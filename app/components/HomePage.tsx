@@ -1,9 +1,31 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { CheckCircle, Clock, MapPin, Calendar, Users, Briefcase, Plane, ArrowLeft, ArrowRight, Navigation, AlertCircle } from 'lucide-react';
+import Image from 'next/image';
 import type { BookingFormData, Route } from '../types';
 import { Services } from './Services';
 import CustomerReviews from './CustomerReviews';
+
+const DiscountSticker = () => {
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 'calc(80px + 20px)', // below navbar (h-20 = 80px) + 20px gap
+      right: '20px',
+      zIndex: 9999,
+      cursor: 'pointer'
+    }}>
+      <Image
+        src="/sticker.png"
+        alt="Discount sticker"
+        width={240}
+        height={80}
+        priority={false}
+        style={{ display: 'block', objectFit: 'contain' }}
+      />
+    </div>
+  );
+};
 
 export default function HomePage(props: {
   formData: BookingFormData;
@@ -208,8 +230,8 @@ export default function HomePage(props: {
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1600&q=80')" }}
         ></div>
         
-        <div className="relative z-20 h-full container mx-auto px-4 pt-20 lg:pt-32 text-center">
-          <div className="max-w-2xl">
+        <div className="relative z-20 h-full container mx-auto px-4 flex items-center justify-center text-center">
+          <div className="max-w-2xl py-10 lg:py-0">
             <span className="inline-block py-1 px-3 rounded-full bg-yellow-400/20 text-yellow-400 text-xs font-bold tracking-wider mb-4 backdrop-blur-sm border border-yellow-400/30">
               PREMIUM TRANSFERS
             </span>
@@ -490,7 +512,7 @@ export default function HomePage(props: {
                         onChange={(e) => handleInputChange('childSeat', e.target.checked)}
                         className="hidden"
                       />
-                      <span className="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">Child Seat (+$5)</span>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">Child Seat (+$20)</span>
                     </label>
                   </div>
 
@@ -655,4 +677,4 @@ export default function HomePage(props: {
       <CustomerReviews />  
     </div>
   );
-}
+}   

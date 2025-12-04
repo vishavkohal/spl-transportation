@@ -52,10 +52,10 @@ export default function ContactPage() {
             <ContactCard 
               icon={Mail}
               title="Email"
-              content="rohit.dhimanptk@gmail.com"
+              content="spltransportation.australia@gmail.com"
               subtext="Response within 24 hours"
               action="Send Email"
-              href="mailto:rohit.dhimanptk@gmail.com"
+              href="mailto:spltransportation.australia@gmail.com"
             />
 
             {/* Location */}

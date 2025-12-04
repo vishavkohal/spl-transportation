@@ -52,8 +52,8 @@ export default function Footer({ setCurrentPage }: { setCurrentPage: (p: string)
               </li>
               <li className="flex items-center space-x-3 group">
                 <Mail className="w-5 h-5 text-yellow-400 shrink-0" />
-                <a href="mailto:rohit.dhimanptk@gmail.com" className="group-hover:text-white transition-colors break-all">
-                  rohit.dhimanptk@gmail.com
+                <a href="mailto:spltransportation.australia@gmail.com" className="group-hover:text-white transition-colors break-all">
+                  spltransportation.australia@gmail.com
                 </a>
               </li>
               <li className="flex items-center space-x-3">

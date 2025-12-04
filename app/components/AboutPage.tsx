@@ -34,7 +34,7 @@ export default function AboutPage() {
                 className="object-cover hover:scale-105 transition-transform duration-700"
               />
               {/* Gradient Overlay for Dark Mode */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent dark:from-black/60"></div>
+              <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent dark:from-black/60"></div>
             </div>
 
             {/* Decorative Dot Pattern */}

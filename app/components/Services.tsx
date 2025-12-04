@@ -11,21 +11,21 @@ const services = [
     title: 'Online Booking',
     description:
       'Book your ride easily through our platform with real-time availability and instant confirmation.',
-    img: '/service1.jpg',
+    img: '/services1.png',
     icon: Car,
   },
   {
     title: 'City Transport',
     description:
       'Comfortable rides within the city for your daily commute and shopping trips.',
-    img: '/service2.jpg',
+    img: '/services2.png',
     icon: MapPin,
   },
   {
     title: 'Airport Transport',
     description:
       'Reliable airport transfers with flight tracking and meet & greet services.',
-    img: '/service3.jpg',
+    img: '/services3.png',
     icon: Plane,
   },
   {
@@ -39,14 +39,14 @@ const services = [
     title: 'Regular Transport',
     description:
       'Daily taxi services for errands, appointments, and regular commutes.',
-    img: '/service5.jpg',
+    img: '/services5.png',
     icon: Users,
   },
   {
     title: 'Tour Transport',
     description:
       'Guided and private tour transport for a comfortable sightseeing experience.',
-    img: '/service6.jpg',
+    img: '/servicess6.png',
     icon: Clock,
   },
 ]

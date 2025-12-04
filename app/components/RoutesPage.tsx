@@ -92,7 +92,7 @@ export default function RoutesPage({
             </div>
 
             <p className="text-sm text-slate-500 mt-4 dark:text-slate-500">
-              * Child seat available for additional $5
+              * Child seat available for additional $20
             </p>
 
             {/* Button: Full width on mobile, centered and compact on Desktop */}
