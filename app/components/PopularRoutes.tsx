@@ -20,8 +20,8 @@ const routes: Route[] = [
     subtitle: 'Easy airport transfers',
     vehicles: [
       { type: '4 Seater', icon: '🚗', price: '$160' },
-      { type: '7 Seater', icon: '🚙', price: '$180' },
-      { type: '8 Seater', icon: '🚐', price: '$200' },
+      { type: '7 Seater', icon: '🚙', price: '$200' },
+      { type: '8 Seater', icon: '🚐', price: '$250' },
     ],
   },
   {
@@ -29,9 +29,9 @@ const routes: Route[] = [
     title: 'Cairns City To Cairns Airport',
     subtitle: 'Interstate express service',
     vehicles: [
-      { type: '4 Seater', icon: '🚗', price: '$320' },
-      { type: '7 Seater', icon: '🚙', price: '$380' },
-      { type: '8 Seater', icon: '🚐', price: '$420' },
+      { type: '4 Seater', icon: '🚗', price: '$70' },
+      { type: '7 Seater', icon: '🚙', price: '$90' },
+      { type: '8 Seater', icon: '🚐', price: '$110' },
     ],
   },
   {
@@ -39,9 +39,9 @@ const routes: Route[] = [
     title: 'Palm Cove to Cairns Airport',
     subtitle: 'Coastal route transfers',
     vehicles: [
-      { type: '4 Seater', icon: '🚗', price: '$140' },
-      { type: '7 Seater', icon: '🚙', price: '$160' },
-      { type: '8 Seater', icon: '🚐', price: '$190' },
+      { type: '4 Seater', icon: '🚗', price: '$80' },
+      { type: '7 Seater', icon: '🚙', price: '$120' },
+      { type: '8 Seater', icon: '🚐', price: '$150' },
     ],
   },
   {
@@ -49,9 +49,9 @@ const routes: Route[] = [
     title: 'Mission Beach to Cairns',
     subtitle: 'Western Australia route',
     vehicles: [
-      { type: '4 Seater', icon: '🚗', price: '$110' },
-      { type: '7 Seater', icon: '🚙', price: '$135' },
-      { type: '8 Seater', icon: '🚐', price: '$160' },
+      { type: '4 Seater', icon: '🚗', price: '$200' },
+      { type: '7 Seater', icon: '🚙', price: '$300' },
+      { type: '8 Seater', icon: '🚐', price: '$400' },
     ],
   },
   {
@@ -59,9 +59,9 @@ const routes: Route[] = [
     title: 'Kuranda to Cairns',
     subtitle: 'Wine region tours available',
     vehicles: [
-      { type: '4 Seater', icon: '🚗', price: '$130' },
-      { type: '7 Seater', icon: '🚙', price: '$150' },
-      { type: '8 Seater', icon: '🚐', price: '$180' },
+      { type: '4 Seater', icon: '🚗', price: '$80' },
+      { type: '7 Seater', icon: '🚙', price: '$120' },
+      { type: '8 Seater', icon: '🚐', price: '$150' },
     ],
   },
   {
@@ -69,9 +69,9 @@ const routes: Route[] = [
     title: 'Sky Rail to Cairns',
     subtitle: 'Tasmania express transfer',
     vehicles: [
-      { type: '4 Seater', icon: '🚗', price: '$220' },
-      { type: '7 Seater', icon: '🚙', price: '$250' },
-      { type: '8 Seater', icon: '🚐', price: '$290' },
+      { type: '4 Seater', icon: '🚗', price: '$70' },
+      { type: '7 Seater', icon: '🚙', price: '$90' },
+      { type: '8 Seater', icon: '🚐', price: '$110' },
     ],
   },
 ];
