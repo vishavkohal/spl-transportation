@@ -58,7 +58,7 @@ export default function AboutPage() {
             </h2>
             
             <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg leading-relaxed">
-              With over 20 years of experience, we&apos;ve been providing reliable taxi services to our customers. Our commitment to safety, comfort, and punctuality has made us the preferred choice for thousands of riders across the city.
+              With over 20 years of experience, we&apos;ve been providing reliable ride services to our customers. Our commitment to safety, comfort, and punctuality has made us the preferred choice for thousands of riders across the city.
             </p>
 
             {/* Features List */}

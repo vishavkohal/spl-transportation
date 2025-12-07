@@ -22,7 +22,7 @@ export default function Footer({ setCurrentPage }: { setCurrentPage: (p: string)
               <div className="w-12 h-1 bg-yellow-400 rounded-full mt-2"></div>
             </div>
             <p className="text-gray-400 leading-relaxed max-w-sm">
-              Premium taxi & transfer services across Queensland. We prioritize safety, punctuality, and comfort in every journey we take.
+              Premium rides & transfer services across Queensland. We prioritize safety, punctuality, and comfort in every journey we take.
             </p>
             {/* Social Icons */}
             <div className="flex space-x-4 pt-2">

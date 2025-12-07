@@ -5,6 +5,7 @@ import Image from 'next/image';
 import type { BookingFormData, Route } from '../types';
 import { Services } from './Services';
 import CustomerReviews from './CustomerReviews';
+import PopularRoutes from './PopularRoutes';
 
 const DiscountSticker = () => {
   return (
@@ -673,6 +674,7 @@ export default function HomePage(props: {
         </div>
       </div>
 
+      <PopularRoutes />
       <Services />
       <CustomerReviews />  
     </div>
