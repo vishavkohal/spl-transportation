@@ -128,7 +128,7 @@ export default function Navigation({
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl 
                         bg-yellow-400 text-gray-900 font-bold shadow-md active:scale-95 transition"
             >
-              BOOK A TAXI
+              BOOK A RIDE
             </button>
           </div>
         </div>

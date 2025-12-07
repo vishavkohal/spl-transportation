@@ -38,7 +38,7 @@ const services = [
   {
     title: 'Regular Transport',
     description:
-      'Daily taxi services for errands, appointments, and regular commutes.',
+      'Daily ride services for errands, appointments, and regular commutes.',
     img: '/services5.png',
     icon: Users,
   },
