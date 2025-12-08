@@ -90,7 +90,7 @@ export default function Footer({ setCurrentPage }: { setCurrentPage: (p: string)
               </li>
               <li className="flex items-center space-x-3">
                 <Clock className="w-5 h-5 shrink-0" style={{ color: ACCENT_COLOR }} /> {/* Accent Color */}
-                <span>Available 24 Hours / 7 Days</span>
+                <span>Available all Week Days</span>
               </li>
             </ul>
           </div>

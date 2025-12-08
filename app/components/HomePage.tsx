@@ -25,13 +25,14 @@ const PRIMARY_COLOR = '#18234B';
 const ACCENT_COLOR = '#A61924';
 const COMPANY_PHONE = '+61470032460';
 // Business rules
-const MAX_PASSENGERS = 7;
+const MAX_PASSENGERS = 8;
 const MAX_LUGGAGE = 4;
 
 const VEHICLE_CONSTRAINTS: { maxPax: number; maxBags: number }[] = [
-  { maxPax: 4, maxBags: 4 },
+  { maxPax: 4, maxBags: 3 },
   { maxPax: 5, maxBags: 3 },
-  { maxPax: 7, maxBags: 4 }
+  { maxPax: 6, maxBags: 2 },
+  { maxPax: 7, maxBags: 2 },
 ];
 
 // slideshow images
@@ -62,9 +63,10 @@ const DiscountSticker = () => {
 
 // Helper: max bags for pax
 function getMaxBagsForCurrentPax(pax: number): number {
-  if (pax >= 1 && pax <= 4) return 4;
-  if (pax === 5) return 3;
-  if (pax >= 6 && pax <= MAX_PASSENGERS) return 4;
+  if (pax >= 1 && pax <= 4) return 3;
+  if (pax >= 5 && pax <6)  return 3;
+   if (pax > 5 && pax <=6)  return 2;
+  if (pax > 6 && pax <= MAX_PASSENGERS) return 4;
   return MAX_LUGGAGE;
 }
 
@@ -956,11 +958,12 @@ function Step1Content(props: {
         </div>
       ) : (
         <div className="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl p-4 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <span className="text-sm font-medium">
-            Please choose a valid Pickup, Dropoff, Date, Time, and Passenger/Luggage combination.
-          </span>
-        </div>
+  <AlertCircle className="w-5 h-5 flex-shrink-0" />
+  <span className="text-sm font-medium">
+    Please contact us prior to booking. For assistance with any details (time, destination, passengers, luggage, vehicle, price, or payment), please reach us via 
+     <a href='tel:+61470032460'> phone</a> or email. We are happy to help.
+  </span>
+</div>
       )}
 
       {/* Footer Actions */}

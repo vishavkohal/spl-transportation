@@ -58,7 +58,7 @@ export default function ContactPage() {
               icon={Phone}
               title="Phone"
               content="+61470032460"
-              subtext="Available 24/7 for bookings"
+              subtext="Available for bookings"
               action="Call Now"
               href="tel:+61470032460"
               accentColor={ACCENT_COLOR}

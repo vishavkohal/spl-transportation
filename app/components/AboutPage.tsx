@@ -10,7 +10,7 @@ export default function AboutPage() {
   const features = [
     "Professional and experienced drivers",
     "Well-maintained fleet of vehicles",
-    "24/7 customer support available"
+    "Customer support available"
   ];
 
   return (

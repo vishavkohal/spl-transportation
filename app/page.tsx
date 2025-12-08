@@ -58,6 +58,7 @@ export default function TaxiBookingApp() {
       try {
         const res = await fetch('/api/routes');
         if (!res.ok) throw new Error('Failed to fetch routes');
+        // Assuming the API returns a list where each entry is unique (A -> B only)
         const data: Route[] = await res.json();
         if (mounted) {
           setRoutes(data);
@@ -81,34 +82,69 @@ export default function TaxiBookingApp() {
   }, []);
 
   // -------------------------------
-  // AVAILABLE LOCATIONS
+  // AVAILABLE LOCATIONS (All unique endpoints in the routes list)
   // -------------------------------
   const availableLocations = useMemo(
+    // NOTE: Includes 'from' and 'to' fields to get all possible locations
     () => Array.from(new Set(routes.flatMap(r => [r.from, r.to]))).sort(),
     [routes]
   );
 
   // -------------------------------
-  // DROPOFF OPTIONS (based on pickup)
+  // DROPOFF OPTIONS (Symmetric Lookup)
+  // Check routes where pickup is 'from' OR 'to'
   // -------------------------------
   const dropoffOptions = useMemo(() => {
     if (!formData.pickupLocation) return availableLocations;
-    const options = routes
-      .filter(r => r.from === formData.pickupLocation)
-      .map(r => r.to);
-    return Array.from(new Set(options)).sort();
+
+    const connectedLocations = new Set<string>();
+    const pickup = formData.pickupLocation;
+
+    routes.forEach(r => {
+      if (r.from === pickup) {
+        connectedLocations.add(r.to);
+      } else if (r.to === pickup) {
+        connectedLocations.add(r.from);
+      }
+    });
+
+    // Convert set to array, exclude the pickup location itself, and sort
+    return Array.from(connectedLocations).filter(loc => loc !== pickup).sort();
   }, [availableLocations, formData.pickupLocation, routes]);
 
   // -------------------------------
-  // CURRENT ROUTE (derived)
+  // CURRENT ROUTE (Symmetric Lookup)
+  // Tries P -> D, then D -> P, and normalizes the result
   // -------------------------------
-  const currentRoute: Route | null = useMemo(
-    () =>
-      routes.find(
-        r => r.from === formData.pickupLocation && r.to === formData.dropoffLocation
-      ) ?? null,
-    [routes, formData.pickupLocation, formData.dropoffLocation]
-  );
+  const currentRoute: Route | null = useMemo(() => {
+    const { pickupLocation, dropoffLocation } = formData;
+    if (!pickupLocation || !dropoffLocation) return null;
+
+    // 1. Try P -> D
+    let route = routes.find(
+      r => r.from === pickupLocation && r.to === dropoffLocation
+    );
+
+    // 2. If not found, try D -> P (Symmetric/Bidirectional check)
+    if (!route) {
+      route = routes.find(
+        r => r.from === dropoffLocation && r.to === pickupLocation
+      );
+
+      // If the reverse route is found, create a temporary route object
+      // that visually matches the user's input (P -> D) for display/checkout.
+      if (route) {
+        return {
+          ...route,
+          from: pickupLocation, // Overwrite to match user's pickup
+          to: dropoffLocation,   // Overwrite to match user's dropoff
+        } as Route;
+      }
+    }
+
+    // 3. Return the directly found route (or null)
+    return route ?? null;
+  }, [routes, formData.pickupLocation, formData.dropoffLocation]);
 
   // -------------------------------
   // PRICE CALCULATION (derived)
@@ -119,9 +155,19 @@ export default function TaxiBookingApp() {
     let basePrice = 0;
     const pax = formData.passengers;
 
-    if (pax <= 2) basePrice = currentRoute.pricing[0].price;
-    else if (pax <= 4) basePrice = currentRoute.pricing[1].price;
-    else basePrice = currentRoute.pricing[2].price;
+    // Assuming the pricing array is structured: [<=2 pax, <=4 pax, >4 pax]
+    if (pax <= 2) {
+      basePrice = currentRoute.pricing?.[0]?.price || 0;
+    } else if (pax <= 4) {
+      basePrice = currentRoute.pricing?.[1]?.price || 0;
+    } else {
+      basePrice = currentRoute.pricing?.[2]?.price || 0;
+    }
+    
+    // Fallback if the pricing array structure is different or missing
+    if (basePrice === 0 && currentRoute.pricing) { 
+        basePrice = currentRoute.pricing[ currentRoute.pricing.length - 1 ].price || 0; 
+    }
 
     const childSeatCost = formData.childSeat ? 20 : 0;
 
@@ -134,15 +180,22 @@ export default function TaxiBookingApp() {
   const handleInputChange = useCallback(
     (field: keyof BookingFormData, value: string | number | boolean) => {
       setFormData(prev => {
-        // Handle pickup location and keep dropoff valid
+        // Handle pickup location and keep dropoff valid (using symmetric logic)
         if (field === 'pickupLocation') {
           const newPickup = String(value);
-          const validDropoffs = routes
-            .filter(r => r.from === newPickup)
-            .map(r => r.to);
-          const uniqueDropoffs = Array.from(new Set(validDropoffs));
-          const dropoffValid = uniqueDropoffs.includes(prev.dropoffLocation);
+          const connectedLocations = new Set<string>();
 
+          routes.forEach(r => {
+            if (r.from === newPickup) {
+              connectedLocations.add(r.to);
+            } else if (r.to === newPickup) {
+              connectedLocations.add(r.from);
+            }
+          });
+
+          const dropoffValid = connectedLocations.has(prev.dropoffLocation);
+
+          // If the old dropoff is no longer connected to the new pickup (bidirectionally), reset it
           return {
             ...prev,
             pickupLocation: newPickup,

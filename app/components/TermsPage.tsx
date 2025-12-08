@@ -64,9 +64,7 @@ export default function TermsPage() {
         >
           <ul className="list-disc list-inside space-y-2 text-slate-600">
             <li>Cancellation requests must be submitted <strong>in writing (email or SMS)</strong>.</li>
-            <li><strong>Within 24 hours</strong> of service date: No refund.</li>
-            <li><strong>Within 48 hours</strong> of service date: 50% refund.</li>
-            <li><strong>Beyond 48 hours</strong> of service date: Subject to a <strong>$30 administration fee</strong>.</li>
+            <li><strong>Within 48 hours</strong> of service date: No refund.</li>
             <li>Card processing fees (2.2%) are non-refundable and will be deducted from any refund.</li>
           </ul>
         </TermsSection>
@@ -120,8 +118,7 @@ export default function TermsPage() {
           accentColor={ACCENT_COLOR}
         >
           <ul className="list-disc list-inside space-y-2 text-slate-600">
-            <li><strong>After-Hours (8 PM – 7 AM)</strong>: A <strong>$30 surcharge</strong> applies per trip.</li>
-            <li><strong>Public Holidays</strong>: A <strong>$30 fee</strong> applies to designated public holidays.</li>
+            <li><strong>After-Hours (11 PM – 7 AM)</strong>: A <strong>$30 surcharge</strong> applies per trip.</li>
             <li><strong>Multiple Stops</strong>: Must be pre-arranged and are subject to a <strong>$30 per 15 minutes</strong> surcharge.</li>
             <li><strong>Delays</strong>: We are not liable for delays caused by traffic, weather, or circumstances beyond our control.</li>
           </ul>
