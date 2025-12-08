@@ -430,7 +430,7 @@ export default function HomePage(props: {
               key={src}
               className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
               // Ensure the first image is visible initially
-              style={{ opacity: index === currentImageIndex ? 1 : 0 }}
+              style={{ opacity: index === currentImageIndex ? 3 : 0 }}
             >
               <div
                 className="absolute inset-0 bg-cover bg-center"
