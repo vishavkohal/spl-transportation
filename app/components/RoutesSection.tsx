@@ -166,7 +166,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
               className="
                 group flex flex-col rounded-xl border border-gray-200 bg-white 
                 p-3 sm:p-4 shadow-sm hover:shadow-md transition-all
-                w-full max-w-[250px] mx-auto
+                w-full max-w-[350px] mx-auto
               "
             >
               {/* 🔖 Label at the very top (extra small chip) */}
@@ -184,7 +184,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
             {/* Route Names and Icons - Centered and Enlarged */}
             <div className="mb-2.5 border-b border-gray-100 pb-2.5 w-full">
               <h1
-                className="text-2xl sm:text-5xl md:text-3xl font-bold tracking-tight text-center"
+                className="text-2xl sm:text-2xl md:text-xl font-bold tracking-tight text-center"
                 style={{ color: PRIMARY_COLOR }}
               >
                 {route.from}
