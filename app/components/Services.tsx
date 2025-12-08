@@ -1,10 +1,11 @@
-import React from 'react'
-import { Car, MapPin, Plane, Users, Briefcase, Clock, ArrowRight } from 'lucide-react'
-import Image from 'next/image'
+'use client';
+import React from 'react';
+import { Car, MapPin, Plane, Users, Briefcase, Clock, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 
-// NOTE: You said you have 6 images in the public folder named service1..service6.
-// Place them in `public/service1.jpg` ... `public/service6.jpg` (or .png) so the component can load them.
-// Developer-provided uploaded image path (for preview/testing): /mnt/data/f1840dbd-fcb6-47b8-bd32-5da525a85aaf.png
+// Define the custom colors for readability
+const PRIMARY_COLOR = '#18234B'; // Dark Navy
+const ACCENT_COLOR = '#A61924'; // Deep Red
 
 const services = [
   {
@@ -49,19 +50,32 @@ const services = [
     img: '/servicess6.png',
     icon: Clock,
   },
-]
+];
 
 export function Services() {
   return (
-    <section id="service" className="py-20 bg-white dark:bg-gray-950 transition-colors duration-300">
+    // Background remains white (bg-white), removed dark background class
+    <section id="service" className="py-20 bg-white transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <p className="text-yellow-500 dark:text-yellow-400 font-bold tracking-wider uppercase text-sm mb-2">
+          <p 
+            className="font-bold tracking-wider uppercase text-sm mb-2"
+            style={{ color: ACCENT_COLOR }} // Accent Color for "Our Services"
+          >
             Our Services
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Best Services For You</h2>
-          <div className="w-24 h-1.5 bg-yellow-400 mx-auto mt-4 rounded-full" />
+          <h2 
+            className="text-3xl md:text-4xl font-bold text-gray-900"
+            style={{ color: PRIMARY_COLOR }} // Primary Color for main heading
+          >
+            Best Services For You
+          </h2>
+          {/* Accent-colored divider */}
+          <div 
+            className="w-24 h-1.5 mx-auto mt-4 rounded-full"
+            style={{ backgroundColor: ACCENT_COLOR }}
+          />
         </div>
 
         {/* Services Grid */}
@@ -69,12 +83,20 @@ export function Services() {
           {services.map((service, index) => (
             <article
               key={index}
-              className={`group bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800 hover:shadow-2xl dark:hover:shadow-yellow-900/20 hover:-translate-y-1 transition-all duration-300 ease-in-out flex flex-col`}
+              // Removed dark theme classes, subtle light background
+              className={`group bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 ease-in-out flex flex-col`}
+              // Added subtle shadow hover using Accent Color
+              style={{ '--shadow-color': `${ACCENT_COLOR}30` } as React.CSSProperties}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = `0 10px 15px -3px var(--shadow-color), 0 4px 6px -4px var(--shadow-color)`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
               {/* Image Container */}
               <div className="relative mb-8">
                 <div className="overflow-hidden rounded-xl shadow-md aspect-video relative">
-                  {/* Next/Image will serve from public/ when src starts with / */}
                   <Image
                     src={service.img}
                     alt={service.title}
@@ -85,20 +107,47 @@ export function Services() {
                 </div>
 
                 {/* Floating Icon */}
-                <div className="absolute -bottom-6 right-6 bg-yellow-400 text-gray-900 p-4 rounded-full shadow-lg group-hover:bg-yellow-300 transition-colors z-10">
-                  {/* render icon component stored on the object */}
+                <div 
+                  className="absolute -bottom-6 right-6 text-white p-4 rounded-full shadow-lg transition-colors z-10"
+                  style={{ backgroundColor: ACCENT_COLOR }} // Accent Color for icon background
+                >
                   <service.icon className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2} />
                 </div>
               </div>
 
               {/* Content */}
               <div className="mt-2 flex-grow">
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">{service.title}</h3>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-6">{service.description}</p>
+                <h3 
+                  className="text-2xl font-bold text-gray-900 mb-3"
+                  style={{ color: PRIMARY_COLOR }} // Primary Color for service title
+                >
+                  {service.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed mb-6">{service.description}</p>
               </div>
 
               {/* Button */}
-              <button className="w-full sm:w-auto self-start inline-flex items-center justify-center gap-2 bg-transparent border-2 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white px-6 py-3 rounded-full font-semibold hover:bg-yellow-400 hover:border-yellow-400 dark:hover:bg-yellow-400 dark:hover:text-gray-900 dark:hover:border-yellow-400 transition-all duration-300 group/btn">
+              <button 
+                className="w-full sm:w-auto self-start inline-flex items-center justify-center gap-2 bg-transparent border-2 border-gray-200 text-gray-900 px-6 py-3 rounded-full font-semibold transition-all duration-300 group/btn"
+                // Accent Color for hover background and border
+                style={{ 
+                  '--accent-color': ACCENT_COLOR 
+                } as React.CSSProperties}
+                onMouseEnter={(e) => {
+                  const target = e.currentTarget as HTMLButtonElement;
+                  target.style.backgroundColor = ACCENT_COLOR;
+                  target.style.borderColor = ACCENT_COLOR;
+                  target.style.color = 'white';
+                  target.querySelectorAll('svg').forEach(svg => svg.style.color = 'white');
+                }}
+                onMouseLeave={(e) => {
+                  const target = e.currentTarget as HTMLButtonElement;
+                  target.style.backgroundColor = 'transparent';
+                  target.style.borderColor = '#E5E7EB'; // gray-200 equivalent
+                  target.style.color = PRIMARY_COLOR; // Primary color on hover out
+                  target.querySelectorAll('svg').forEach(svg => svg.style.color = PRIMARY_COLOR);
+                }}
+              >
                 Read More
                 <ArrowRight className="w-4 h-4 transform group-hover/btn:translate-x-1 transition-transform" />
               </button>
@@ -107,5 +156,5 @@ export function Services() {
         </div>
       </div>
     </section>
-  )
+  );
 }

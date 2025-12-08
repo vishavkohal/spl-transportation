@@ -1,3 +1,5 @@
+// app/api/routes/route.ts
+export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { getRoutes, addRoute, updateRoute, deleteRoute } from '../../lib/routesStore';
 

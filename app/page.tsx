@@ -9,32 +9,42 @@ import AboutPage from './components/AboutPage';
 import TermsPage from './components/TermsPage';
 import ContactPage from './components/ContactPage';
 import type { BookingFormData, Route } from './types';
+import FeatureSection from './components/FeatureSection';
+import CustomerReviews from './components/CustomerReviews';
+import RoutesSection from './components/RoutesSection';
+import PlaceCarousel from './components/PlaceCarousal';
+import HowToBookModern from './components/HowToBook';
+// Optional: export this if you want Navigation/Footer/RoutesPage to reuse it
+export type PageKey = 'home' | 'routes' | 'about' | 'terms' | 'contact';
+
+const initialFormData: BookingFormData = {
+  pickupLocation: '',
+  pickupAddress: '',
+  dropoffLocation: '',
+  dropoffAddress: '',
+  pickupDate: '',
+  pickupTime: '',
+  passengers: 1,
+  luggage: 0,
+  flightNumber: '',
+  childSeat: false,
+  fullName: '',
+  email: '',
+  contactNumber: ''
+};
 
 export default function TaxiBookingApp() {
-  const [currentPage, setCurrentPage] = useState<string>('home');
-  const [menuOpen, setMenuOpen] = useState<boolean>(false);
-  const [bookingStep, setBookingStep] = useState<number>(1);
+  // Page / UI state
+  const [currentPage, setCurrentPage] = useState<PageKey>('home');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [bookingStep, setBookingStep] = useState<1 | 2>(1); // ✅ matches HomePage props
 
-  const [formData, setFormData] = useState<BookingFormData>({
-    pickupLocation: '',
-    pickupAddress: '',
-    dropoffLocation: '',
-    dropoffAddress: '',
-    pickupDate: '',
-    pickupTime: '',
-    passengers: 1,
-    luggage: 0,
-    flightNumber: '',
-    childSeat: false,
-    fullName: '',
-    email: '',
-    contactNumber: ''
-  });
+  // Booking data state
+  const [formData, setFormData] = useState<BookingFormData>(initialFormData);
 
-  const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
-  const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
+  // Routes data
   const [routes, setRoutes] = useState<Route[]>([]);
-  const [routesLoading, setRoutesLoading] = useState<boolean>(true);
+  const [routesLoading, setRoutesLoading] = useState(true);
 
   // -------------------------------
   // LOAD ROUTES FROM API
@@ -55,73 +65,73 @@ export default function TaxiBookingApp() {
       }
     })();
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // -------------------------------
   // AVAILABLE LOCATIONS
   // -------------------------------
-  const AVAILABLE_LOCATIONS = useMemo(() => {
-    return Array.from(new Set(routes.flatMap(r => [r.from, r.to]))).sort();
-  }, [routes]);
+  const availableLocations = useMemo(
+    () => Array.from(new Set(routes.flatMap(r => [r.from, r.to]))).sort(),
+    [routes]
+  );
 
   // -------------------------------
-  // DROPOFF OPTIONS
+  // DROPOFF OPTIONS (based on pickup)
   // -------------------------------
-  const dropoffOptions: string[] = formData.pickupLocation
-    ? Array.from(new Set(routes.filter(r => r.from === formData.pickupLocation).map(r => r.to))).sort()
-    : AVAILABLE_LOCATIONS;
+  const dropoffOptions = useMemo(() => {
+    if (!formData.pickupLocation) return availableLocations;
+    const options = routes
+      .filter(r => r.from === formData.pickupLocation)
+      .map(r => r.to);
+    return Array.from(new Set(options)).sort();
+  }, [availableLocations, formData.pickupLocation, routes]);
 
   // -------------------------------
-  // PRICE CALCULATION
+  // CURRENT ROUTE (derived)
   // -------------------------------
-  useEffect(() => {
-    if (formData.pickupLocation && formData.dropoffLocation) {
-      const route = routes.find(
+  const currentRoute: Route | null = useMemo(
+    () =>
+      routes.find(
         r => r.from === formData.pickupLocation && r.to === formData.dropoffLocation
-      );
-
-      if (route) {
-        // SET selectedRoute ONLY if user didn't manually select via "Book This Route"
-        if (!selectedRoute || selectedRoute.id !== route.id) {
-          setSelectedRoute(route);
-        }
-
-        let basePrice = 0;
-
-        if (formData.passengers <= 2) basePrice = route.pricing[0].price;
-        else if (formData.passengers <= 4) basePrice = route.pricing[1].price;
-        else basePrice = route.pricing[2].price;
-
-        const childSeatCost = formData.childSeat ? 5 : 0;
-
-        setCalculatedPrice(basePrice + childSeatCost);
-      } else {
-        setCalculatedPrice(0);
-      }
-    } else {
-      setCalculatedPrice(0);
-    }
-  }, [
-    formData.pickupLocation,
-    formData.dropoffLocation,
-    formData.passengers,
-    formData.childSeat,
-    routes
-  ]);
+      ) ?? null,
+    [routes, formData.pickupLocation, formData.dropoffLocation]
+  );
 
   // -------------------------------
-  // FIXED: useCallback for handleInputChange (prevents re-renders / infinite loops)
+  // PRICE CALCULATION (derived)
+  // -------------------------------
+  const calculatedPrice = useMemo(() => {
+    if (!currentRoute) return 0;
+
+    let basePrice = 0;
+    const pax = formData.passengers;
+
+    if (pax <= 2) basePrice = currentRoute.pricing[0].price;
+    else if (pax <= 4) basePrice = currentRoute.pricing[1].price;
+    else basePrice = currentRoute.pricing[2].price;
+
+    const childSeatCost = formData.childSeat ? 20 : 0;
+
+    return basePrice + childSeatCost;
+  }, [currentRoute, formData.passengers, formData.childSeat]);
+
+  // -------------------------------
+  // CENTRALIZED INPUT HANDLER
   // -------------------------------
   const handleInputChange = useCallback(
     (field: keyof BookingFormData, value: string | number | boolean) => {
       setFormData(prev => {
+        // Handle pickup location and keep dropoff valid
         if (field === 'pickupLocation') {
           const newPickup = String(value);
-          const validDropoffs = Array.from(
-            new Set(routes.filter(r => r.from === newPickup).map(r => r.to))
-          );
-          const dropoffValid = validDropoffs.includes(prev.dropoffLocation);
+          const validDropoffs = routes
+            .filter(r => r.from === newPickup)
+            .map(r => r.to);
+          const uniqueDropoffs = Array.from(new Set(validDropoffs));
+          const dropoffValid = uniqueDropoffs.includes(prev.dropoffLocation);
 
           return {
             ...prev,
@@ -130,21 +140,21 @@ export default function TaxiBookingApp() {
           };
         }
 
+        // Clamp passengers
         if (field === 'passengers') {
           const parsed = Number(value);
           const n = Number.isFinite(parsed)
             ? Math.max(1, Math.min(10, Math.floor(parsed)))
             : prev.passengers;
-
           return { ...prev, passengers: n };
         }
 
+        // Clamp luggage
         if (field === 'luggage') {
           const parsed = Number(value);
           const n = Number.isFinite(parsed)
             ? Math.max(0, Math.min(10, Math.floor(parsed)))
             : prev.luggage;
-
           return { ...prev, luggage: n };
         }
 
@@ -154,58 +164,48 @@ export default function TaxiBookingApp() {
     [routes]
   );
 
-  const clearSelectedRoute = useCallback(() => {
-    setSelectedRoute(null);
-  }, []);
-
   // -------------------------------
   // HANDLE ROUTE SELECTION FROM ROUTES PAGE
   // -------------------------------
-  const handleRouteSelect = useCallback((route: Route) => {
-    setSelectedRoute(route);
-    setFormData(prev => ({
-      ...prev,
-      pickupLocation: route.from,
-      dropoffLocation: route.to
-    }));
-    setBookingStep(1);
-    setCurrentPage('home');
-    // Scroll to top to ensure user sees the populated form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  const handleRouteSelect = useCallback(
+    (route: Route) => {
+      // Fill pickup & dropoff
+      setFormData(prev => ({
+        ...prev,
+        pickupLocation: route.from,
+        dropoffLocation: route.to
+      }));
+
+      // Take user to step 1 of home page with filled-in locations
+      setBookingStep(1);
+      setCurrentPage('home');
+
+      // Scroll user to top
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+    []
+  );
 
   // -------------------------------
-  // BOOKING SUBMIT
+  // BOOKING SUBMIT (called from HomePage)
   // -------------------------------
-  const handleBookingSubmit = async () => {
+  const handleBookingSubmit = useCallback(() => {
     const bookingData = {
       ...formData,
       totalPrice: calculatedPrice,
-      route: selectedRoute
+      route: currentRoute
     };
 
     console.log('Booking Details:', bookingData);
     alert(`Booking confirmed! Confirmation email sent to ${formData.email}`);
 
-    setFormData({
-      pickupLocation: '',
-      pickupAddress: '',
-      dropoffLocation: '',
-      dropoffAddress: '',
-      pickupDate: '',
-      pickupTime: '',
-      passengers: 1,
-      luggage: 0,
-      flightNumber: '',
-      childSeat: false,
-      fullName: '',
-      email: '',
-      contactNumber: ''
-    });
-
+    // Reset
+    setFormData(initialFormData);
     setBookingStep(1);
     setCurrentPage('home');
-  };
+  }, [formData, calculatedPrice, currentRoute]);
 
   // -------------------------------
   // RENDER PAGES
@@ -213,35 +213,50 @@ export default function TaxiBookingApp() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation
+        currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         menuOpen={menuOpen}
         setMenuOpen={setMenuOpen}
       />
 
       {currentPage === 'home' && (
+        <main>
         <HomePage
           formData={formData}
           handleInputChange={handleInputChange}
-          bookingStep={bookingStep}
-          setBookingStep={setBookingStep}
-          setCurrentPage={setCurrentPage}
-          AVAILABLE_LOCATIONS={AVAILABLE_LOCATIONS}
+          bookingStep={bookingStep}             
+          setBookingStep={setBookingStep}       
+          setCurrentPage={(page: string) => setCurrentPage(page as PageKey)}
+          AVAILABLE_LOCATIONS={availableLocations}
           dropoffOptions={dropoffOptions}
-          selectedRoute={selectedRoute}
-          clearSelectedRoute={clearSelectedRoute}
+          selectedRoute={currentRoute}
           calculatedPrice={calculatedPrice}
+          onConfirmBooking={handleBookingSubmit}
         />
+        <PlaceCarousel/>
+        <HowToBookModern/>
+         <RoutesSection/>
+        <FeatureSection />
+        <CustomerReviews />
+       
+        </main>
       )}
 
       {currentPage === 'routes' && (
-        <RoutesPage setCurrentPage={setCurrentPage} onSelectRoute={handleRouteSelect} />
+        <RoutesPage
+          setCurrentPage={(page: string) => setCurrentPage(page as PageKey)}
+          onSelectRoute={handleRouteSelect}
+          // if your RoutesPage expects routes/loading, you can also pass:
+          // routes={routes}
+          // loading={routesLoading}
+        />
       )}
 
       {currentPage === 'about' && <AboutPage />}
       {currentPage === 'terms' && <TermsPage />}
       {currentPage === 'contact' && <ContactPage />}
 
-      <Footer setCurrentPage={setCurrentPage} />
+      <Footer setCurrentPage={(page: string) => setCurrentPage(page as PageKey)}/>
     </div>
   );
 }

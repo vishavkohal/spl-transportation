@@ -1,29 +1,46 @@
 'use client';
+
 import React from 'react';
-import { MapPin, Menu, X, Phone } from 'lucide-react';
+import { Menu, X, Phone } from 'lucide-react';
 import Image from 'next/image';
+import type { PageKey } from '../page'; // 👈 import the union type
+
+// Define the custom colors for readability
+const PRIMARY_COLOR = '#18234B'; // Dark Navy
+const ACCENT_COLOR = '#A61924'; // Deep Red
+
 // --- CONFIGURATION ---
 const COMPANY_PHONE = '+61470032460';
 
+// Pages we support in nav
+const PAGES: PageKey[] = ['home', 'routes', 'about', 'contact', 'terms'];
+
+type NavigationProps = {
+  currentPage: PageKey;
+  setCurrentPage: (p: PageKey) => void;
+  menuOpen: boolean;
+  setMenuOpen: (v: boolean) => void;
+};
+
 export default function Navigation({
+  currentPage,
   setCurrentPage,
   menuOpen,
   setMenuOpen
-}: {
-  setCurrentPage: (p: string) => void;
-  menuOpen: boolean;
-  setMenuOpen: (v: boolean) => void;
-}) {
-  const handleNavClick = (page: string) => {
+}: NavigationProps) {
+  const handleNavClick = (page: PageKey) => {
     setCurrentPage(page);
     setMenuOpen(false);
-    window.scrollTo(0, 0);
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+    }
   };
 
+  const labelFor = (page: PageKey) =>
+    page.charAt(0).toUpperCase() + page.slice(1); // "home" -> "Home"
+
   return (
-    <nav
-      className="fixed w-full top-0 z-50 transition-all duration-300 bg-white border-b border-gray-200"
-    >
+    <nav className="fixed w-full top-0 z-50 transition-all duration-300 bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Left: Logo + Text */}
@@ -31,36 +48,34 @@ export default function Navigation({
             className="flex items-center gap-1 cursor-pointer group"
             onClick={() => handleNavClick('home')}
           >
-            <div className="flex items-center p-1 dark:bg-white dark:shadow-md dark:border dark:border-gray-200 lg:dark:bg-transparent lg:dark:shadow-none lg:dark:border-0 pt-0.5 pb-0.5">
-              <Image
-                src="/spll.png"
-                width={150}
-                height={30}
-                alt="SPL Transportation Logo"
-                className="object-contain"
-                priority
-              />
-              <Image
-                src="/spllo.png"
-                alt="SPL"
-                width={120}
-                height={15}
-                className="object-contain ml-1"
-                priority={false}
-              />
+          <div className="flex items-center p-1 dark:bg-transparent dark:shadow-none lg:dark:bg-transparent lg:dark:shadow-none pt-0.5 pb-0.5">
+    <Image
+        src="/logo.png"
+        width={150}
+        height={30}
+        alt="SPL Transportation Logo"
+        className="object-contain"
+        priority
+    />
             </div>
           </div>
 
           {/* Center: Links (Desktop) */}
           <div className="hidden lg:flex space-x-8 items-center">
-            {['Home', 'Routes', 'About', 'Contact', 'Terms'].map((item) => (
+            {PAGES.map(page => (
               <button
-                key={item}
-                onClick={() => handleNavClick(item.toLowerCase())}
-                className="text-sm font-semibold text-black 
-                          hover:text-yellow-500 transition-colors"
+                key={page}
+                onClick={() => handleNavClick(page)}
+                className="text-sm font-semibold transition-colors"
+                style={{ color: PRIMARY_COLOR }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.color = ACCENT_COLOR;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.color = PRIMARY_COLOR;
+                }}
               >
-                {item}
+                {labelFor(page)}
               </button>
             ))}
           </div>
@@ -71,18 +86,28 @@ export default function Navigation({
             <div className="hidden md:flex items-center gap-3">
               <a
                 href={`tel:${COMPANY_PHONE}`}
-                className="text-gray-900 hover:text-yellow-500 transition mr-2"
+                className="transition mr-2"
+                style={{ color: PRIMARY_COLOR }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.color = ACCENT_COLOR;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.color = PRIMARY_COLOR;
+                }}
               >
                 <Phone className="w-5 h-5" />
               </a>
               <button
                 onClick={() => handleNavClick('routes')}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-full 
-                          bg-yellow-400 hover:bg-yellow-300 
-                          text-gray-900 font-bold text-sm shadow-lg shadow-yellow-400/20 
-                          transition-all hover:-translate-y-0.5 active:translate-y-0"
+                           text-white font-bold text-sm shadow-lg transition-all 
+                           hover:-translate-y-0.5 active:translate-y-0"
+                style={{
+                  backgroundColor: ACCENT_COLOR,
+                  boxShadow: `0 4px 10px ${ACCENT_COLOR}40`
+                }}
               >
-                <span>Book Ride</span>
+                <span>Book Now</span>
               </button>
             </div>
 
@@ -90,10 +115,8 @@ export default function Navigation({
             <div className="lg:hidden">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-
                 aria-label="Toggle menu"
-                className="p-2 rounded-lg text-gray-600 
-                          hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
               >
                 {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -109,15 +132,20 @@ export default function Navigation({
         }`}
       >
         <div className="px-4 py-4 space-y-2">
-          {['Home', 'Routes', 'About', 'Contact', 'Terms'].map((item) => (
+          {PAGES.map(page => (
             <button
-              key={item}
-              onClick={() => handleNavClick(item.toLowerCase())}
-              className="block w-full text-left py-3 px-4 rounded-lg font-medium
-                         text-black 
-                         hover:bg-gray-50 hover:text-yellow-500 transition"
+              key={page}
+              onClick={() => handleNavClick(page)}
+              className="block w-full text-left py-3 px-4 rounded-lg font-medium transition"
+              style={{ color: PRIMARY_COLOR }}
+              onMouseEnter={e => {
+                e.currentTarget.style.color = ACCENT_COLOR;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.color = PRIMARY_COLOR;
+              }}
             >
-              {item}
+              {labelFor(page)}
             </button>
           ))}
 
@@ -126,9 +154,10 @@ export default function Navigation({
             <button
               onClick={() => handleNavClick('routes')}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl 
-                        bg-yellow-400 text-gray-900 font-bold shadow-md active:scale-95 transition"
+                         text-white font-bold shadow-md active:scale-95 transition"
+              style={{ backgroundColor: ACCENT_COLOR }}
             >
-              BOOK A TAXI
+              BOOK Now
             </button>
           </div>
         </div>

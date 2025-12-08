@@ -2,6 +2,10 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Send, CheckCircle } from 'lucide-react';
 
+// Define the custom colors for readability
+const PRIMARY_COLOR = '#18234B'; // Dark Navy
+const ACCENT_COLOR = '#A61924'; // Deep Red
+
 export default function ContactPage() {
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
 
@@ -17,21 +21,32 @@ export default function ContactPage() {
   };
 
   return (
-    <section className="py-20 bg-gray-50 pt-24 md:pt-32 dark:bg-gray-950 transition-colors duration-300 min-h-screen">
+    // Background remains light gray/white (bg-gray-50), removed dark background class
+    <section className="py-20 bg-gray-50 pt-24 md:pt-32 transition-colors duration-300 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="text-center mb-16">
-          <p className="text-yellow-500 dark:text-yellow-400 font-bold tracking-wider uppercase text-sm mb-2">
+          <p 
+            className="font-bold tracking-wider uppercase text-sm mb-2"
+            style={{ color: ACCENT_COLOR }} // Accent Color for "Get In Touch"
+          >
             Get In Touch
           </p>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-4">
+          <h1 
+            className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4"
+            style={{ color: PRIMARY_COLOR }} // Primary Color for main heading
+          >
             Contact Us
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Have a question about a route? Need a custom quote? We are here to help you 24/7.
           </p>
-          <div className="w-24 h-1.5 bg-yellow-400 mx-auto mt-6 rounded-full"></div>
+          {/* Accent-colored divider */}
+          <div 
+            className="w-24 h-1.5 mx-auto mt-6 rounded-full"
+            style={{ backgroundColor: ACCENT_COLOR }}
+          ></div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-10">
@@ -46,6 +61,7 @@ export default function ContactPage() {
               subtext="Available 24/7 for bookings"
               action="Call Now"
               href="tel:+61470032460"
+              accentColor={ACCENT_COLOR}
             />
 
             {/* Email */}
@@ -56,6 +72,7 @@ export default function ContactPage() {
               subtext="Response within 24 hours"
               action="Send Email"
               href="mailto:spltransportation.australia@gmail.com"
+              accentColor={ACCENT_COLOR}
             />
 
             {/* Location */}
@@ -66,36 +83,44 @@ export default function ContactPage() {
               subtext="Cairns, Port Douglas & Palm Cove"
               action="View on Map"
               href="#"
+              accentColor={ACCENT_COLOR}
             />
           </div>
 
           {/* Contact Form (Right Column - Spans 2) */}
-          <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-3xl shadow-xl dark:shadow-yellow-900/5 p-8 md:p-12 border border-gray-100 dark:border-gray-800 relative overflow-hidden">
+          <div className="lg:col-span-2 bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-gray-100 relative overflow-hidden">
             
             <div className="relative z-10">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
+              <h2 
+                className="text-3xl font-bold text-gray-900 mb-8"
+                style={{ color: PRIMARY_COLOR }} // Primary Color for form title
+              >
                 Send us a Message
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
-                  <InputField label="Your Name" type="text" placeholder="John Doe" />
-                  <InputField label="Your Email" type="email" placeholder="john@example.com" />
+                  <InputField label="Your Name" type="text" placeholder="John Doe" accentColor={ACCENT_COLOR} />
+                  <InputField label="Your Email" type="email" placeholder="john@example.com" accentColor={ACCENT_COLOR} />
                 </div>
 
-                <InputField label="Phone Number" type="tel" placeholder="+61 ..." />
+                <InputField label="Phone Number" type="tel" placeholder="+61 ..." accentColor={ACCENT_COLOR} />
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">
+                  <label className="text-sm font-semibold text-gray-700 ml-1">
                     Message
                   </label>
                   <textarea
                     rows={5}
                     placeholder="Tell us about your trip details..."
-                    className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 
-                             rounded-xl text-gray-900 dark:text-white placeholder-gray-400 
-                             focus:ring-2 focus:ring-yellow-400 focus:border-transparent focus:outline-none 
+                    className="w-full px-5 py-4 bg-gray-50 border border-gray-200 
+                             rounded-xl text-gray-900 placeholder-gray-400 
+                             focus:ring-2 focus:border-transparent focus:outline-none 
                              transition-all resize-none"
+                    style={{ 
+                        '--tw-ring-color': ACCENT_COLOR, // Apply Accent Color to focus ring
+                        '--tw-ring-offset-width': '0px' 
+                    } as React.CSSProperties} 
                     required
                   ></textarea>
                 </div>
@@ -103,12 +128,17 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={formStatus !== 'idle'}
-                  className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300
+                  className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 text-white
                     ${formStatus === 'success' 
-                      ? 'bg-green-500 text-white scale-[1.02]' 
-                      : 'bg-yellow-400 text-gray-900 hover:bg-yellow-300 hover:-translate-y-1 shadow-lg hover:shadow-yellow-400/30'
+                      ? 'bg-green-600 scale-[1.02]' 
+                      : 'hover:-translate-y-1 shadow-lg'
                     }
                   `}
+                  // Set background color using inline style, handling success state explicitly
+                  style={{
+                    backgroundColor: formStatus === 'success' ? '#10B981' : ACCENT_COLOR, // Using bg-green-600 equivalent for success
+                    boxShadow: formStatus === 'success' ? 'none' : `0 4px 12px ${ACCENT_COLOR}30`
+                  }}
                 >
                   {formStatus === 'idle' && (
                     <><span>Send Message</span> <Send className="w-5 h-5" /></>
@@ -130,22 +160,29 @@ export default function ContactPage() {
 }
 
 // Helper Component for Contact Cards
-function ContactCard({ icon: Icon, title, content, subtext, action, href }: any) {
+// Props updated to accept accentColor
+function ContactCard({ icon: Icon, title, content, subtext, action, href, accentColor }: any) {
   return (
     <a 
       href={href}
-      className="flex items-start gap-5 bg-white dark:bg-gray-900 p-6 rounded-2xl 
-                 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md 
-                 transition-all duration-300 hover:-translate-y-1 group"
+      className="flex items-start gap-5 bg-white p-6 rounded-2xl 
+                  border border-gray-100 shadow-sm hover:shadow-md 
+                  transition-all duration-300 hover:-translate-y-1 group"
     >
-      <div className="bg-yellow-400 w-12 h-12 flex items-center justify-center rounded-xl shadow-sm shrink-0 group-hover:scale-110 transition-transform">
-        <Icon className="w-6 h-6 text-gray-900" strokeWidth={2} />
+      <div 
+        className="w-12 h-12 flex items-center justify-center rounded-xl shadow-sm shrink-0 group-hover:scale-110 transition-transform"
+        style={{ backgroundColor: accentColor }} // Accent Color for icon background
+      >
+        <Icon className="w-6 h-6 text-white" strokeWidth={2} /> {/* Changed icon color to white for contrast */}
       </div>
       <div>
-        <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-1">{title}</h3>
-        <p className="text-gray-600 dark:text-gray-300 font-medium mb-1">{content}</p>
-        <p className="text-sm text-gray-400 dark:text-gray-500 mb-3">{subtext}</p>
-        <span className="text-yellow-600 dark:text-yellow-500 text-sm font-bold group-hover:underline">
+        <h3 className="font-bold text-lg text-gray-900 mb-1">{title}</h3>
+        <p className="text-gray-600 font-medium mb-1">{content}</p>
+        <p className="text-sm text-gray-400 mb-3">{subtext}</p>
+        <span 
+          className="text-sm font-bold group-hover:underline"
+          style={{ color: accentColor }} // Accent Color for action link
+        >
           {action}
         </span>
       </div>
@@ -154,20 +191,25 @@ function ContactCard({ icon: Icon, title, content, subtext, action, href }: any)
 }
 
 // Helper Component for Inputs
-function InputField({ label, type, placeholder }: any) {
+// Props updated to accept accentColor
+function InputField({ label, type, placeholder, accentColor }: any) {
   return (
     <div className="space-y-2">
-      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 ml-1">
+      <label className="text-sm font-semibold text-gray-700 ml-1">
         {label}
       </label>
       <input
         type={type}
         placeholder={placeholder}
         required
-        className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 
-                 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 
-                 focus:ring-2 focus:ring-yellow-400 focus:border-transparent focus:outline-none 
-                 transition-all"
+        className="w-full px-5 py-4 bg-gray-50 border border-gray-200 
+                  rounded-xl text-gray-900 placeholder-gray-400 
+                  focus:ring-2 focus:border-transparent focus:outline-none 
+                  transition-all"
+        style={{ 
+            '--tw-ring-color': accentColor, // Apply Accent Color to focus ring
+            '--tw-ring-offset-width': '0px' 
+        } as React.CSSProperties} 
       />
     </div>
   );

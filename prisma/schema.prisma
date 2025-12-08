@@ -1,0 +1,25 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Route {
+  id        Int            @id @default(autoincrement())
+  from      String
+  to        String
+  distance  String
+  duration  String
+  pricing   RoutePricing[] // 1 -> many
+}
+
+model RoutePricing {
+  id          Int    @id @default(autoincrement())
+  passengers  String
+  price       Int
+
+  routeId     Int
+  route       Route  @relation(fields: [routeId], references: [id], onDelete: Cascade)
+}

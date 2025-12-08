@@ -1,53 +1,115 @@
-import fs from 'fs/promises';
-import path from 'path';
+// lib/routesStore.ts
+import { prisma } from './prisma';
 
-const FILE_PATH = path.join(process.cwd(), 'data', 'routes.json');
+// Define a type that matches your current JSON shape
+export type PricingItem = {
+  passengers: string;
+  price: number;
+};
 
-async function readFileSafe() {
+export type RouteDTO = {
+  id: number;
+  from: string;
+  to: string;
+  distance: string;
+  duration: string;
+  pricing: PricingItem[];
+};
+
+// Helper to map Prisma Route + RoutePricing[] to your DTO
+function mapRoute(route: any): RouteDTO {
+  return {
+    id: route.id,
+    from: route.from,
+    to: route.to,
+    distance: route.distance,
+    duration: route.duration,
+    pricing: route.pricing.map((p: any) => ({
+      passengers: p.passengers,
+      price: p.price,
+    })),
+  };
+}
+
+export async function getRoutes(): Promise<RouteDTO[]> {
+  const routes = await prisma.route.findMany({
+    include: { pricing: true },
+    orderBy: { id: 'asc' },
+  });
+
+  return routes.map(mapRoute);
+}
+
+export async function addRoute(route: Omit<RouteDTO, 'id'>): Promise<RouteDTO> {
+  const created = await prisma.route.create({
+    data: {
+      from: route.from,
+      to: route.to,
+      distance: route.distance,
+      duration: route.duration,
+      pricing: {
+        create: route.pricing.map((p) => ({
+          passengers: p.passengers,
+          price: p.price,
+        })),
+      },
+    },
+    include: { pricing: true },
+  });
+
+  return mapRoute(created);
+}
+
+export async function updateRoute(
+  id: number,
+  patch: Partial<RouteDTO>
+): Promise<RouteDTO | null> {
+  // If pricing is included, for simplicity we’ll delete old pricing and recreate
+  let pricingOp = undefined as any;
+
+  if (patch.pricing) {
+    pricingOp = {
+      deleteMany: {}, // delete all existing pricing rows for this route
+      create: patch.pricing.map((p) => ({
+        passengers: p.passengers,
+        price: p.price,
+      })),
+    };
+  }
+
   try {
-    const raw = await fs.readFile(FILE_PATH, 'utf8');
-    return JSON.parse(raw);
+    const updated = await prisma.route.update({
+      where: { id },
+      data: {
+        from: patch.from,
+        to: patch.to,
+        distance: patch.distance,
+        duration: patch.duration,
+        ...(pricingOp && { pricing: pricingOp }),
+      },
+      include: { pricing: true },
+    });
+
+    return mapRoute(updated);
   } catch (err: any) {
-    if (err.code === 'ENOENT') {
-      await fs.mkdir(path.dirname(FILE_PATH), { recursive: true });
-      await fs.writeFile(FILE_PATH, '[]', 'utf8');
-      return [];
+    if (err.code === 'P2025') {
+      // Record not found
+      return null;
     }
     throw err;
   }
 }
 
-export async function getRoutes() {
-  return (await readFileSafe()) as any[];
-}
-
-export async function saveRoutes(routes: any[]) {
-  await fs.writeFile(FILE_PATH, JSON.stringify(routes, null, 2), 'utf8');
-  return routes;
-}
-
-export async function addRoute(route: any) {
-  const routes = await readFileSafe();
-  const nextId = routes.length ? Math.max(...routes.map((r: any) => r.id)) + 1 : 1;
-  const newRoute = { ...route, id: nextId };
-  routes.push(newRoute);
-  await saveRoutes(routes);
-  return newRoute;
-}
-
-export async function updateRoute(id: number, patch: Partial<any>) {
-  const routes = await readFileSafe();
-  const idx = routes.findIndex((r: any) => r.id === id);
-  if (idx === -1) return null;
-  routes[idx] = { ...routes[idx], ...patch };
-  await saveRoutes(routes);
-  return routes[idx];
-}
-
-export async function deleteRoute(id: number) {
-  const routes = await readFileSafe();
-  const filtered = routes.filter((r: any) => r.id !== id);
-  if (filtered.length === routes.length) return false;
-  await saveRoutes(filtered);
-  return true;
+export async function deleteRoute(id: number): Promise<boolean> {
+  try {
+    await prisma.route.delete({
+      where: { id },
+    });
+    return true;
+  } catch (err: any) {
+    if (err.code === 'P2025') {
+      return false; // not found
+    }
+    throw err;
+  }
 }

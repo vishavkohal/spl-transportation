@@ -40,5 +40,26 @@
     ],
     "distance": "67 km",
     "duration": "55 min"
+  },
+  {
+    "from": "test",
+    "to": "test2",
+    "distance": "290",
+    "duration": "58",
+    "pricing": [
+      {
+        "passengers": "1-2",
+        "price": 112
+      },
+      {
+        "passengers": "3-4",
+        "price": 144
+      },
+      {
+        "passengers": "5+",
+        "price": 400
+      }
+    ],
+    "id": 3
   }
 ]
