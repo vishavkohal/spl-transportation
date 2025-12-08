@@ -112,11 +112,6 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
           />
         </h1>
 
-        <div
-          className="w-20 h-[3px] mx-auto mt-3 rounded-full"
-          style={{ backgroundColor: ACCENT_COLOR }}
-        />
-
         <motion.p
           className="mt-3 text-[12px] sm:text-sm md:text-base text-gray-600 max-w-xl md:max-w-2xl leading-relaxed"
           variants={subtextVariants}

@@ -34,6 +34,7 @@ const VEHICLE_CONSTRAINTS: { maxPax: number; maxBags: number }[] = [
   { maxPax: 7, maxBags: 4 }
 ];
 
+// slideshow images
 const heroImages = ['/copy2.png', '/copy.webp', '/copy3.png'];
 
 const DiscountSticker = () => {
@@ -165,6 +166,7 @@ export default function HomePage(props: {
   const [luggageInput, setLuggageInput] = useState<string>(String(formData.luggage));
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [firstHeroLoaded, setFirstHeroLoaded] = useState(false); // 👈 NEW: track first image load
 
   const minDateForInput = getMinDateForInput();
 
