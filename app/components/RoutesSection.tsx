@@ -174,41 +174,41 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                 <div className="mb-1 flex justify-between items-center">
                   <span
                     className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-[2.5px] 
-                     text-[15px] font-semibold uppercase tracking-wide text-red-700"
+                      text-[10px] font-semibold uppercase tracking-wide text-red-700"
                   >
                     {route.label}
                   </span>
                 </div>
               )}
 
-              {/* Route Names and Icons */}
-              <div className="mb-2.5 border-b border-gray-100 pb-2.5">
-                <h3
-                  className="text-base sm:text-lg font-bold tracking-tight mb-1"
-                  style={{ color: PRIMARY_COLOR }}
+            {/* Route Names and Icons - Centered and Enlarged */}
+            <div className="mb-2.5 border-b border-gray-100 pb-2.5 w-full">
+              <h1
+                className="text-2xl sm:text-5xl md:text-3xl font-bold tracking-tight text-center"
+                style={{ color: PRIMARY_COLOR }}
+              >
+                {route.from}
+                <span
+                  className="mx-1.5 text-3xl sm:text-3xl md:text-3xl font-extrabold"
+                  style={{ color: ACCENT_COLOR }}
                 >
-                  {route.from}
-                  <span
-                    className="mx-1.5 text-base sm:text-xl font-extrabold"
-                    style={{ color: ACCENT_COLOR }}
-                  >
-                    →
-                  </span>
-                  {route.to}
-                </h3>
+                  &nbsp;→&nbsp;
+                </span>
+                {route.to}
+              </h1>
 
-                {/* Distance and Duration */}
-                <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
-                  <span className="flex items-center">
-                    <BusFront className="mr-1 h-3.5 w-3.5" />
-                    {route.distance}
-                  </span>
-                  <span className="flex items-center">
-                    <Clock className="mr-1 h-3.5 w-3.5" />
-                    {route.duration}
-                  </span>
-                </div>
+              {/* Distance and Duration - Centered */}
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500 justify-center">
+                <span className="flex items-center">
+                  <BusFront className="mr-1 h-3.5 w-3.5" />
+                  {route.distance}
+                </span>
+                <span className="flex items-center">
+                  <Clock className="mr-1 h-3.5 w-3.5" />
+                  {route.duration}
+                </span>
               </div>
+            </div>
 
               {/* Pricing Rows – compact, horizontal layout */}
               <div className="flex flex-col gap-1.5">
@@ -238,10 +238,10 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                         </div>
 
                         <div className="flex flex-col leading-tight">
-                          <p className="font-semibold text-gray-900 text-[11px] sm:text-[12px]">
+                          <p className="font-semibold text-gray-900 text-[18px] sm:text-[12px]">
                             {p.vehicleType}
                           </p>
-                          <p className="mt-[2px] flex items-center text-[10px] text-gray-500">
+                          <p className="mt-[2px] flex items-center text-[15px] text-gray-500">
                             <Users className="mr-1 h-3 w-3" />
                             {p.passengers} Passengers
                           </p>
@@ -264,8 +264,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
 
               {/* Note */}
               <p className="mt-3 border-t border-gray-100 pt-2 text-[10px] leading-snug text-gray-500 italic">
-                <span className="font-semibold text-gray-600">Note:</span> Child
-                seat available for additional $20.
+                <span className="font-semibold text-gray-600">Note:</span>{route.description ?? ' Fixed pricing per vehicle, no hidden fees.'}
               </p>
 
               {/* Book Button – compact */}
