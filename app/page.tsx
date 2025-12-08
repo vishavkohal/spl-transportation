@@ -46,6 +46,7 @@ export default function TaxiBookingApp() {
   // Routes data
   const [routes, setRoutes] = useState<Route[]>([]);
   const [routesLoading, setRoutesLoading] = useState(true);
+  const [routesError, setRoutesError] = useState<string | null>(null);
 
   // -------------------------------
   // LOAD ROUTES FROM API
@@ -58,9 +59,17 @@ export default function TaxiBookingApp() {
         const res = await fetch('/api/routes');
         if (!res.ok) throw new Error('Failed to fetch routes');
         const data: Route[] = await res.json();
-        if (mounted) setRoutes(data);
+        if (mounted) {
+          setRoutes(data);
+          setRoutesError(null);
+        }
       } catch (e) {
         console.error('Error loading routes', e);
+        if (mounted) {
+          setRoutesError(
+            e instanceof Error ? e.message : 'Failed to load routes'
+          );
+        }
       } finally {
         if (mounted) setRoutesLoading(false);
       }
@@ -166,28 +175,25 @@ export default function TaxiBookingApp() {
   );
 
   // -------------------------------
-  // HANDLE ROUTE SELECTION FROM ROUTES PAGE
+  // HANDLE ROUTE SELECTION FROM ROUTES PAGE / SECTION
   // -------------------------------
-  const handleRouteSelect = useCallback(
-    (route: Route) => {
-      // Fill pickup & dropoff
-      setFormData(prev => ({
-        ...prev,
-        pickupLocation: route.from,
-        dropoffLocation: route.to
-      }));
+  const handleRouteSelect = useCallback((route: Route) => {
+    // Fill pickup & dropoff
+    setFormData(prev => ({
+      ...prev,
+      pickupLocation: route.from,
+      dropoffLocation: route.to
+    }));
 
-      // Take user to step 1 of home page with filled-in locations
-      setBookingStep(1);
-      setCurrentPage('home');
+    // Take user to step 1 of home page with filled-in locations
+    setBookingStep(1);
+    setCurrentPage('home');
 
-      // Scroll user to top
-      if (typeof window !== 'undefined') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    },
-    []
-  );
+    // Scroll user to top
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, []);
 
   // -------------------------------
   // RENDER PAGES
@@ -216,7 +222,18 @@ export default function TaxiBookingApp() {
           />
           <PlaceCarousel />
           <HowToBookModern />
-          <RoutesSection />
+
+          {/* ✅ Wait until routes have finished loading before showing the section */}
+          {!routesLoading && (
+            <RoutesSection
+              routes={routes}
+              loading={routesLoading}
+              error={routesError}
+              setCurrentPage={(page: string) => setCurrentPage(page as PageKey)}
+              onSelectRoute={handleRouteSelect}
+            />
+          )}
+
           <FeatureSection />
           <CustomerReviews />
         </main>
@@ -226,7 +243,7 @@ export default function TaxiBookingApp() {
         <RoutesPage
           setCurrentPage={(page: string) => setCurrentPage(page as PageKey)}
           onSelectRoute={handleRouteSelect}
-          // if your RoutesPage expects routes/loading, you can also pass:
+          // You can also pass routes/loading if RoutesPage supports it:
           // routes={routes}
           // loading={routesLoading}
         />

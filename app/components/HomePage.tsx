@@ -417,7 +417,7 @@ export default function HomePage(props: {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-2 md:pt-14">
+    <div className="min-h-screen bg-white-50 pt-2 md:pt-14">
       {/* Optional: <DiscountSticker /> */}
 
       {/* Hero Section */}
