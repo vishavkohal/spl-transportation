@@ -147,7 +147,6 @@ export default function HomePage(props: {
   dropoffOptions: string[];
   selectedRoute: Route | null;
   calculatedPrice: number;
-  onConfirmBooking: () => void;
 }) {
   const {
     formData,
@@ -157,8 +156,7 @@ export default function HomePage(props: {
     AVAILABLE_LOCATIONS,
     dropoffOptions,
     selectedRoute,
-    calculatedPrice,
-    onConfirmBooking
+    calculatedPrice
   } = props;
 
   const formTopRef = useRef<HTMLDivElement>(null);
@@ -331,6 +329,15 @@ export default function HomePage(props: {
     return true;
   };
 
+  // helper to mark contact fields touched & return validity
+  const validateStep2 = () => {
+    const fields = ['fullName', 'email', 'contactNumber'];
+    const newTouched = { ...touched };
+    fields.forEach(f => (newTouched[f] = true));
+    setTouched(newTouched);
+    return isStep2FormValid();
+  };
+
   // -------------------------------
   // HANDLERS
   // -------------------------------
@@ -409,16 +416,6 @@ export default function HomePage(props: {
     }
   };
 
-  const submitStep2 = () => {
-    const fields = ['fullName', 'email', 'contactNumber'];
-    const newTouched = { ...touched };
-    fields.forEach(f => (newTouched[f] = true));
-    setTouched(newTouched);
-
-    if (!isStep2FormValid()) return;
-    onConfirmBooking();
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 pt-2 md:pt-14">
       {/* Optional: <DiscountSticker /> */}
@@ -430,6 +427,7 @@ export default function HomePage(props: {
             <div
               key={src}
               className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+              // Ensure the first image is visible initially
               style={{ opacity: index === currentImageIndex ? 1 : 0 }}
             >
               <div
@@ -536,7 +534,7 @@ export default function HomePage(props: {
                 <p className="text-sm text-gray-500 mt-1">
                   {bookingStep === 1
                     ? 'Enter your trip information below'
-                    : 'Review your trip and add contact info'}
+                    : 'Review your trip, add contact info & pay securely via Stripe'}
                 </p>
               </div>
 
@@ -607,7 +605,7 @@ export default function HomePage(props: {
                     markTouched={markTouched}
                     setBookingStep={setBookingStep}
                     isStep2FormValid={isStep2FormValid}
-                    submitStep2={submitStep2}
+                    validateStep2={validateStep2}
                     handleInputChange={handleInputChange}
                   />
                 </motion.div>
@@ -1004,7 +1002,7 @@ function Step1Content(props: {
 }
 
 /* -----------------------------
-   STEP 2 CONTENT (extracted)
+   STEP 2 CONTENT (Stripe Checkout)
 ------------------------------*/
 function Step2Content(props: {
   formData: BookingFormData;
@@ -1015,7 +1013,7 @@ function Step2Content(props: {
   markTouched: (field: string) => void;
   setBookingStep: (n: 1 | 2) => void;
   isStep2FormValid: () => boolean;
-  submitStep2: () => void;
+  validateStep2: () => boolean;
   handleInputChange: (field: keyof BookingFormData, value: string | number | boolean) => void;
 }) {
   const {
@@ -1027,9 +1025,50 @@ function Step2Content(props: {
     markTouched,
     setBookingStep,
     isStep2FormValid,
-    submitStep2,
+    validateStep2,
     handleInputChange
   } = props;
+
+  const [loadingPayment, setLoadingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  const handlePayAndRedirect = async () => {
+    setPaymentError(null);
+
+    const valid = validateStep2();
+    if (!valid) {
+      setPaymentError('Please fill in your contact details correctly.');
+      return;
+    }
+
+    try {
+      setLoadingPayment(true);
+
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: calculatedPrice,
+          booking: formData
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        setPaymentError(data.error || 'Could not start payment. Please try again.');
+        setLoadingPayment(false);
+        return;
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    } catch (err) {
+      console.error(err);
+      setPaymentError('Payment failed. Please try again.');
+      setLoadingPayment(false);
+    }
+  };
 
   return (
     <div className="flex flex-col md:flex-row gap-8">
@@ -1113,7 +1152,7 @@ function Step2Content(props: {
         </div>
       </div>
 
-      {/* Contact */}
+      {/* Contact + Payment */}
       <div className="w-full md:w-1/2 flex flex-col justify-between order-2">
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-gray-900" style={{ color: PRIMARY_COLOR }}>
@@ -1201,22 +1240,35 @@ function Step2Content(props: {
           </div>
         </div>
 
-        {/* Buttons */}
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={() => setBookingStep(1)}
-            className="px-6 py-3 rounded-xl font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <button
-            onClick={submitStep2}
-            type="button"
-            disabled={!isStep2FormValid()}
-            className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
-          >
-            Confirm Booking <CheckCircle className="w-4 h-4" />
-          </button>
+        {/* Payment Section */}
+        <div className="mt-6 space-y-3">
+          <h4 className="text-sm font-semibold text-gray-800">
+            Pay securely via Stripe Checkout
+          </h4>
+
+          {paymentError && (
+            <p className="text-xs text-red-500 mt-1">{paymentError}</p>
+          )}
+
+          {/* Buttons */}
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={() => setBookingStep(1)}
+              className="px-6 py-3 rounded-xl font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
+              type="button"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={handlePayAndRedirect}
+              type="button"
+              disabled={!isStep2FormValid() || loadingPayment}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
+            >
+              {loadingPayment ? 'Redirecting...' : 'Pay & Confirm Booking'}
+              <CheckCircle className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

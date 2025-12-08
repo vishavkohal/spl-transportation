@@ -14,6 +14,7 @@ import CustomerReviews from './components/CustomerReviews';
 import RoutesSection from './components/RoutesSection';
 import PlaceCarousel from './components/PlaceCarousal';
 import HowToBookModern from './components/HowToBook';
+
 // Optional: export this if you want Navigation/Footer/RoutesPage to reuse it
 export type PageKey = 'home' | 'routes' | 'about' | 'terms' | 'contact';
 
@@ -189,25 +190,6 @@ export default function TaxiBookingApp() {
   );
 
   // -------------------------------
-  // BOOKING SUBMIT (called from HomePage)
-  // -------------------------------
-  const handleBookingSubmit = useCallback(() => {
-    const bookingData = {
-      ...formData,
-      totalPrice: calculatedPrice,
-      route: currentRoute
-    };
-
-    console.log('Booking Details:', bookingData);
-    alert(`Booking confirmed! Confirmation email sent to ${formData.email}`);
-
-    // Reset
-    setFormData(initialFormData);
-    setBookingStep(1);
-    setCurrentPage('home');
-  }, [formData, calculatedPrice, currentRoute]);
-
-  // -------------------------------
   // RENDER PAGES
   // -------------------------------
   return (
@@ -221,24 +203,22 @@ export default function TaxiBookingApp() {
 
       {currentPage === 'home' && (
         <main>
-        <HomePage
-          formData={formData}
-          handleInputChange={handleInputChange}
-          bookingStep={bookingStep}             
-          setBookingStep={setBookingStep}       
-          setCurrentPage={(page: string) => setCurrentPage(page as PageKey)}
-          AVAILABLE_LOCATIONS={availableLocations}
-          dropoffOptions={dropoffOptions}
-          selectedRoute={currentRoute}
-          calculatedPrice={calculatedPrice}
-          onConfirmBooking={handleBookingSubmit}
-        />
-        <PlaceCarousel/>
-        <HowToBookModern/>
-         <RoutesSection/>
-        <FeatureSection />
-        <CustomerReviews />
-       
+          <HomePage
+            formData={formData}
+            handleInputChange={handleInputChange}
+            bookingStep={bookingStep}
+            setBookingStep={setBookingStep}
+            setCurrentPage={(page: string) => setCurrentPage(page as PageKey)}
+            AVAILABLE_LOCATIONS={availableLocations}
+            dropoffOptions={dropoffOptions}
+            selectedRoute={currentRoute}
+            calculatedPrice={calculatedPrice}
+          />
+          <PlaceCarousel />
+          <HowToBookModern />
+          <RoutesSection />
+          <FeatureSection />
+          <CustomerReviews />
         </main>
       )}
 
@@ -256,7 +236,7 @@ export default function TaxiBookingApp() {
       {currentPage === 'terms' && <TermsPage />}
       {currentPage === 'contact' && <ContactPage />}
 
-      <Footer setCurrentPage={(page: string) => setCurrentPage(page as PageKey)}/>
+      <Footer setCurrentPage={(page: string) => setCurrentPage(page as PageKey)} />
     </div>
   );
 }

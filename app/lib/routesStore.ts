@@ -1,32 +1,39 @@
 // lib/routesStore.ts
-import { prisma } from './prisma';
+import { prisma } from '@/lib/prisma';
 
-// Define a type that matches your current JSON shape
+// 1. UPDATED: PricingItem type with 'vehicleType'
 export type PricingItem = {
   passengers: string;
   price: number;
+  vehicleType: string; // New field
 };
 
+// 2. UPDATED: RouteDTO type with 'label' and 'description'
 export type RouteDTO = {
   id: number;
   from: string;
   to: string;
+  label: string | null; // New field, matches String? in Prisma
+  description: string | null; // New field, matches String? in Prisma
   distance: string;
   duration: string;
   pricing: PricingItem[];
 };
 
-// Helper to map Prisma Route + RoutePricing[] to your DTO
+// 3. UPDATED: mapRoute function to include new fields
 function mapRoute(route: any): RouteDTO {
   return {
     id: route.id,
     from: route.from,
     to: route.to,
+    label: route.label, // Include new field
+    description: route.description, // Include new field
     distance: route.distance,
     duration: route.duration,
     pricing: route.pricing.map((p: any) => ({
       passengers: p.passengers,
       price: p.price,
+      vehicleType: p.vehicleType, // Include new field
     })),
   };
 }
@@ -40,17 +47,21 @@ export async function getRoutes(): Promise<RouteDTO[]> {
   return routes.map(mapRoute);
 }
 
+// 4. UPDATED: addRoute function to include new fields
 export async function addRoute(route: Omit<RouteDTO, 'id'>): Promise<RouteDTO> {
   const created = await prisma.route.create({
     data: {
       from: route.from,
       to: route.to,
+      label: route.label, // Include new field
+      description: route.description, // Include new field
       distance: route.distance,
       duration: route.duration,
       pricing: {
         create: route.pricing.map((p) => ({
           passengers: p.passengers,
           price: p.price,
+          vehicleType: p.vehicleType, // Include new field
         })),
       },
     },
@@ -60,6 +71,7 @@ export async function addRoute(route: Omit<RouteDTO, 'id'>): Promise<RouteDTO> {
   return mapRoute(created);
 }
 
+// 5. UPDATED: updateRoute function to include new fields
 export async function updateRoute(
   id: number,
   patch: Partial<RouteDTO>
@@ -73,6 +85,7 @@ export async function updateRoute(
       create: patch.pricing.map((p) => ({
         passengers: p.passengers,
         price: p.price,
+        vehicleType: p.vehicleType, // Include new field
       })),
     };
   }
@@ -83,6 +96,8 @@ export async function updateRoute(
       data: {
         from: patch.from,
         to: patch.to,
+        label: patch.label, // Include new field
+        description: patch.description, // Include new field
         distance: patch.distance,
         duration: patch.duration,
         ...(pricingOp && { pricing: pricingOp }),

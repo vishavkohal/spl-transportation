@@ -1,12 +1,19 @@
+// type.ts
+
+// 1. UPDATED: PricingTier now includes 'vehicleType'
 export interface PricingTier {
   passengers: string;
   price: number;
+  vehicleType: string; // <-- New required field
 }
 
+// 2. UPDATED: Route now includes 'label' and 'description'
 export interface Route {
   id: number;
   from: string;
   to: string;
+  label: string | null; // <-- New optional field
+  description: string | null; // <-- New optional field
   pricing: PricingTier[];
   distance: string;
   duration: string;

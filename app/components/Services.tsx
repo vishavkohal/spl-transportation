@@ -4,8 +4,11 @@ import { Car, MapPin, Plane, Users, Briefcase, Clock, ArrowRight } from 'lucide-
 import Image from 'next/image';
 
 // Define the custom colors for readability
-const PRIMARY_COLOR = '#18234B'; // Dark Navy
-const ACCENT_COLOR = '#A61924'; // Deep Red
+const PRIMARY_COLOR = '#18234B'; // Dark Navy (Page Text, Card BG)
+const ACCENT_COLOR = '#A61924'; // Deep Red (Accent)
+const CARD_BG_DARK = PRIMARY_COLOR;
+const CARD_TEXT_LIGHT = '#FFFFFF';
+const CARD_MUTED_TEXT = '#A0AEC0'; // Light Gray
 
 const services = [
   {
@@ -39,7 +42,7 @@ const services = [
   {
     title: 'Regular Transport',
     description:
-      'Daily taxi services for errands, appointments, and regular commutes.',
+    'Daily taxi services for errands, appointments, and regular commutes.',
     img: '/services5.png',
     icon: Users,
   },
@@ -54,24 +57,24 @@ const services = [
 
 export function Services() {
   return (
-    // Background remains white (bg-white), removed dark background class
+    // Main section background remains white
     <section id="service" className="py-20 bg-white transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
+        
+        {/* Section Header (Uses original light theme colors) */}
         <div className="text-center mb-16">
           <p 
             className="font-bold tracking-wider uppercase text-sm mb-2"
-            style={{ color: ACCENT_COLOR }} // Accent Color for "Our Services"
+            style={{ color: ACCENT_COLOR }}
           >
             Our Services
           </p>
           <h2 
-            className="text-3xl md:text-4xl font-bold text-gray-900"
-            style={{ color: PRIMARY_COLOR }} // Primary Color for main heading
+            className="text-3xl md:text-4xl font-bold"
+            style={{ color: PRIMARY_COLOR }}
           >
             Best Services For You
           </h2>
-          {/* Accent-colored divider */}
           <div 
             className="w-24 h-1.5 mx-auto mt-4 rounded-full"
             style={{ backgroundColor: ACCENT_COLOR }}
@@ -83,18 +86,18 @@ export function Services() {
           {services.map((service, index) => (
             <article
               key={index}
-              // Removed dark theme classes, subtle light background
-              className={`group bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 ease-in-out flex flex-col`}
-              // Added subtle shadow hover using Accent Color
-              style={{ '--shadow-color': `${ACCENT_COLOR}30` } as React.CSSProperties}
+              // CARD BACKGROUND: Changed from bg-gray-50 to Dark Navy (CARD_BG_DARK)
+              className={`group rounded-2xl p-6 border border-gray-100 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 ease-in-out flex flex-col`}
+              style={{ backgroundColor: CARD_BG_DARK, '--shadow-color': `${ACCENT_COLOR}50` } as React.CSSProperties}
               onMouseEnter={(e) => {
+                // Stronger shadow on hover
                 e.currentTarget.style.boxShadow = `0 10px 15px -3px var(--shadow-color), 0 4px 6px -4px var(--shadow-color)`;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              {/* Image Container */}
+              {/* Image Container (No change) */}
               <div className="relative mb-8">
                 <div className="overflow-hidden rounded-xl shadow-md aspect-video relative">
                   <Image
@@ -109,7 +112,7 @@ export function Services() {
                 {/* Floating Icon */}
                 <div 
                   className="absolute -bottom-6 right-6 text-white p-4 rounded-full shadow-lg transition-colors z-10"
-                  style={{ backgroundColor: ACCENT_COLOR }} // Accent Color for icon background
+                  style={{ backgroundColor: ACCENT_COLOR }} // Accent Color
                 >
                   <service.icon className="w-6 h-6 md:w-8 md:h-8" strokeWidth={2} />
                 </div>
@@ -118,12 +121,17 @@ export function Services() {
               {/* Content */}
               <div className="mt-2 flex-grow">
                 <h3 
-                  className="text-2xl font-bold text-gray-900 mb-3"
-                  style={{ color: PRIMARY_COLOR }} // Primary Color for service title
+                  className="text-2xl font-bold mb-3"
+                  style={{ color: CARD_TEXT_LIGHT }} // Service title inverted to White
                 >
                   {service.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed mb-6">{service.description}</p>
+                <p 
+                  className="leading-relaxed mb-6" 
+                  style={{ color: CARD_MUTED_TEXT }} // Description inverted to Light Gray
+                >
+                  {service.description}
+                </p>
               </div>
 
               {/* Button */}
@@ -131,7 +139,8 @@ export function Services() {
                 className="w-full sm:w-auto self-start inline-flex items-center justify-center gap-2 bg-transparent border-2 border-gray-200 text-gray-900 px-6 py-3 rounded-full font-semibold transition-all duration-300 group/btn"
                 // Accent Color for hover background and border
                 style={{ 
-                  '--accent-color': ACCENT_COLOR 
+                  borderColor: CARD_MUTED_TEXT, // Muted border for better contrast
+                  color: CARD_TEXT_LIGHT // Default text color on dark card
                 } as React.CSSProperties}
                 onMouseEnter={(e) => {
                   const target = e.currentTarget as HTMLButtonElement;
@@ -143,13 +152,13 @@ export function Services() {
                 onMouseLeave={(e) => {
                   const target = e.currentTarget as HTMLButtonElement;
                   target.style.backgroundColor = 'transparent';
-                  target.style.borderColor = '#E5E7EB'; // gray-200 equivalent
-                  target.style.color = PRIMARY_COLOR; // Primary color on hover out
-                  target.querySelectorAll('svg').forEach(svg => svg.style.color = PRIMARY_COLOR);
+                  target.style.borderColor = CARD_MUTED_TEXT; // Revert border
+                  target.style.color = CARD_TEXT_LIGHT; // Revert text
+                  target.querySelectorAll('svg').forEach(svg => svg.style.color = CARD_TEXT_LIGHT);
                 }}
               >
                 Read More
-                <ArrowRight className="w-4 h-4 transform group-hover/btn:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 transform group-hover/btn:translate-x-1 transition-transform" style={{ color: CARD_TEXT_LIGHT }} />
               </button>
             </article>
           ))}
