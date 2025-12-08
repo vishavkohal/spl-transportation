@@ -156,9 +156,9 @@ export default function TaxiBookingApp() {
     const pax = formData.passengers;
 
     // Assuming the pricing array is structured: [<=2 pax, <=4 pax, >4 pax]
-    if (pax <= 2) {
+    if (pax <= 4) {
       basePrice = currentRoute.pricing?.[0]?.price || 0;
-    } else if (pax <= 4) {
+    } else if (pax <= 6) {
       basePrice = currentRoute.pricing?.[1]?.price || 0;
     } else {
       basePrice = currentRoute.pricing?.[2]?.price || 0;
