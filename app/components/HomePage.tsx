@@ -37,7 +37,7 @@ const VEHICLE_CONSTRAINTS: { maxPax: number; maxBags: number }[] = [
 ];
 
 // slideshow images
-const heroImages = ['/copy.jpg', '/copy2.jpg', '/copy3.png'];
+const heroImages = [ '/home.jpg','/copy.jpg', '/copy3.png'];
 const PHONE_COUNTRIES = PHONE_COUNTRIES_LIST
 // Helper: max bags for pax
 function getMaxBagsForCurrentPax(pax: number): number {
