@@ -36,7 +36,7 @@ const VEHICLE_CONSTRAINTS: { maxPax: number; maxBags: number }[] = [
 ];
 
 // slideshow images
-const heroImages = ['/copy.jpg', '/copy2.png', '/copy3.png'];
+const heroImages = ['/copy.jpg', '/copy2.jpg', '/copy3.png'];
 
 const DiscountSticker = () => {
   return (
