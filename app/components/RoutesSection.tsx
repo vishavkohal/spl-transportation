@@ -87,7 +87,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
     const skeletonItems = Array.from({ length: 5 });
 
     return (
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 justify-items-center mt-4">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 justify-items-center mt-4">
         {skeletonItems.map((_, idx) => (
           <div
             key={idx}
@@ -174,9 +174,9 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
         </motion.p>
 
         <motion.div
-          className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 justify-items-center"
-          variants={cardsContainerVariants}
-        >
+  className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 justify-items-center"
+  variants={cardsContainerVariants}
+>
           {routes.map(route => (
             <motion.div
               key={route.id}
@@ -206,7 +206,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
               {/* Route Names and Icons - Centered and Enlarged */}
               <div className="mb-2.5 border-b border-gray-100 pb-2.5 w-full">
                 <h2
-                  className="text-2xl sm:text-2xl md:text-xl font-bold tracking-tight text-center"
+                  className="text-xl sm:text-xl md:text-xl lg:text-l font-bold tracking-tight text-center"
                   style={{ color: PRIMARY_COLOR }}
                 >
                   {route.from}
@@ -260,10 +260,10 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                         </div>
 
                         <div className="flex flex-col leading-tight">
-                          <p className="font-semibold text-gray-900 text-[18px] sm:text-[12px]">
+                          <p className="font-semibold text-gray-900 text-[15px] sm:text-[9px]">
                             {p.vehicleType}
                           </p>
-                          <p className="mt-[2px] flex items-center text-[15px] text-gray-500">
+                          <p className="mt-[2px] flex items-center text-[10px] text-gray-500">
                             <Users className="mr-1 h-3 w-3" />
                             {p.passengers} Passengers
                           </p>
@@ -272,7 +272,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
 
                       {/* Price */}
                       <p
-                        className="ml-auto whitespace-nowrap text-xs sm:text-sm font-bold"
+                        className="ml-auto whitespace-nowrap text-xl sm:text-sm font-bold"
                         style={{
                           color: isFeatured ? ACCENT_COLOR : PRIMARY_COLOR
                         }}
@@ -324,14 +324,14 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
         variants={headingVariants}
       >
         <p
-          className="text-[11px] sm:text-[12px] md:text-sm font-semibold tracking-[0.24em] uppercase mb-1.5"
+          className="text-[11px] sm:text-[15px] md:text-xm font-semibold tracking-[0.24em] uppercase mb-1.5"
           style={{ color: ACCENT_COLOR }}
         >
           Private Airport & City Transfers
         </p>
 
         <h1
-          className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight"
+          className="text-3xl sm:text-3xl md:text-4xl font-extrabold leading-tight"
           style={{ color: PRIMARY_COLOR }}
         >
           Private Transfer Routes&nbsp;

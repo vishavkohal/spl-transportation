@@ -19,21 +19,21 @@ type Review = {
 const CUSTOMER_REVIEWS: Review[] = [
   {
     name: 'Sarah Johnson',
-    date: 'Oct 12, 2023',
+    date: 'Oct 12, 2025',
     rating: 5,
     comment:
       'The driver was incredibly professional and arrived exactly on time. The car was spotless. Highly recommended!',
   },
   {
     name: 'Michael Chen',
-    date: 'Sep 28, 2023',
+    date: 'Sep 28, 2025',
     rating: 5,
     comment:
       'Best airport transfer I have ever used. The flight tracking feature is a lifesaver. Will definitely book again.',
   },
   {
     name: 'Emily Davis',
-    date: 'Nov 05, 2023',
+    date: 'Nov 05, 2025',
     rating: 4,
     comment:
       'Great service for city commuting. Very comfortable ride, though traffic was a bit heavy. Driver knew all the shortcuts!',
