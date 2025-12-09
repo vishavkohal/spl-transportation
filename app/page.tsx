@@ -137,7 +137,7 @@ export default function TaxiBookingApp() {
         return {
           ...route,
           from: pickupLocation, // Overwrite to match user's pickup
-          to: dropoffLocation,   // Overwrite to match user's dropoff
+          to: dropoffLocation   // Overwrite to match user's dropoff
         } as Route;
       }
     }
@@ -166,7 +166,7 @@ export default function TaxiBookingApp() {
     
     // Fallback if the pricing array structure is different or missing
     if (basePrice === 0 && currentRoute.pricing) { 
-        basePrice = currentRoute.pricing[ currentRoute.pricing.length - 1 ].price || 0; 
+      basePrice = currentRoute.pricing[currentRoute.pricing.length - 1].price || 0; 
     }
 
     const childSeatCost = formData.childSeat ? 20 : 0;
@@ -276,16 +276,14 @@ export default function TaxiBookingApp() {
           <PlaceCarousel />
           <HowToBookModern />
 
-          {/* ✅ Wait until routes have finished loading before showing the section */}
-          {!routesLoading && (
-            <RoutesSection
-              routes={routes}
-              loading={routesLoading}
-              error={routesError}
-              setCurrentPage={(page: string) => setCurrentPage(page as PageKey)}
-              onSelectRoute={handleRouteSelect}
-            />
-          )}
+          {/* ✅ Always render RoutesSection; it will show skeleton when routesLoading is true */}
+          <RoutesSection
+            routes={routes}
+            loading={routesLoading}
+            error={routesError}
+            setCurrentPage={(page: string) => setCurrentPage(page as PageKey)}
+            onSelectRoute={handleRouteSelect}
+          />
 
           <FeatureSection />
           <CustomerReviews />

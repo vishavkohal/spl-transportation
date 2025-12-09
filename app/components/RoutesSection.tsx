@@ -1,4 +1,5 @@
 'use client';
+
 import React from 'react';
 import { BusFront, Clock, Users } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
@@ -81,76 +82,97 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
     }
   };
 
-  return (
-    <motion.div
-      className="max-w-7xl mx-auto px-4 md:px-6 pb-10 pt-16 md:pt-18 transition-colors bg-gray-50"
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.15 }}
-    >
-      {/* Centered Heading with bigger text sizes */}
-      <motion.div
-        className="flex flex-col justify-center items-center mb-5 md:mb-8 text-center"
-        variants={headingVariants}
-      >
-        <p
-          className="text-[11px] sm:text-[12px] md:text-sm font-semibold tracking-[0.24em] uppercase mb-1.5"
-          style={{ color: ACCENT_COLOR }}
-        >
-          Private Airport & City Transfers
-        </p>
+  // 🔹 Shimmer skeleton cards while data is loading
+  const renderSkeletonCards = () => {
+    const skeletonItems = Array.from({ length: 5 });
 
-        <h1
-          className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight"
-          style={{ color: PRIMARY_COLOR }}
-        >
-          Private Transfer Routes&nbsp;
-          <span className="block sm:inline">and Fixed Pricing</span>
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 justify-items-center mt-4">
+        {skeletonItems.map((_, idx) => (
           <div
-            className="w-24 h-1.5 mx-auto mt-4 rounded-full"
-            style={{ backgroundColor: ACCENT_COLOR }}
-          />
-        </h1>
+            key={idx}
+            className="
+              w-full max-w-[350px] mx-auto
+              rounded-xl border border-gray-200 bg-white 
+              p-3 sm:p-4 shadow-sm
+            "
+          >
+            {/* Top chip */}
+            <div className="mb-2 h-3 w-20 skeleton" />
 
-        <motion.p
-          className="mt-3 text-[12px] sm:text-sm md:text-base text-gray-600 max-w-xl md:max-w-2xl leading-relaxed"
-          variants={subtextVariants}
-        >
-          Browse our most popular routes between airports, hotels, and key
-          destinations. All prices are per vehicle, not per person, with no
-          hidden extras.
-        </motion.p>
-      </motion.div>
+            {/* Route title */}
+            <div className="mb-2.5 border-b border-gray-100 pb-2.5">
+              <div className="h-4 w-3/4 mx-auto rounded skeleton-block mb-2" />
+              <div className="flex justify-center gap-3">
+                <div className="h-3 w-16 rounded skeleton-block" />
+                <div className="h-3 w-16 rounded skeleton-block" />
+              </div>
+            </div>
 
-      {/* Loading and Error messages */}
-      {loading && (
-        <p className="text-gray-600 text-center text-xs md:text-sm">
-          Loading routes data...
-        </p>
-      )}
-      {error && (
-        <p className="text-red-500 font-medium text-center text-xs md:text-sm">
+            {/* Pricing rows (2 skeleton rows) */}
+            <div className="flex flex-col gap-1.5">
+              {[0, 1].map(i => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2.5 rounded-lg border border-gray-200 px-2.5 py-2 bg-slate-50"
+                >
+                  <div className="flex items-center gap-2.5 flex-1">
+                    <div className="h-7 w-8 rounded skeleton-block" />
+                    <div className="flex flex-col gap-1 flex-1">
+                      <div className="h-3 w-20 rounded skeleton-block" />
+                      <div className="h-3 w-24 rounded skeleton-block" />
+                    </div>
+                  </div>
+                  <div className="h-3 w-10 rounded skeleton-block" />
+                </div>
+              ))}
+            </div>
+
+            {/* Note */}
+            <div className="mt-3 border-t border-gray-100 pt-2">
+              <div className="h-3 w-5/6 rounded skeleton-block" />
+            </div>
+
+            {/* Button */}
+            <div className="mt-3 h-8 w-full rounded-lg skeleton-block" />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // 🔹 Decide what to render *under the heading*
+  const renderContent = () => {
+    if (loading) {
+      return renderSkeletonCards();
+    }
+
+    if (error) {
+      return (
+        <p className="text-red-500 font-medium text-center text-xs md:text-sm mt-4">
           Error: {error}
         </p>
-      )}
-      {!loading && !error && routes.length === 0 && (
-        <p className="text-gray-600 text-center text-xs md:text-sm">
+      );
+    }
+
+    if (!routes || routes.length === 0) {
+      return (
+        <p className="text-gray-600 text-center text-xs md:text-sm mt-4">
           No routes configured.
         </p>
-      )}
+      );
+    }
 
-      {/* Additional intro text once routes are loaded */}
-      {!loading && !error && routes.length > 0 && (
+    // ✅ Normal case: we have routes
+    return (
+      <>
         <motion.p
           className="text-gray-600 text-center mb-5 md:mb-6 max-w-2xl md:max-w-3xl mx-auto leading-relaxed text-[11px] sm:text-xs md:text-sm"
           variants={subtextVariants}
         >
-          {/* you can add extra copy here if you like */}
+          {/* extra copy if you want */}
         </motion.p>
-      )}
 
-      {/* Route Cards Grid */}
-      {!loading && !error && routes.length > 0 && (
         <motion.div
           className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 justify-items-center"
           variants={cardsContainerVariants}
@@ -181,34 +203,34 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                 </div>
               )}
 
-            {/* Route Names and Icons - Centered and Enlarged */}
-            <div className="mb-2.5 border-b border-gray-100 pb-2.5 w-full">
-              <h1
-                className="text-2xl sm:text-2xl md:text-xl font-bold tracking-tight text-center"
-                style={{ color: PRIMARY_COLOR }}
-              >
-                {route.from}
-                <span
-                  className="mx-1.5 text-3xl sm:text-3xl md:text-3xl font-extrabold"
-                  style={{ color: ACCENT_COLOR }}
+              {/* Route Names and Icons - Centered and Enlarged */}
+              <div className="mb-2.5 border-b border-gray-100 pb-2.5 w-full">
+                <h2
+                  className="text-2xl sm:text-2xl md:text-xl font-bold tracking-tight text-center"
+                  style={{ color: PRIMARY_COLOR }}
                 >
-                  &nbsp;→&nbsp;
-                </span>
-                {route.to}
-              </h1>
+                  {route.from}
+                  <span
+                    className="mx-1.5 text-3xl sm:text-3xl md:text-3xl font-extrabold"
+                    style={{ color: ACCENT_COLOR }}
+                  >
+                    &nbsp;→&nbsp;
+                  </span>
+                  {route.to}
+                </h2>
 
-              {/* Distance and Duration - Centered */}
-              <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500 justify-center">
-                <span className="flex items-center">
-                  <BusFront className="mr-1 h-3.5 w-3.5" />
-                  {route.distance}
-                </span>
-                <span className="flex items-center">
-                  <Clock className="mr-1 h-3.5 w-3.5" />
-                  {route.duration}
-                </span>
+                {/* Distance and Duration - Centered */}
+                <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500 justify-center">
+                  <span className="flex items-center">
+                    <BusFront className="mr-1 h-3.5 w-3.5" />
+                    {route.distance}
+                  </span>
+                  <span className="flex items-center">
+                    <Clock className="mr-1 h-3.5 w-3.5" />
+                    {route.duration}
+                  </span>
+                </div>
               </div>
-            </div>
 
               {/* Pricing Rows – compact, horizontal layout */}
               <div className="flex flex-col gap-1.5">
@@ -264,7 +286,8 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
 
               {/* Note */}
               <p className="mt-3 border-t border-gray-100 pt-2 text-[10px] leading-snug text-gray-500 italic">
-                <span className="font-semibold text-gray-600">Note:</span>{route.description ?? ' Fixed pricing per vehicle, no hidden fees.'}
+                <span className="font-semibold text-gray-600">Note:</span>
+                {route.description ?? ' Fixed pricing per vehicle, no hidden fees.'}
               </p>
 
               {/* Book Button – compact */}
@@ -284,7 +307,53 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
             </motion.div>
           ))}
         </motion.div>
-      )}
+      </>
+    );
+  };
+
+  return (
+    <motion.div
+      className="max-w-7xl mx-auto px-4 md:px-6 pb-10 pt-16 md:pt-18 transition-colors bg-gray-50"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.15 }}
+    >
+      {/* Centered Heading */}
+      <motion.div
+        className="flex flex-col justify-center items-center mb-5 md:mb-8 text-center"
+        variants={headingVariants}
+      >
+        <p
+          className="text-[11px] sm:text-[12px] md:text-sm font-semibold tracking-[0.24em] uppercase mb-1.5"
+          style={{ color: ACCENT_COLOR }}
+        >
+          Private Airport & City Transfers
+        </p>
+
+        <h1
+          className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight"
+          style={{ color: PRIMARY_COLOR }}
+        >
+          Private Transfer Routes&nbsp;
+          <span className="block sm:inline">and Fixed Pricing</span>
+          <div
+            className="w-24 h-1.5 mx-auto mt-4 rounded-full"
+            style={{ backgroundColor: ACCENT_COLOR }}
+          />
+        </h1>
+
+        <motion.p
+          className="mt-3 text-[12px] sm:text-sm md:text-base text-gray-600 max-w-xl md:max-w-2xl leading-relaxed"
+          variants={subtextVariants}
+        >
+          Browse our most popular routes between airports, hotels, and key
+          destinations. All prices are per vehicle, not per person, with no
+          hidden extras.
+        </motion.p>
+      </motion.div>
+
+      {/* 🔹 Dynamic content: skeleton / error / empty / cards */}
+      {renderContent()}
     </motion.div>
   );
 };
