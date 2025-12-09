@@ -33,7 +33,7 @@ const initialFormData: BookingFormData = {
   contactNumber: ''
 };
 
-// ⭐ helper to normalize locations (trim spaces, you can add .toUpperCase() if needed)
+// ⭐ helper to normalize locations
 const normalizeLocation = (value: string) => value.trim();
 
 export default function TaxiBookingApp() {
@@ -72,7 +72,6 @@ export default function TaxiBookingApp() {
           throw new Error('Invalid routes format from API');
         }
 
-        // ⭐ sanitize all route endpoints once here
         const sanitizedRoutes: Route[] = (data as Route[]).map(r => ({
           ...r,
           from: normalizeLocation(String(r.from)),
@@ -166,7 +165,7 @@ export default function TaxiBookingApp() {
         normalizeLocation(r.to) === dropoff
     );
 
-    // 2. Try D -> P
+    // 2. Try D -> P (reverse)
     if (!route) {
       const reverse = routes.find(
         r =>
@@ -220,7 +219,6 @@ export default function TaxiBookingApp() {
     (field: keyof BookingFormData, value: string | number | boolean) => {
       setFormData(prev => {
         if (field === 'pickupLocation') {
-          // ⭐ normalize pickup value
           const newPickup = normalizeLocation(String(value));
           const connectedLocations = new Set<string>();
 
@@ -262,7 +260,6 @@ export default function TaxiBookingApp() {
           return { ...prev, luggage: n };
         }
 
-        // ⭐ normalize dropoff too, just in case
         if (field === 'dropoffLocation') {
           return { ...prev, dropoffLocation: normalizeLocation(String(value)) };
         }
@@ -315,6 +312,7 @@ export default function TaxiBookingApp() {
             dropoffOptions={dropoffOptions}
             selectedRoute={currentRoute}
             calculatedPrice={calculatedPrice}
+            routesLoading={routesLoading} // 👈 PASSED IN
           />
           <PlaceCarousel />
           <HowToBookModern />

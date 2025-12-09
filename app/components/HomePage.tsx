@@ -11,7 +11,8 @@ import {
   ArrowLeft,
   ArrowRight,
   Navigation,
-  AlertCircle
+  AlertCircle,
+  ChevronDown
 } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
@@ -19,7 +20,7 @@ import type { BookingFormData, Route } from '../types';
 import { Services } from './Services';
 import CustomerReviews from './CustomerReviews';
 import HeroSection from './FeatureSection';
-
+import { PHONE_COUNTRIES_LIST } from '../lib/phonecodes';
 // Custom colors
 const PRIMARY_COLOR = '#18234B';
 const ACCENT_COLOR = '#A61924';
@@ -32,40 +33,17 @@ const VEHICLE_CONSTRAINTS: { maxPax: number; maxBags: number }[] = [
   { maxPax: 4, maxBags: 3 },
   { maxPax: 5, maxBags: 3 },
   { maxPax: 6, maxBags: 2 },
-  { maxPax: 7, maxBags: 2 },
+  { maxPax: 7, maxBags: 2 }
 ];
 
 // slideshow images
 const heroImages = ['/copy.jpg', '/copy2.jpg', '/copy3.png'];
-
-const DiscountSticker = () => {
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 'calc(80px + 20px)',
-        right: '20px',
-        zIndex: 9999,
-        cursor: 'pointer'
-      }}
-    >
-      <Image
-        src="/sticker.png"
-        alt="Discount sticker"
-        width={240}
-        height={80}
-        priority={false}
-        style={{ display: 'block', objectFit: 'contain' }}
-      />
-    </div>
-  );
-};
-
+const PHONE_COUNTRIES = PHONE_COUNTRIES_LIST
 // Helper: max bags for pax
 function getMaxBagsForCurrentPax(pax: number): number {
   if (pax >= 1 && pax <= 4) return 3;
-  if (pax >= 5 && pax <6)  return 3;
-   if (pax > 5 && pax <=6)  return 2;
+  if (pax >= 5 && pax < 6) return 3;
+  if (pax > 5 && pax <= 6) return 2;
   if (pax > 6 && pax <= MAX_PASSENGERS) return 4;
   return MAX_LUGGAGE;
 }
@@ -142,7 +120,10 @@ const stepTransitionVariants: Variants = {
 
 export default function HomePage(props: {
   formData: BookingFormData;
-  handleInputChange: (field: keyof BookingFormData, value: string | number | boolean) => void;
+  handleInputChange: (
+    field: keyof BookingFormData,
+    value: string | number | boolean
+  ) => void;
   bookingStep: 1 | 2;
   setBookingStep: (n: 1 | 2) => void;
   setCurrentPage: (p: string) => void;
@@ -150,6 +131,7 @@ export default function HomePage(props: {
   dropoffOptions: string[];
   selectedRoute: Route | null;
   calculatedPrice: number;
+  routesLoading: boolean; // 👈 NEW
 }) {
   const {
     formData,
@@ -159,16 +141,21 @@ export default function HomePage(props: {
     AVAILABLE_LOCATIONS,
     dropoffOptions,
     selectedRoute,
-    calculatedPrice
+    calculatedPrice,
+    routesLoading
   } = props;
 
   const formTopRef = useRef<HTMLDivElement>(null);
 
-  const [passengerInput, setPassengerInput] = useState<string>(String(formData.passengers));
-  const [luggageInput, setLuggageInput] = useState<string>(String(formData.luggage));
+  const [passengerInput, setPassengerInput] = useState<string>(
+    String(formData.passengers)
+  );
+  const [luggageInput, setLuggageInput] = useState<string>(
+    String(formData.luggage)
+  );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [firstHeroLoaded, setFirstHeroLoaded] = useState(false); // 👈 NEW: track first image load
+  const [firstHeroLoaded, setFirstHeroLoaded] = useState(false);
 
   const minDateForInput = getMinDateForInput();
 
@@ -203,7 +190,10 @@ export default function HomePage(props: {
 
   useEffect(() => {
     if (bookingStep === 2 && formTopRef.current) {
-      formTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      formTopRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
     }
   }, [bookingStep]);
 
@@ -317,7 +307,8 @@ export default function HomePage(props: {
           break;
         case 'luggage': {
           const maxAllowedBags = getMaxBagsForCurrentPax(pax);
-          if (bags > maxAllowedBags) error = `Max ${maxAllowedBags} Bags for ${pax} Pax`;
+          if (bags > maxAllowedBags)
+            error = `Max ${maxAllowedBags} Bags for ${pax} Pax`;
           break;
         }
       }
@@ -364,7 +355,10 @@ export default function HomePage(props: {
     if (!/^\d+$/.test(passengerInput)) {
       setPassengerInput(String(formData.passengers));
     } else {
-      const parsed = Math.max(1, Math.min(MAX_PASSENGERS, parseInt(passengerInput, 10)));
+      const parsed = Math.max(
+        1,
+        Math.min(MAX_PASSENGERS, parseInt(passengerInput, 10))
+      );
       setPassengerInput(String(parsed));
       handleInputChange('passengers', parsed);
     }
@@ -385,7 +379,10 @@ export default function HomePage(props: {
       setLuggageInput(String(formData.luggage));
     } else {
       const maxAllowedBags = getMaxBagsForCurrentPax(formData.passengers);
-      const parsed = Math.max(0, Math.min(parseInt(luggageInput, 10), maxAllowedBags));
+      const parsed = Math.max(
+        0,
+        Math.min(parseInt(luggageInput, 10), maxAllowedBags)
+      );
       setLuggageInput(String(parsed));
       handleInputChange('luggage', parsed);
     }
@@ -395,7 +392,11 @@ export default function HomePage(props: {
   const onPickupDateChange = (v: string) => {
     handleInputChange('pickupDate', v);
     const minT = getMinTimeForDate(v);
-    if (v === minDateForInput && formData.pickupTime && formData.pickupTime < minT) {
+    if (
+      v === minDateForInput &&
+      formData.pickupTime &&
+      formData.pickupTime < minT
+    ) {
       handleInputChange('pickupTime', minT);
     }
   };
@@ -422,8 +423,6 @@ export default function HomePage(props: {
 
   return (
     <div className="min-h-screen bg-white-50 pt-2 md:pt-14">
-      {/* Optional: <DiscountSticker /> */}
-
       {/* Hero Section */}
       <div className="relative h-[550px] lg:h-[500px] overflow-hidden">
         <div className="absolute inset-0">
@@ -431,7 +430,6 @@ export default function HomePage(props: {
             <div
               key={src}
               className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
-              // Ensure the first image is visible initially
               style={{ opacity: index === currentImageIndex ? 3 : 0 }}
             >
               <div
@@ -496,7 +494,9 @@ export default function HomePage(props: {
               className="w-2.5 h-2.5 rounded-full transition-all duration-300"
               style={{
                 backgroundColor:
-                  index === currentImageIndex ? ACCENT_COLOR : 'rgba(255, 255, 255, 0.4)'
+                  index === currentImageIndex
+                    ? ACCENT_COLOR
+                    : 'rgba(255, 255, 255, 0.4)'
               }}
               onClick={() => setCurrentImageIndex(index)}
             />
@@ -590,6 +590,7 @@ export default function HomePage(props: {
                     markTouched={markTouched}
                     isStep1Valid={isStep1Valid}
                     goToStep2={goToStep2}
+                    routesLoading={routesLoading}
                   />
                 </motion.div>
               ) : (
@@ -627,7 +628,10 @@ export default function HomePage(props: {
 ------------------------------*/
 function Step1Content(props: {
   formData: BookingFormData;
-  handleInputChange: (field: keyof BookingFormData, value: string | number | boolean) => void;
+  handleInputChange: (
+    field: keyof BookingFormData,
+    value: string | number | boolean
+  ) => void;
   AVAILABLE_LOCATIONS: string[];
   dropoffOptions: string[];
   selectedRoute: Route | null;
@@ -645,6 +649,7 @@ function Step1Content(props: {
   markTouched: (field: string) => void;
   isStep1Valid: () => boolean;
   goToStep2: () => void;
+  routesLoading: boolean;
 }) {
   const {
     formData,
@@ -665,11 +670,25 @@ function Step1Content(props: {
     onLuggageBlur,
     markTouched,
     isStep1Valid,
-    goToStep2
+    goToStep2,
+    routesLoading
   } = props;
+
+  // derived disabled flags
+  const isPickupDisabled = routesLoading || AVAILABLE_LOCATIONS.length === 0;
+  const isDropoffDisabled =
+    routesLoading || !formData.pickupLocation || dropoffOptions.length === 0;
 
   return (
     <div className="space-y-6">
+      {/* Routes loading banner */}
+      {routesLoading && (
+        <div className="flex items-center gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-xs text-blue-800 mb-2">
+          <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
+          <span>Fetching available routes and prices… this usually takes just a moment.</span>
+        </div>
+      )}
+
       {/* Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Pickup/Dropoff */}
@@ -682,12 +701,16 @@ function Step1Content(props: {
               } w-5 h-5 z-20 pointer-events-none transition-colors`}
               style={{ color: getFieldError('pickupLocation') ? undefined : ACCENT_COLOR }}
             />
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
                 Pickup
               </label>
-              {getFieldError('pickupLocation') && (
-                <span className="text-xs font-bold text-red-500 animate-pulse">Required</span>
+              {routesLoading ? (
+                <span className="text-[11px] text-gray-400 italic">Loading routes…</span>
+              ) : (
+                getFieldError('pickupLocation') && (
+                  <span className="text-xs font-bold text-red-500 animate-pulse">Required</span>
+                )
               )}
             </div>
             <select
@@ -695,14 +718,24 @@ function Step1Content(props: {
               value={formData.pickupLocation || ''}
               onChange={e => handleInputChange('pickupLocation', e.target.value)}
               onBlur={() => markTouched('pickupLocation')}
-              className={getInputClass('pickupLocation')}
+              disabled={isPickupDisabled}
+              className={
+                getInputClass('pickupLocation') +
+                (isPickupDisabled ? ' cursor-not-allowed opacity-60' : '')
+              }
             >
-              <option value="">Select Location</option>
-              {AVAILABLE_LOCATIONS.map(loc => (
-                <option key={loc} value={loc}>
-                  {loc}
-                </option>
-              ))}
+              {routesLoading ? (
+                <option value="">Loading routes…</option>
+              ) : (
+                <>
+                  <option value="">Select Location</option>
+                  {AVAILABLE_LOCATIONS.map(loc => (
+                    <option key={loc} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+                </>
+              )}
             </select>
           </div>
 
@@ -713,12 +746,16 @@ function Step1Content(props: {
                 getFieldError('dropoffLocation') ? 'text-red-500' : 'text-gray-400'
               } w-5 h-5 z-20 pointer-events-none transition-colors`}
             />
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
                 Dropoff
               </label>
-              {getFieldError('dropoffLocation') && (
-                <span className="text-xs font-bold text-red-500 animate-pulse">Required</span>
+              {routesLoading && formData.pickupLocation ? (
+                <span className="text-[11px] text-gray-400 italic">Loading destinations…</span>
+              ) : (
+                getFieldError('dropoffLocation') && (
+                  <span className="text-xs font-bold text-red-500 animate-pulse">Required</span>
+                )
               )}
             </div>
             <select
@@ -726,19 +763,33 @@ function Step1Content(props: {
               value={formData.dropoffLocation || ''}
               onChange={e => handleInputChange('dropoffLocation', e.target.value)}
               onBlur={() => markTouched('dropoffLocation')}
-              className={getInputClass('dropoffLocation')}
+              disabled={isDropoffDisabled}
+              className={
+                getInputClass('dropoffLocation') +
+                (isDropoffDisabled ? ' cursor-not-allowed opacity-60' : '')
+              }
             >
-              <option value="">Select Destination</option>
-              {dropoffOptions.length === 0 ? (
-                <option value="" disabled>
-                  Select pickup first
-                </option>
-              ) : (
-                dropoffOptions.map(loc => (
-                  <option key={loc} value={loc}>
-                    {loc}
-                  </option>
-                ))
+              {!formData.pickupLocation && !routesLoading && (
+                <option value="">Select pickup first</option>
+              )}
+
+              {formData.pickupLocation && routesLoading && (
+                <option value="">Loading destinations…</option>
+              )}
+
+              {formData.pickupLocation && !routesLoading && dropoffOptions.length === 0 && (
+                <option value="">No destinations available</option>
+              )}
+
+              {formData.pickupLocation && !routesLoading && dropoffOptions.length > 0 && (
+                <>
+                  <option value="">Select Destination</option>
+                  {dropoffOptions.map(loc => (
+                    <option key={loc} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+                </>
               )}
             </select>
           </div>
@@ -958,12 +1009,13 @@ function Step1Content(props: {
         </div>
       ) : (
         <div className="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl p-4 flex items-center gap-3">
-  <AlertCircle className="w-5 h-5 flex-shrink-0" />
-  <span className="text-sm font-medium">
-    Please contact us prior to booking. For assistance with any details (time, destination, passengers, luggage, vehicle, price, or payment), please reach us via 
-     <a href='tel:+61470032460'> phone</a> or email. We are happy to help.
-  </span>
-</div>
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span className="text-sm font-medium">
+            Please contact us prior to booking. For assistance with any details (time,
+            destination, passengers, luggage, vehicle, price, or payment), please reach us via
+            <a href="tel:+61470032460"> phone</a> or email. We are happy to help.
+          </span>
+        </div>
       )}
 
       {/* Footer Actions */}
@@ -1019,7 +1071,10 @@ function Step2Content(props: {
   setBookingStep: (n: 1 | 2) => void;
   isStep2FormValid: () => boolean;
   validateStep2: () => boolean;
-  handleInputChange: (field: keyof BookingFormData, value: string | number | boolean) => void;
+  handleInputChange: (
+    field: keyof BookingFormData,
+    value: string | number | boolean
+  ) => void;
 }) {
   const {
     formData,
@@ -1130,9 +1185,7 @@ function Step2Content(props: {
               <span className="font-medium text-gray-900">
                 {formData.passengers} Pax, {formData.luggage} Bags
               </span>
-              {formData.childSeat && (
-                <span className="text-xs text-green-600">+ Child Seat</span>
-              )}
+              {formData.childSeat && <span className="text-xs text-green-600">+ Child Seat</span>}
             </div>
           </div>
 
@@ -1147,10 +1200,7 @@ function Step2Content(props: {
                 )}
               </div>
             </div>
-            <span
-              className="text-3xl font-bold text-gray-900"
-              style={{ color: PRIMARY_COLOR }}
-            >
+            <span className="text-3xl font-bold text-gray-900" style={{ color: PRIMARY_COLOR }}>
               ${calculatedPrice}
             </span>
           </div>
@@ -1209,27 +1259,13 @@ function Step2Content(props: {
               />
             </div>
 
-            {/* Mobile */}
-            <div>
-              <div className="flex justify-between">
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
-                  Mobile
-                </label>
-                {getFieldError('contactNumber') && (
-                  <span className="text-xs text-red-500 font-bold">
-                    {getFieldError('contactNumber')}
-                  </span>
-                )}
-              </div>
-              <input
-                type="tel"
-                value={formData.contactNumber}
-                onChange={e => handleInputChange('contactNumber', e.target.value)}
-                onBlur={() => markTouched('contactNumber')}
-                className={getInputClass('contactNumber', false)}
-                placeholder="+61 400 000 000"
-              />
-            </div>
+            {/* Mobile: country code + number */}
+            <PhoneInput
+              formData={formData}
+              getFieldError={getFieldError}
+              markTouched={markTouched}
+              handleInputChange={handleInputChange}
+            />
           </div>
         </div>
 
@@ -1251,9 +1287,7 @@ function Step2Content(props: {
             Pay securely via Stripe Checkout
           </h4>
 
-          {paymentError && (
-            <p className="text-xs text-red-500 mt-1">{paymentError}</p>
-          )}
+          {paymentError && <p className="text-xs text-red-500 mt-1">{paymentError}</p>}
 
           {/* Buttons */}
           <div className="flex gap-3 mt-4">
@@ -1276,6 +1310,169 @@ function Step2Content(props: {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* -----------------------------
+   Phone Input Component
+------------------------------*/
+type PhoneInputProps = {
+  formData: BookingFormData;
+  getFieldError: (field: string) => string | null;
+  markTouched: (field: string) => void;
+  handleInputChange: (
+    field: keyof BookingFormData,
+    value: string | number | boolean
+  ) => void;
+};
+
+function PhoneInput({
+  formData,
+  getFieldError,
+  markTouched,
+  handleInputChange
+}: PhoneInputProps) {
+  // Default to Australia if present, otherwise first in list
+  const defaultCountry =
+    PHONE_COUNTRIES.find(c => c.code === 'AU') ?? PHONE_COUNTRIES[0];
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState(defaultCountry);
+  const [dialCode, setDialCode] = useState<string>(defaultCountry.dialCode);
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+
+  const error = getFieldError('contactNumber');
+
+  // Initialise from existing contactNumber if present
+  useEffect(() => {
+    const existing = String(formData.contactNumber || '');
+    if (!existing) return;
+
+    // Find matching country by dial code if possible
+    const match =
+      PHONE_COUNTRIES.find(c => existing.startsWith(c.dialCode)) ?? defaultCountry;
+
+    const strippedDial = match.dialCode;
+    const numericPart = existing.replace(strippedDial, '').replace(/\D/g, '');
+
+    setSelectedCountry(match);
+    setDialCode(strippedDial);
+    setPhoneNumber(numericPart);
+  }, [formData.contactNumber]);
+
+  // Update selected country when dialCode changes (if we can match)
+  useEffect(() => {
+    const match = PHONE_COUNTRIES.find(c => dialCode.startsWith(c.dialCode));
+    if (match) {
+      setSelectedCountry(match);
+    }
+  }, [dialCode]);
+
+  // Keep formData.contactNumber in sync as "<dialCode><number>"
+  useEffect(() => {
+    if (phoneNumber) {
+      handleInputChange('contactNumber', `${dialCode}${phoneNumber}`);
+    } else {
+      handleInputChange('contactNumber', '');
+    }
+  }, [phoneNumber, dialCode, handleInputChange]);
+
+  const onPhoneChange = (value: string) => {
+    // allow only digits
+    const numeric = value.replace(/\D/g, '');
+    setPhoneNumber(numeric);
+  };
+
+  const onDialCodeChange = (value: string) => {
+    // Allow only "+" and digits, and force a single leading "+"
+    let v = value.replace(/[^\d+]/g, ''); // strip non +/digits
+    // Ensure exactly one leading +
+    v = v.replace(/\+/g, '');
+    v = '+' + v;
+    setDialCode(v);
+  };
+
+  const onSelectCountry = (country: (typeof PHONE_COUNTRIES)[number]) => {
+    setSelectedCountry(country);
+    setDialCode(country.dialCode);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="space-y-1 relative">
+      <div className="flex justify-between">
+        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+          Mobile
+        </label>
+        {error && <span className="text-xs text-red-500 font-bold">{error}</span>}
+      </div>
+
+      <div
+        className={`flex items-stretch rounded-xl bg-white border ${
+          error ? 'border-red-500' : 'border-gray-200'
+        } shadow-sm overflow-hidden`}
+      >
+        {/* Country selector + editable dial code */}
+        <div className="flex items-center bg-gray-50 border-r border-gray-200 px-2 py-2 gap-1.5 shrink-0">
+          {/* Flag + dropdown trigger */}
+          <button
+            type="button"
+           // onClick={() => setIsOpen(o => !o)}
+            className="inline-flex items-center gap-1 px-1 py-0.5 text-sm font-medium text-gray-700"
+          >
+            <span className="text-lg">{selectedCountry.flag}</span>
+            <ChevronDown className="w-4 h-4 text-gray-500" />
+          </button>
+
+          {/* Editable dial code */}
+          <input
+            type="tel"
+            inputMode="numeric"
+            className="w-20 bg-transparent outline-none border-none text-sm font-medium text-gray-900"
+            value={dialCode}
+            onChange={e => onDialCodeChange(e.target.value)}
+          />
+        </div>
+
+        {/* Phone number input – digits only */}
+        <div className="relative flex-1">
+          <input
+            id="phone-input"
+            type="tel"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={phoneNumber}
+            onChange={e => onPhoneChange(e.target.value)}
+            onBlur={() => markTouched('contactNumber')}
+            className="w-full px-3 py-2.5 text-sm font-medium text-gray-900 bg-white outline-none border-none placeholder:text-gray-400"
+            placeholder="400000000"
+          />
+        </div>
+      </div>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <div className="absolute z-30 mt-1 w-full max-h-64 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg">
+          <ul className="text-sm py-1">
+            {PHONE_COUNTRIES.map(country => (
+              <li key={country.code}>
+                <button
+                  type="button"
+                  onClick={() => onSelectCountry(country)}
+                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-left"
+                >
+                  <span className="text-lg">{country.flag}</span>
+                  <span className="flex-1">
+                    {country.name}{' '}
+                    <span className="text-gray-500">({country.dialCode})</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
