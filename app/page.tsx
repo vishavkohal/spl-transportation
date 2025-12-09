@@ -67,7 +67,7 @@ export default function TaxiBookingApp() {
         }
 
         const json = await res.json();
-        console.log('[Routes API raw json]', json);
+      //  console.log('[Routes API raw json]', json);
 
         // Handle both shapes: [ ...routes ] or { routes: [ ... ] }
         const data = Array.isArray(json) ? json : json.routes;
@@ -77,7 +77,7 @@ export default function TaxiBookingApp() {
         }
 
         if (!ignore) {
-          console.log('[Routes API parsed array]', data);
+        //  console.log('[Routes API parsed array]', data);
           setRoutes(data as Route[]);
           setRoutesError(null);
         }

@@ -314,7 +314,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
   return (
     <motion.div
       className="max-w-7xl mx-auto px-4 md:px-6 pb-10 pt-16 md:pt-18 transition-colors bg-gray-50"
-      initial="hidden"
+      initial="visible"
       whileInView="visible"
       viewport={{ once: true, amount: 0.15 }}
     >
