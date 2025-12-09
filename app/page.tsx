@@ -49,35 +49,57 @@ export default function TaxiBookingApp() {
   const [routesError, setRoutesError] = useState<string | null>(null);
 
   // -------------------------------
-  // LOAD ROUTES FROM API
+  // LOAD ROUTES FROM API  ✅ FIXED
   // -------------------------------
   useEffect(() => {
-    let mounted = true;
+    let ignore = false; // avoid setting state on unmounted component
 
-    (async () => {
+    const loadRoutes = async () => {
+      setRoutesLoading(true);
+
       try {
-        const res = await fetch('/api/routes');
-        if (!res.ok) throw new Error('Failed to fetch routes');
-        // Assuming the API returns a list where each entry is unique (A -> B only)
-        const data: Route[] = await res.json();
-        if (mounted) {
-          setRoutes(data);
+        const res = await fetch('/api/routes', {
+          cache: 'no-store' // helps avoid any weird caching issues
+        });
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch routes (status ${res.status})`);
+        }
+
+        const json = await res.json();
+        console.log('[Routes API raw json]', json);
+
+        // Handle both shapes: [ ...routes ] or { routes: [ ... ] }
+        const data = Array.isArray(json) ? json : json.routes;
+
+        if (!Array.isArray(data)) {
+          throw new Error('Invalid routes format from API');
+        }
+
+        if (!ignore) {
+          console.log('[Routes API parsed array]', data);
+          setRoutes(data as Route[]);
           setRoutesError(null);
         }
       } catch (e) {
         console.error('Error loading routes', e);
-        if (mounted) {
+        if (!ignore) {
+          setRoutes([]);
           setRoutesError(
             e instanceof Error ? e.message : 'Failed to load routes'
           );
         }
       } finally {
-        if (mounted) setRoutesLoading(false);
+        if (!ignore) {
+          setRoutesLoading(false);
+        }
       }
-    })();
+    };
+
+    loadRoutes();
 
     return () => {
-      mounted = false;
+      ignore = true;
     };
   }, []);
 
