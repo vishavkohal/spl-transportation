@@ -2349,15 +2349,18 @@ function PhoneInput({
             <span className="text-lg">{selectedCountry.flag}</span>
             <ChevronDown className="w-4 h-4 text-gray-500" />
           </button>
-
-          {/* Editable dial code */}
-          <input
-            type="tel"
-            inputMode="numeric"
-            className="w-20 bg-transparent outline-none border-none text-sm font-medium text-gray-900"
-            value={dialCode}
-            onChange={e => onDialCodeChange(e.target.value)}
-          />
+{/* Editable dial code */}
+<input
+  type="tel"
+  inputMode="numeric"
+  maxLength={4}
+  className="w-20 bg-transparent outline-none border-none text-sm font-medium text-gray-900"
+  value={dialCode}
+  onChange={e => {
+    const value = e.target.value.replace(/\D/g, ""); // remove non-digits
+    onDialCodeChange(value.slice(0, 3)); // enforce max 3
+  }}
+/>
         </div>
 
         {/* Phone number input – digits only */}
