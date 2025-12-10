@@ -4,10 +4,11 @@ import React from 'react';
 import { Star, Quote } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 
-// Define the custom colors for readability
-const PRIMARY_COLOR = '#18234B'; // Dark Navy
-const ACCENT_COLOR = '#A61924'; // Deep Red
+// Custom colors
+const PRIMARY_COLOR = '#18234B'; // Dark Navy (now card background)
+const ACCENT_COLOR = '#A61924'; // Deep Red (stars + highlights)
 
+// Types
 type Review = {
   name: string;
   date: string;
@@ -15,7 +16,7 @@ type Review = {
   comment: string;
 };
 
-// Temporary mock data to make this component renderable immediately for testing
+// Temporary mock data
 const CUSTOMER_REVIEWS: Review[] = [
   {
     name: 'Sarah Johnson',
@@ -40,7 +41,7 @@ const CUSTOMER_REVIEWS: Review[] = [
   },
 ];
 
-// Animation variants
+// Animations
 const sectionHeaderVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
@@ -53,9 +54,7 @@ const sectionHeaderVariants: Variants = {
 const reviewsContainerVariants: Variants = {
   hidden: {},
   visible: {
-    transition: {
-      staggerChildren: 0.15,
-    },
+    transition: { staggerChildren: 0.15 },
   },
 };
 
@@ -65,10 +64,7 @@ const reviewCardVariants: Variants = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: {
-      duration: 0.5,
-      ease: 'easeOut',
-    },
+    transition: { duration: 0.5, ease: 'easeOut' },
   },
 };
 
@@ -76,6 +72,7 @@ const CustomerReviews: React.FC = () => {
   return (
     <section className="py-20 bg-gray-50 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
         {/* Section Title */}
         <motion.div
           className="text-center mb-16"
@@ -90,19 +87,21 @@ const CustomerReviews: React.FC = () => {
           >
             Testimonials
           </p>
+
           <h2
-            className="text-3xl md:text-4xl font-bold text-gray-900"
+            className="text-3xl md:text-4xl font-bold"
             style={{ color: PRIMARY_COLOR }}
           >
             What Our Customers Say
           </h2>
+
           <div
             className="w-24 h-1.5 mx-auto mt-4 rounded-full"
             style={{ backgroundColor: ACCENT_COLOR }}
           />
         </motion.div>
 
-        {/* Reviews Grid */}
+        {/* Review Cards */}
         <motion.div
           className="grid md:grid-cols-3 gap-8"
           variants={reviewsContainerVariants}
@@ -117,17 +116,20 @@ const CustomerReviews: React.FC = () => {
               whileHover={{
                 y: -6,
                 scale: 1.02,
-                boxShadow:
-                  '0 18px 45px rgba(0, 0, 0, 0.12)',
+                boxShadow: '0 18px 45px rgba(0, 0, 0, 0.25)',
               }}
-              className="relative bg-white rounded-2xl p-8 border border-gray-100 shadow-lg transition-all duration-300"
+              className="relative rounded-2xl p-8 border shadow-xl transition-all duration-300"
+              style={{
+                backgroundColor: PRIMARY_COLOR,
+                borderColor: PRIMARY_COLOR,
+              }}
             >
-              {/* Decorative Quote Icon */}
-              <div
-                className="absolute top-6 right-8 opacity-10"
-                style={{ color: ACCENT_COLOR }}
-              >
-                <Quote className="w-12 h-12 fill-current" />
+              {/* Quote Icon */}
+              <div className="absolute top-6 right-8 opacity-15">
+                <Quote
+                  className="w-12 h-12"
+                  style={{ color: ACCENT_COLOR }}
+                />
               </div>
 
               {/* Rating Stars */}
@@ -135,33 +137,29 @@ const CustomerReviews: React.FC = () => {
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${
-                      i < review.rating ? 'fill-current' : 'text-gray-300'
-                    }`}
+                    className="w-5 h-5"
                     style={{
-                      color: i < review.rating ? ACCENT_COLOR : undefined,
+                      color: i < review.rating
+                        ? ACCENT_COLOR
+                        : 'rgba(255,255,255,0.25)',
                     }}
+                    fill={i < review.rating ? ACCENT_COLOR : 'none'}
                   />
                 ))}
               </div>
 
               {/* Comment */}
-              <p className="text-gray-600 leading-relaxed mb-8 italic relative z-10">
+              <p className="leading-relaxed mb-8 italic text-white relative z-10">
                 &quot;{review.comment}&quot;
               </p>
 
               {/* Divider */}
-              <div className="w-full h-px bg-gray-100 mb-6" />
+              <div className="w-full h-px mb-6" style={{ backgroundColor: 'rgba(255,255,255,0.25)' }} />
 
               {/* User Info */}
               <div className="flex justify-between items-end">
                 <div>
-                  <p
-                    className="font-bold text-lg text-gray-900"
-                    style={{ color: PRIMARY_COLOR }}
-                  >
-                    {review.name}
-                  </p>
+                  <p className="font-bold text-lg text-white">{review.name}</p>
                   <p
                     className="text-sm font-medium"
                     style={{ color: ACCENT_COLOR }}
@@ -169,7 +167,7 @@ const CustomerReviews: React.FC = () => {
                     Verified Client
                   </p>
                 </div>
-                <p className="text-sm text-gray-400">{review.date}</p>
+                <p className="text-sm text-white/60">{review.date}</p>
               </div>
             </motion.div>
           ))}

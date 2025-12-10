@@ -1,4 +1,4 @@
-// type.ts
+// types.ts
 
 // 1. UPDATED: PricingTier now includes 'vehicleType'
 export interface PricingTier {
@@ -20,6 +20,7 @@ export interface Route {
 }
 
 export interface BookingFormData {
+  // Standard transfer fields
   pickupLocation: string;
   pickupAddress: string;
   dropoffLocation: string;
@@ -33,6 +34,11 @@ export interface BookingFormData {
   fullName: string;
   email: string;
   contactNumber: string;
+
+  // NEW: Chauffeur & Hourly Hire fields
+  hourlyPickupLocation: string;
+  hourlyHours: number;
+  hourlyVehicleType: string; // 'Sedan' | 'SUV' | 'Van' stored as string
 }
 
 export interface Review {

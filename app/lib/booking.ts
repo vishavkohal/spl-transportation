@@ -4,6 +4,9 @@ import Stripe from 'stripe';
 import { sendCustomerEmail, sendAdminEmail } from './email';
 
 export type BookingPayload = {
+  id?: string;
+  createdAt?: string;
+
   pickupLocation: string;
   pickupAddress?: string | null;
   dropoffLocation: string;
@@ -21,6 +24,12 @@ export type BookingPayload = {
 
   totalPrice: number;
   currency?: string;
+
+  // NEW: booking type + hourly hire fields
+  bookingType?: 'standard' | 'hourly';
+  hourlyPickupLocation?: string | null;
+  hourlyHours?: number | null;
+  hourlyVehicleType?: string | null;
 };
 
 // --- Prisma booking model shim ---------------------------------
@@ -61,6 +70,15 @@ export async function saveBooking(
       totalPriceCents: Math.round(booking.totalPrice * 100),
       currency: booking.currency ?? 'AUD',
       emailSent: false,
+
+      // NEW: hourly hire fields
+      bookingType: booking.bookingType ?? 'standard',
+      hourlyPickupLocation: booking.hourlyPickupLocation ?? null,
+      hourlyHours:
+        typeof booking.hourlyHours === 'number'
+          ? booking.hourlyHours
+          : booking.hourlyHours ?? null,
+      hourlyVehicleType: booking.hourlyVehicleType ?? null,
     },
   });
 }
@@ -87,8 +105,38 @@ export async function sendEmailsOnce(
   if (!existing) return;
 
   if (!existing.emailSent) {
-    await sendCustomerEmail(booking, session);
-    await sendAdminEmail(booking, session);
+    // Map DB record to BookingPayload-like shape including id & createdAt & totalPrice
+    const bookingForEmail: BookingPayload = {
+      id: (existing as any).id,
+      createdAt: (existing as any).createdAt
+        ? new Date((existing as any).createdAt).toISOString()
+        : undefined,
+      pickupLocation: (existing as any).pickupLocation,
+      pickupAddress: (existing as any).pickupAddress ?? undefined,
+      dropoffLocation: (existing as any).dropoffLocation,
+      dropoffAddress: (existing as any).dropoffAddress ?? undefined,
+      pickupDate: (existing as any).pickupDate,
+      pickupTime: (existing as any).pickupTime,
+      passengers: (existing as any).passengers,
+      luggage: (existing as any).luggage,
+      flightNumber: (existing as any).flightNumber ?? undefined,
+      childSeat: (existing as any).childSeat,
+      fullName: (existing as any).fullName,
+      email: (existing as any).email,
+      contactNumber: (existing as any).contactNumber,
+      totalPrice: ((existing as any).totalPriceCents ?? 0) / 100,
+      currency: (existing as any).currency ?? booking.currency,
+      bookingType: (existing as any).bookingType ?? booking.bookingType,
+      hourlyPickupLocation: (existing as any).hourlyPickupLocation ?? undefined,
+      hourlyHours:
+        typeof (existing as any).hourlyHours === 'number'
+          ? (existing as any).hourlyHours
+          : (existing as any).hourlyHours ?? undefined,
+      hourlyVehicleType: (existing as any).hourlyVehicleType ?? undefined,
+    };
+
+    await sendCustomerEmail(bookingForEmail, session);
+    await sendAdminEmail(bookingForEmail, session);
 
     await bookingClient.update({
       where: { stripeSessionId },

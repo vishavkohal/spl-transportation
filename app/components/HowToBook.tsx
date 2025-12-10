@@ -1,19 +1,20 @@
 'use client';
 import React from 'react';
-import { BookOpen, UserCheck, CheckCircle } from 'lucide-react'; // Icons
+import { BookOpen, UserCheck, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Define the custom colors based on user's theme
-const PRIMARY_COLOR = '#18234B'; // Dark Navy (Used for Background, Text on Card)
-const ACCENT_COLOR = '#A61924'; // Deep Red (Used for Heading, Step Number/Icon)
-const CARD_BG = '#FFFFFF'; // Pure White for Card Background
-const TEXT_COLOR_DARK = '#18234B'; // Dark Navy for body text on the card
-const MUTED_TEXT_COLOR = '#5F6368'; // Medium Gray (Muted Text)
+// Theme Colors
+const PRIMARY_COLOR = '#18234B'; 
+const ACCENT_COLOR = '#A61924';
+const CARD_BG = '#FFFFFF';
+const TEXT_COLOR_DARK = '#18234B';
+const MUTED_TEXT_COLOR = '#5F6368';
 
-// Material Shadow properties
-const CARD_SHADOW = '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)';
+// Shadow
+const CARD_SHADOW =
+  '0 3px 6px rgba(0,0,0,0.12), 0 3px 6px rgba(0,0,0,0.18)';
 
-// Data structure for the steps
+// Data
 const steps = [
   {
     id: 1,
@@ -35,17 +36,13 @@ const steps = [
   },
 ];
 
-// Motion variants
+// Motion Variants
 const containerVariants = {
   hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.5,
-      ease: 'easeOut',
-      staggerChildren: 0.12,
-    },
+    transition: { duration: 0.5, ease: 'easeOut', staggerChildren: 0.12 },
   },
 };
 
@@ -61,22 +58,22 @@ const cardVariants = {
 
 export default function HowToBookModern() {
   return (
-    // Outer container: Using Dark Navy background
     <div className="py-20 px-6" style={{ backgroundColor: PRIMARY_COLOR }}>
       <motion.div
-        className="max-w-7xl mx-auto"
+        className="max-w-6xl mx-auto"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, amount: 0.25 }}
       >
-         <p
-          className="text-[11px] text-center sm:text-[15px] md:text-xm font-semibold tracking-[0.24em] uppercase mb-1.5"
+        {/* Tag */}
+        <p
+          className="text-[11px] text-center sm:text-[14px] font-semibold tracking-[0.24em] uppercase mb-1.5"
           style={{ color: ACCENT_COLOR }}
         >
           Easy Booking
         </p>
 
-        {/* Component Header */}
+        {/* Heading */}
         <motion.h2
           className="text-4xl md:text-5xl font-extrabold text-center tracking-tight"
           style={{ color: 'white' }}
@@ -88,66 +85,60 @@ export default function HowToBookModern() {
           />
         </motion.h2>
 
-        {/* Small description under the heading */}
+        {/* Subtitle */}
         <motion.p
-          className="mt-4 mb-14 text-center text-sm md:text-base max-w-2xl mx-auto leading-relaxed"
-          style={{ color: '#E5E7EB' }} // light gray on navy
+          className="mt-4 mb-12 text-center text-sm md:text-base max-w-2xl mx-auto leading-relaxed"
+          style={{ color: '#E5E7EB' }}
         >
-          Booking your private airport or city transfer is simple. 
-          Just follow these three quick steps and we&apos;ll handle the rest.
+          Booking your private airport or city transfer is simple.
+          Just follow these quick steps and we&apos;ll handle the rest.
         </motion.p>
 
         {/* Steps Grid */}
-        <motion.div
-          className="grid md:grid-cols-3 gap-8"
-        >
-          {steps.map(step => (
+        <motion.div className="grid md:grid-cols-3 gap-6">
+          {steps.map((step) => (
             <motion.div
               key={step.id}
               whileHover={{
-                y: -6,
+                y: -5,
                 scale: 1.02,
-                boxShadow: '0 8px 18px rgba(0,0,0,0.25)',
+                boxShadow: '0 8px 20px rgba(0,0,0,0.20)',
               }}
               transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-              // Card styling: White background, rounded corners, shadow
-              className="p-8 md:p-10 rounded-xl cursor-default"
-              style={{ backgroundColor: CARD_BG, boxShadow: CARD_SHADOW }}
+              className="p-5 md:p-6 rounded-lg cursor-default bg-white"
+              style={{ boxShadow: CARD_SHADOW }}
             >
-              {/* Step Number/Icon Group */}
-              <div className="flex items-center mb-4 space-x-4">
-                {/* Step Number - Large, bold, and accented (Deep Red) */}
+              {/* Step Icon & Number */}
+              <div className="flex items-center mb-3 space-x-3">
                 <span
-                  className="text-4xl font-black"
+                  className="text-3xl font-black"
                   style={{ color: ACCENT_COLOR }}
                 >
                   {step.id}
                 </span>
-                {/* Visual Separator */}
                 <span
-                  className="text-3xl"
+                  className="text-2xl"
                   style={{ color: MUTED_TEXT_COLOR }}
                 >
                   |
                 </span>
-                {/* Icon */}
                 <step.icon
-                  className="w-8 h-8"
+                  className="w-6 h-6"
                   style={{ color: ACCENT_COLOR }}
                 />
               </div>
 
-              {/* Step Title */}
+              {/* Title */}
               <h3
-                className="text-2xl font-bold mb-3 mt-4"
+                className="text-xl font-bold mb-2"
                 style={{ color: TEXT_COLOR_DARK }}
               >
                 {step.title}
               </h3>
 
-              {/* Step Description */}
+              {/* Description */}
               <p
-                className="text-base leading-relaxed"
+                className="text-sm leading-relaxed"
                 style={{ color: MUTED_TEXT_COLOR }}
               >
                 {step.description}

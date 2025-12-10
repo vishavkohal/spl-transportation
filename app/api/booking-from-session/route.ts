@@ -1,3 +1,6 @@
+
+
+// app/api/booking-from-session/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import {
@@ -6,7 +9,7 @@ import {
   getBookingBySession,
   sendEmailsOnce
 } from '../../lib/booking';
-
+export const runtime = 'nodejs';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: '2025-11-17.clover',
 });
@@ -34,7 +37,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing booking metadata' }, { status: 500 });
     }
 
-    // Parse booking
+    // Parse booking from metadata
     const rawBooking = JSON.parse(session.metadata.booking) as BookingPayload;
     const currency = (session.currency ?? 'aud').toUpperCase();
     const amountTotal = (session.amount_total ?? 0) / 100;
@@ -45,17 +48,53 @@ export async function POST(req: NextRequest) {
       currency,
     };
 
-    // Save (idempotent)
-    await saveBooking(session.id, booking);
+    // Save (idempotent) - returns the Prisma Booking record
+    const saved = await saveBooking(session.id, booking);
 
-    // Send emails only once
+    // Send emails only once if paid (sendEmailsOnce will check DB flag)
     if (paid) {
       await sendEmailsOnce(session.id, booking, session);
+    } else {
+      console.log('Session not paid yet — skipping emails for session', sessionId);
+    }
+
+    // Map saved DB record to a client-friendly shape (if available)
+    let bookingForClient = booking;
+    if (saved) {
+      bookingForClient = {
+        id: (saved as any).id,
+        createdAt: (saved as any).createdAt
+          ? new Date((saved as any).createdAt).toISOString()
+          : undefined,
+        pickupLocation: (saved as any).pickupLocation,
+        pickupAddress: (saved as any).pickupAddress ?? undefined,
+        dropoffLocation: (saved as any).dropoffLocation,
+        dropoffAddress: (saved as any).dropoffAddress ?? undefined,
+        pickupDate: (saved as any).pickupDate,
+        pickupTime: (saved as any).pickupTime,
+        passengers: (saved as any).passengers,
+        luggage: (saved as any).luggage,
+        flightNumber: (saved as any).flightNumber ?? undefined,
+        childSeat: (saved as any).childSeat,
+        fullName: (saved as any).fullName,
+        email: (saved as any).email,
+        contactNumber: (saved as any).contactNumber,
+        totalPrice: ((saved as any).totalPriceCents ?? 0) / 100,
+        currency: (saved as any).currency ?? booking.currency,
+        bookingType: (saved as any).bookingType ?? booking.bookingType,
+        hourlyPickupLocation: (saved as any).hourlyPickupLocation ?? undefined,
+        hourlyHours:
+          typeof (saved as any).hourlyHours === 'number'
+            ? (saved as any).hourlyHours
+            : (saved as any).hourlyHours ?? undefined,
+        hourlyVehicleType: (saved as any).hourlyVehicleType ?? undefined,
+      } as BookingPayload;
     }
 
     return NextResponse.json({
+      ok: true,
       paid,
-      booking,
+      booking: bookingForClient,
     });
   } catch (err) {
     console.error('booking-from-session error:', err);

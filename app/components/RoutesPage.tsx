@@ -262,9 +262,9 @@ export default function RoutesPage({
                 }}
                 className="mt-3 w-full rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all hover:brightness-110 active:scale-[0.98]"
                 style={{
-                  backgroundColor: ACCENT_COLOR,
+                  backgroundColor: PRIMARY_COLOR,
                   boxShadow:
-                    '0 4px 6px -1px rgba(166, 25, 36, 0.4), 0 2px 4px -2px rgba(166, 25, 36, 0.4)'
+                    '0 4px 6px -1px rgba(41, 78, 128, 0.4), 0 2px 4px -2px rgba(40, 54, 144, 0.4)'
                 }}
                 aria-label={`Book route from ${route.from} to ${route.to}`}
               >

@@ -16,7 +16,13 @@ interface BookingRequest {
   email: string;
   contactNumber: string;
   totalPrice: number;
-  paymentIntentId?: string; // NEW: store Stripe payment reference
+  paymentIntentId?: string; // store Stripe payment reference
+
+  // NEW: support for hourly hire
+  bookingType?: 'standard' | 'hourly';
+  hourlyPickupLocation?: string;
+  hourlyHours?: number;
+  hourlyVehicleType?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -45,9 +51,8 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Booking confirmed',
       bookingId: generateBookingId(),
-      paymentIntentId: bookingData.paymentIntentId
+      paymentIntentId: bookingData.paymentIntentId,
     });
-
   } catch (error) {
     console.error('Booking error:', error);
     return NextResponse.json(
@@ -64,13 +69,31 @@ function generateBookingId(): string {
 async function sendCustomerEmail(booking: BookingRequest) {
   console.log('Sending customer email to:', booking.email);
 
-  const emailContent = `
-    Dear ${booking.fullName},
+  const isHourly = booking.bookingType === 'hourly';
 
-    Thank you for booking with QLD Taxi Services!
+  const hourlyPickup =
+    booking.hourlyPickupLocation || booking.pickupLocation || 'N/A';
+  const hourlyHours =
+    typeof booking.hourlyHours === 'number'
+      ? booking.hourlyHours
+      : booking.hourlyHours
+      ? Number(booking.hourlyHours)
+      : undefined;
+  const hourlyVehicle = booking.hourlyVehicleType || 'N/A';
 
-    Booking Details:
-    ----------------
+  const tripDetails = isHourly
+    ? `
+    Service: Chauffeur & Hourly Hire
+    Pickup: ${hourlyPickup}
+    Hours: ${hourlyHours ?? 'N/A'}
+    Vehicle: ${hourlyVehicle}
+    Date & Time: ${booking.pickupDate} at ${booking.pickupTime}
+    Passengers: ${booking.passengers}
+    Luggage: ${booking.luggage}
+    ${booking.flightNumber ? `Flight: ${booking.flightNumber}` : ''}
+    Child Seat: ${booking.childSeat ? 'Yes' : 'No'}
+  `
+    : `
     Pickup: ${booking.pickupLocation}
     Address: ${booking.pickupAddress}
 
@@ -82,6 +105,16 @@ async function sendCustomerEmail(booking: BookingRequest) {
     Luggage: ${booking.luggage}
     ${booking.flightNumber ? `Flight: ${booking.flightNumber}` : ''}
     Child Seat: ${booking.childSeat ? 'Yes' : 'No'}
+  `;
+
+  const emailContent = `
+    Dear ${booking.fullName},
+
+    Thank you for booking with QLD Taxi Services!
+
+    Booking Details:
+    ----------------
+    ${tripDetails}
 
     Total Fare: $${booking.totalPrice}
     Stripe Payment: ${booking.paymentIntentId ?? 'N/A'}
@@ -99,17 +132,31 @@ async function sendCustomerEmail(booking: BookingRequest) {
 async function sendCompanyEmail(booking: BookingRequest) {
   console.log('Sending company notification');
 
-  const emailContent = `
-    New Booking Received!
+  const isHourly = booking.bookingType === 'hourly';
 
-    Customer Details:
-    ----------------
-    Name: ${booking.fullName}
-    Email: ${booking.email}
-    Phone: ${booking.contactNumber}
+  const hourlyPickup =
+    booking.hourlyPickupLocation || booking.pickupLocation || 'N/A';
+  const hourlyHours =
+    typeof booking.hourlyHours === 'number'
+      ? booking.hourlyHours
+      : booking.hourlyHours
+      ? Number(booking.hourlyHours)
+      : undefined;
+  const hourlyVehicle = booking.hourlyVehicleType || 'N/A';
 
-    Trip Details:
-    -------------
+  const tripDetails = isHourly
+    ? `
+    Service: Chauffeur & Hourly Hire
+    Pickup: ${hourlyPickup}
+    Hours: ${hourlyHours ?? 'N/A'}
+    Vehicle: ${hourlyVehicle}
+    Date & Time: ${booking.pickupDate} at ${booking.pickupTime}
+    Passengers: ${booking.passengers}
+    Luggage: ${booking.luggage}
+    ${booking.flightNumber ? `Flight: ${booking.flightNumber}` : ''}
+    Child Seat: ${booking.childSeat ? 'Yes' : 'No'}
+  `
+    : `
     Pickup: ${booking.pickupLocation}
     Address: ${booking.pickupAddress}
 
@@ -121,6 +168,20 @@ async function sendCompanyEmail(booking: BookingRequest) {
     Luggage: ${booking.luggage}
     ${booking.flightNumber ? `Flight: ${booking.flightNumber}` : ''}
     Child Seat: ${booking.childSeat ? 'Yes' : 'No'}
+  `;
+
+  const emailContent = `
+    New Booking Received!
+
+    Customer Details:
+    ----------------
+    Name: ${booking.fullName}
+    Email: ${booking.email}
+    Phone: ${booking.contactNumber}
+
+    Trip Details:
+    -------------
+    ${tripDetails}
 
     Total Fare: $${booking.totalPrice}
     Stripe Payment: ${booking.paymentIntentId ?? 'N/A'}

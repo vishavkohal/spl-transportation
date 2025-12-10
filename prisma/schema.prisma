@@ -30,28 +30,34 @@ model RoutePricing {
 }
 
 model Booking {
-  id              String   @id @default(cuid())
-  stripeSessionId String   @unique
+  id                   String   @id @default(cuid())
+  stripeSessionId      String   @unique
 
-  pickupLocation  String
-  pickupAddress   String?
-  dropoffLocation String
-  dropoffAddress  String?
-  pickupDate      String
-  pickupTime      String
-  passengers      Int
-  luggage         Int
-  flightNumber    String?
-  childSeat       Boolean
+  pickupLocation       String
+  pickupAddress        String?
+  dropoffLocation      String
+  dropoffAddress       String?
+  pickupDate           String
+  pickupTime           String
+  passengers           Int
+  luggage              Int
+  flightNumber         String?
+  childSeat            Boolean
 
-  fullName        String
-  email           String
-  contactNumber   String
+  fullName             String
+  email                String
+  contactNumber        String
 
-  totalPriceCents Int
-  currency        String
+  totalPriceCents      Int
+  currency             String
 
-  emailSent       Boolean  @default(false)
+  emailSent            Boolean  @default(false)
 
-  createdAt       DateTime @default(now())
+  // NEW: booking type + hourly hire fields
+  bookingType          String   @default("standard")
+  hourlyPickupLocation String?
+  hourlyHours          Int?
+  hourlyVehicleType    String?
+
+  createdAt            DateTime @default(now())
 }

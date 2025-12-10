@@ -1,28 +1,28 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 
-// 1. UPDATED: Type definition to match the new backend DTO
-// We include null for optional fields (label, description)
+// 1. UPDATED: Type definition to match the backend DTO
 export type PricingItem = {
   passengers: string;
   price: number;
-  vehicleType: string; // New field
+  vehicleType: string;
 };
 
 export type Route = {
   id: number;
   from: string;
   to: string;
-  label: string | null; // New field
-  description: string | null; // New field
+  label: string | null;
+  description: string | null;
   distance: string;
   duration: string;
   pricing: PricingItem[];
 };
 
 // Booking type for admin view
+// NOTE: id is string to match Prisma (BookingWhereUniqueInput.id is string)
 type Booking = {
-  id: number;
+  id: string;
   stripeSessionId: string;
   pickupLocation: string;
   pickupAddress: string | null;
@@ -41,26 +41,29 @@ type Booking = {
   currency: string;
   emailSent: boolean;
   createdAt?: string;
+
+  // NEW: support for booking type & hourly hire
+  bookingType?: 'standard' | 'hourly' | null;
+  hourlyPickupLocation?: string | null;
+  hourlyHours?: number | null;
+  hourlyVehicleType?: string | null;
 };
 
 // Define the custom colors
-const PRIMARY_COLOR = '#18234B'; // Dark Navy (used for primary text/headings)
-const ACCENT_COLOR = '#A61924'; // Deep Red (used for buttons, focus rings, and accents)
-const SUCCESS_COLOR = '#16A34A'; // Tailwind green-600 for Save button
+const PRIMARY_COLOR = '#18234B'; // Dark Navy
+const ACCENT_COLOR = '#A61924'; // Deep Red
+const SUCCESS_COLOR = '#16A34A'; // Green
 
-// --- CONSTANTS ---
 const DISTANCE_UNIT = 'km';
 const DURATION_UNIT = 'min';
 
-// 2. UPDATED: PricingRow to include vehicleType
 type PricingRow = { passengers: string; price: number | string; vehicleType: string };
 
-// 3. UPDATED: Form state to include label and description
 type FormState = {
   from: string;
   to: string;
-  label: string; // Treat as string in form, submit null/empty string
-  description: string; // Treat as string in form, submit null/empty string
+  label: string;
+  description: string;
   distance: string | number;
   duration: string | number;
   pricing: PricingRow[];
@@ -69,34 +72,28 @@ type FormState = {
 type FormErrors = {
   from?: string;
   to?: string;
-  label?: string; // New field error
-  description?: string; // New field error
+  label?: string;
+  description?: string;
   distance?: string;
   duration?: string;
   pricing?: (string | null)[];
   _form?: string | null;
 };
 
-// Reusable Input Class Generator for Form
 const getInputClass = (hasError: boolean): string => {
-  const base = `p-2 border rounded w-full focus:outline-none focus:ring-2 focus:ring-offset-0 transition-colors duration-150`;
-  const errorStyle = `border-red-500`;
+  const base =
+    'p-2 border rounded w-full focus:outline-none focus:ring-2 focus:ring-offset-0 transition-colors duration-150';
+  const errorStyle = 'border-red-500';
   const normalStyle = `border-gray-200 focus:ring-[${ACCENT_COLOR}]`;
-
   return `${base} ${hasError ? errorStyle : normalStyle}`;
 };
 
-// Helper to convert display value (e.g., "10 km") to raw number (10)
 const parseNumericInput = (displayValue: string | null): number | null => {
   if (!displayValue) return null;
   const value = String(displayValue).replace(/[^0-9.]/g, '').trim();
   const parsed = Number(value);
   return isNaN(parsed) || value === '' ? null : parsed;
 };
-
-// =====================
-// Top-level AdminPanel
-// =====================
 
 type AdminTab = 'routes' | 'bookings';
 
@@ -108,7 +105,6 @@ function AdminPanel() {
   const [authLoading, setAuthLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<AdminTab>('routes');
 
-  // Check if user is already logged in (cookie-based)
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -214,7 +210,6 @@ function AdminPanel() {
     );
   }
 
-  // Authenticated layout with navbar (Routes / Bookings + Logout)
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
@@ -227,13 +222,10 @@ function AdminPanel() {
             >
               Admin Panel
             </h1>
-            <p className="text-xs text-gray-500">
-              Manage routes and bookings
-            </p>
+            <p className="text-xs text-gray-500">Manage routes and bookings</p>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Tabs */}
             <div className="inline-flex rounded-full border bg-gray-50 p-1 text-sm">
               <button
                 type="button"
@@ -269,7 +261,6 @@ function AdminPanel() {
               </button>
             </div>
 
-            {/* Logout in navbar */}
             <button
               onClick={handleLogout}
               className="px-3 py-1.5 text-sm text-white rounded shadow hover:brightness-110"
@@ -291,25 +282,22 @@ function AdminPanel() {
 
 export default AdminPanel;
 
-// =======================
-// Routes Admin UI
-// =======================
+/* =======================
+   Routes Admin UI
+======================= */
 
 function RoutesAdminPanel() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [editing, setEditing] = useState<Route | null>(null);
 
-  // 4. UPDATED: default pricing includes vehicleType
   const defaultPricing: PricingRow[] = [
     { passengers: '1-2', price: 0, vehicleType: 'Sedan' },
     { passengers: '3-4', price: 0, vehicleType: 'SUV' },
     { passengers: '5+', price: 0, vehicleType: 'Van' }
   ];
 
-  // 5. UPDATED: form state includes label and description
   const [form, setForm] = useState<FormState>({
     from: '',
     to: '',
@@ -361,7 +349,6 @@ function RoutesAdminPanel() {
     }
   }
 
-  // 6. UPDATED: startEdit to map new fields
   function startEdit(r?: Route | null) {
     setErrors({ pricing: [] });
     setSaving(false);
@@ -408,7 +395,6 @@ function RoutesAdminPanel() {
     setErrors(e => ({ ...e, [key]: undefined }));
   }
 
-  // 7. UPDATED: updatePricingRow to handle vehicleType
   function updatePricingRow(index: number, patch: Partial<PricingRow>) {
     setForm(s => {
       const pricing = s.pricing.map((row, i) => (i === index ? { ...row, ...patch } : row));
@@ -440,23 +426,21 @@ function RoutesAdminPanel() {
     }));
   }
 
-  // 9. UPDATED: validate to check label, description, and vehicleType
   function validate(): boolean {
     const newErrors: FormErrors = { pricing: [] };
     if (!form.from.trim()) newErrors.from = 'Start location is required';
     if (!form.to.trim()) newErrors.to = 'Destination is required';
 
     if (form.label.length > 50) newErrors.label = 'Label must be under 50 characters';
-    if (form.description.length > 255) newErrors.description = 'Description must be under 255 characters';
+    if (form.description.length > 255)
+      newErrors.description = 'Description must be under 255 characters';
 
-    // Validate distance as a number
     if (form.distance && Number.isNaN(Number(form.distance))) {
       newErrors.distance = 'Must be a number';
     } else if (String(form.distance).length > 10) {
       newErrors.distance = 'Number too long';
     }
 
-    // Validate duration as a number
     if (form.duration && Number.isNaN(Number(form.duration))) {
       newErrors.duration = 'Must be a number';
     } else if (String(form.duration).length > 10) {
@@ -501,7 +485,6 @@ function RoutesAdminPanel() {
     return !(hasFieldErrors || hasPricingErrors);
   }
 
-  // 10. UPDATED: handleSave to include new fields in the payload
   async function handleSave(e?: React.FormEvent) {
     e?.preventDefault();
     if (!validate()) return;
@@ -553,7 +536,6 @@ function RoutesAdminPanel() {
 
   return (
     <div className="bg-gray-50 rounded-lg">
-      {/* Header row for routes section */}
       <div className="flex justify-between items-center mb-4">
         <h2
           className="text-2xl sm:text-3xl font-bold"
@@ -596,7 +578,7 @@ function RoutesAdminPanel() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left: routes list */}
+        {/* Routes list */}
         <div>
           {!loading && routes.length === 0 && (
             <p className="text-sm text-gray-600 p-4 border rounded bg-white">
@@ -616,8 +598,7 @@ function RoutesAdminPanel() {
                       className="text-lg font-semibold"
                       style={{ color: PRIMARY_COLOR }}
                     >
-                      {r.from}{' '}
-                      <span style={{ color: ACCENT_COLOR }}>→</span> {r.to}
+                      {r.from} <span style={{ color: ACCENT_COLOR }}>→</span> {r.to}
                     </div>
 
                     {(r.label || r.description) && (
@@ -684,7 +665,7 @@ function RoutesAdminPanel() {
           </ul>
         </div>
 
-        {/* Right: Add / Edit form — shown only when editing !== null */}
+        {/* Add / Edit form */}
         {editing !== null && (
           <div className="bg-white p-6 border rounded-lg shadow-xl sticky top-4 h-fit">
             <h3
@@ -697,9 +678,8 @@ function RoutesAdminPanel() {
             </h3>
 
             <form onSubmit={handleSave} className="space-y-4" noValidate>
-              {/* Route Details (FROM/TO) */}
+              {/* Route Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-2 border-b border-gray-100">
-                {/* Start location */}
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Start location
@@ -719,7 +699,6 @@ function RoutesAdminPanel() {
                   )}
                 </div>
 
-                {/* Destination */}
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Destination
@@ -740,9 +719,8 @@ function RoutesAdminPanel() {
                 </div>
               </div>
 
-              {/* Label and Description */}
+              {/* Label / Description */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 pb-4 border-b border-gray-100">
-                {/* Label */}
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Label (Optional, max 50)
@@ -762,7 +740,6 @@ function RoutesAdminPanel() {
                   )}
                 </div>
 
-                {/* Description */}
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Description (Optional, max 255)
@@ -783,9 +760,8 @@ function RoutesAdminPanel() {
                 </div>
               </div>
 
-              {/* Distance and Duration */}
+              {/* Distance / Duration */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 pb-4 border-b border-gray-100">
-                {/* Distance */}
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Distance ({DISTANCE_UNIT})
@@ -812,7 +788,6 @@ function RoutesAdminPanel() {
                   )}
                 </div>
 
-                {/* Duration */}
                 <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Estimated duration ({DURATION_UNIT})
@@ -839,11 +814,11 @@ function RoutesAdminPanel() {
                 </div>
               </div>
 
-              {/* Pricing Section */}
+              {/* Pricing */}
               <div>
                 <div className="flex items-center justify-between mt-4 mb-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 pb-10">
                       Pricing (USD)
                     </label>
                   </div>
@@ -865,8 +840,7 @@ function RoutesAdminPanel() {
                 <div className="space-y-3">
                   {form.pricing.map((row, i) => (
                     <div key={i} className="grid grid-cols-12 gap-2 items-start">
-                      {/* Vehicle Type */}
-                      <div className="col-span-4 min-w-0 relative">
+                      <div className="col-span-3 min-w-0 relative">
                         {i === 0 && (
                           <label className="text-xs text-gray-600 absolute -top-5">
                             Vehicle Type
@@ -886,11 +860,10 @@ function RoutesAdminPanel() {
                         />
                       </div>
 
-                      {/* Passenger range */}
-                      <div className="col-span-4 min-w-0 relative">
+                      <div className="col-span-2 min-w-0 relative">
                         {i === 0 && (
                           <label className="text-xs text-gray-600 absolute -top-5">
-                            Passenger range
+                            Passenger
                           </label>
                         )}
                         <input
@@ -907,8 +880,7 @@ function RoutesAdminPanel() {
                         />
                       </div>
 
-                      {/* Price */}
-                      <div className="col-span-2 min-w-0 relative">
+                      <div className="col-span-5 min-w-0 relative pl-6">
                         {i === 0 && (
                           <label className="text-xs text-gray-600 absolute -top-5">
                             Price
@@ -937,11 +909,10 @@ function RoutesAdminPanel() {
                         </div>
                       </div>
 
-                      {/* Remove button */}
                       <div className="col-span-2 flex items-start">
                         <button
                           type="button"
-                          className="w-full h-full px-1 py-2 border rounded text-sm hover:bg-gray-200 transition-colors text-gray-700"
+                          className="w-full bg-red-600 h-full px-1 py-2 border rounded text-xs hover:bg-red-700 transition-colors text-white"
                           onClick={() => removePricingRow(i)}
                         >
                           Remove
@@ -963,7 +934,7 @@ function RoutesAdminPanel() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Actions */}
               <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-100">
                 <button
                   type="submit"
@@ -1000,20 +971,30 @@ function RoutesAdminPanel() {
   );
 }
 
-// =======================
-// Bookings Admin UI
-// =======================
+/* =======================
+   Bookings Admin UI
+======================= */
 
 function BookingsAdminPanel() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 🔍 Filters
+  const [search, setSearch] = useState('');
+  const [filterBookingType, setFilterBookingType] = useState<'all' | 'standard' | 'hourly'>(
+    'all'
+  );
+  const [filterEmailStatus, setFilterEmailStatus] = useState<'all' | 'sent' | 'not-sent'>(
+    'all'
+  );
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+
   async function loadBookings() {
     setLoading(true);
     setError(null);
     try {
-      // You should implement this API on the backend using your booking.ts + Prisma
       const res = await fetch('/api/admin/bookings');
       if (!res.ok) throw new Error(`Fetch failed (${res.status})`);
       const data: Booking[] = await res.json();
@@ -1029,15 +1010,91 @@ function BookingsAdminPanel() {
     loadBookings();
   }, []);
 
+  async function handleDeleteBooking(id: string) {
+    if (!confirm('Delete this booking?')) return;
+
+    try {
+      const res = await fetch('/api/admin/bookings', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Failed to delete booking');
+
+      await loadBookings();
+    } catch (error: any) {
+      alert(error.message || 'Delete failed');
+    }
+  }
+
+  // 🔎 Derived: filtered bookings
+  const filteredBookings = React.useMemo(() => {
+    const searchLower = search.trim().toLowerCase();
+
+    // Parse date filters (if provided)
+    const fromDate = filterDateFrom ? new Date(filterDateFrom) : null;
+    const toDate = filterDateTo ? new Date(filterDateTo) : null;
+
+    if (toDate) {
+      // include the whole "to" day
+      toDate.setHours(23, 59, 59, 999);
+    }
+
+    return bookings.filter(b => {
+      // Search filter (name, email, phone, locations, session)
+      if (searchLower) {
+        const haystack = [
+          b.fullName,
+          b.email,
+          b.contactNumber,
+          b.pickupLocation,
+          b.pickupAddress || '',
+          b.dropoffLocation,
+          b.dropoffAddress || '',
+          b.stripeSessionId
+        ]
+          .join(' ')
+          .toLowerCase();
+
+        if (!haystack.includes(searchLower)) return false;
+      }
+
+      // Booking type filter
+      const type = (b.bookingType || 'standard') as 'standard' | 'hourly';
+      if (filterBookingType !== 'all' && type !== filterBookingType) return false;
+
+      // Email status filter
+      if (filterEmailStatus === 'sent' && !b.emailSent) return false;
+      if (filterEmailStatus === 'not-sent' && b.emailSent) return false;
+
+      // Date range filter (createdAt)
+      if (b.createdAt && (fromDate || toDate)) {
+        const created = new Date(b.createdAt);
+        if (fromDate && created < fromDate) return false;
+        if (toDate && created > toDate) return false;
+      }
+
+      return true;
+    });
+  }, [bookings, search, filterBookingType, filterEmailStatus, filterDateFrom, filterDateTo]);
+
   return (
     <div className="bg-gray-50 rounded-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h2
-          className="text-2xl sm:text-3xl font-bold"
-          style={{ color: PRIMARY_COLOR }}
-        >
-          Bookings
-        </h2>
+      <div className="flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2
+            className="text-2xl sm:text-3xl font-bold"
+            style={{ color: PRIMARY_COLOR }}
+          >
+            Bookings
+          </h2>
+          <p className="text-xs text-gray-500">
+            View &amp; manage all Stripe bookings (standard &amp; hourly hire)
+          </p>
+        </div>
+
         <div className="flex items-center gap-3">
           <button
             className="px-4 py-2 border rounded hover:bg-gray-200 text-gray-700 transition-colors"
@@ -1046,8 +1103,111 @@ function BookingsAdminPanel() {
           >
             {loading ? 'Refreshing...' : 'Refresh'}
           </button>
-          <div className="text-sm text-gray-600">
-            {loading ? 'Loading...' : `${bookings.length} bookings`}
+          <div className="text-sm text-gray-600 text-right">
+            {loading
+              ? 'Loading...'
+              : `${filteredBookings.length} of ${bookings.length} bookings`}
+          </div>
+        </div>
+      </div>
+
+      {/* 🔍 Filters row */}
+      <div className="mb-4 p-4 bg-white border rounded-lg shadow-sm space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          {/* Search */}
+          <div className="col-span-1 md:col-span-2">
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Search (name, email, phone, locations, session)
+            </label>
+            <input
+              className="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-offset-0"
+              style={{ '--tw-ring-color': ACCENT_COLOR } as React.CSSProperties}
+              placeholder="Type to search bookings…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+
+          {/* Booking type */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Booking type
+            </label>
+            <select
+              className="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-offset-0"
+              style={{ '--tw-ring-color': ACCENT_COLOR } as React.CSSProperties}
+              value={filterBookingType}
+              onChange={e =>
+                setFilterBookingType(e.target.value as 'all' | 'standard' | 'hourly')
+              }
+            >
+              <option value="all">All types</option>
+              <option value="standard">Standard transfer</option>
+              <option value="hourly">Hourly hire</option>
+            </select>
+          </div>
+
+          {/* Email status */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Email status
+            </label>
+            <select
+              className="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-offset-0"
+              style={{ '--tw-ring-color': ACCENT_COLOR } as React.CSSProperties}
+              value={filterEmailStatus}
+              onChange={e =>
+                setFilterEmailStatus(e.target.value as 'all' | 'sent' | 'not-sent')
+              }
+            >
+              <option value="all">All</option>
+              <option value="sent">Emails sent</option>
+              <option value="not-sent">Emails not sent</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Date range */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Created from
+            </label>
+            <input
+              type="date"
+              className="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-offset-0"
+              style={{ '--tw-ring-color': ACCENT_COLOR } as React.CSSProperties}
+              value={filterDateFrom}
+              onChange={e => setFilterDateFrom(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Created to
+            </label>
+            <input
+              type="date"
+              className="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-offset-0"
+              style={{ '--tw-ring-color': ACCENT_COLOR } as React.CSSProperties}
+              value={filterDateTo}
+              onChange={e => setFilterDateTo(e.target.value)}
+            />
+          </div>
+
+          <div className="sm:col-span-2 flex items-end justify-start sm:justify-end gap-2">
+            <button
+              type="button"
+              className="px-3 py-2 text-xs border rounded text-gray-700 hover:bg-gray-100"
+              onClick={() => {
+                setSearch('');
+                setFilterBookingType('all');
+                setFilterEmailStatus('all');
+                setFilterDateFrom('');
+                setFilterDateTo('');
+              }}
+            >
+              Clear filters
+            </button>
           </div>
         </div>
       </div>
@@ -1058,18 +1218,30 @@ function BookingsAdminPanel() {
         </p>
       )}
 
-      {!loading && bookings.length === 0 && !error && (
+      {!loading && filteredBookings.length === 0 && !error && (
         <p className="text-sm text-gray-600 p-4 border rounded bg-white">
-          No bookings found yet.
+          No bookings match your filters.
         </p>
       )}
 
       <ul className="space-y-4">
-        {bookings.map(b => {
+        {filteredBookings.map(b => {
           const amount =
             typeof b.totalPriceCents === 'number'
               ? (b.totalPriceCents / 100).toFixed(2)
               : '—';
+
+          const bookingType: 'standard' | 'hourly' =
+            (b.bookingType as 'standard' | 'hourly') || 'standard';
+
+          const bookingTypeLabel =
+            bookingType === 'hourly' ? 'Hourly hire' : 'Standard transfer';
+
+          const bookingTypeClass =
+            bookingType === 'hourly'
+              ? 'bg-blue-50 border-blue-200 text-blue-700'
+              : 'bg-gray-50 border-gray-200 text-gray-700';
+
           return (
             <li
               key={b.id}
@@ -1077,7 +1249,7 @@ function BookingsAdminPanel() {
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-start">
                 <div>
-                  {/* Customer + route */}
+                  {/* Customer + badges */}
                   <div className="flex flex-wrap items-center gap-2">
                     <div
                       className="font-semibold text-base sm:text-lg"
@@ -1085,22 +1257,44 @@ function BookingsAdminPanel() {
                     >
                       {b.fullName}
                     </div>
+
                     <span className="text-xs px-2 py-0.5 rounded-full border bg-gray-50 text-gray-600">
                       {b.email}
                     </span>
                     <span className="text-xs px-2 py-0.5 rounded-full border bg-gray-50 text-gray-600">
                       {b.contactNumber}
                     </span>
+
+                    {/* Booking type badge */}
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full border ${bookingTypeClass}`}
+                    >
+                      {bookingTypeLabel}
+                    </span>
                   </div>
 
-                  <div className="mt-1 text-sm text-gray-700">
-                    {b.pickupLocation}
-                    {b.pickupAddress ? ` (${b.pickupAddress})` : ''}{' '}
-                    <span style={{ color: ACCENT_COLOR }}>→</span>{' '}
-                    {b.dropoffLocation}
-                    {b.dropoffAddress ? ` (${b.dropoffAddress})` : ''}
-                  </div>
+                  {/* Route / hourly info */}
+                  {bookingType === 'hourly' ? (
+                    <>
+                      <div className="mt-1 text-sm text-gray-700">
+                        Pickup: {b.hourlyPickupLocation || b.pickupLocation}
+                      </div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        Hours: {b.hourlyHours ?? 'N/A'} • Vehicle:{' '}
+                        {b.hourlyVehicleType || 'N/A'}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mt-1 text-sm text-gray-700">
+                      {b.pickupLocation}
+                      {b.pickupAddress ? ` (${b.pickupAddress})` : ''}{' '}
+                      <span style={{ color: ACCENT_COLOR }}>→</span>{' '}
+                      {b.dropoffLocation}
+                      {b.dropoffAddress ? ` (${b.dropoffAddress})` : ''}
+                    </div>
+                  )}
 
+                  {/* Date & pax */}
                   <div className="mt-1 text-xs text-gray-500">
                     {b.pickupDate} • {b.pickupTime} • {b.passengers} pax •{' '}
                     {b.luggage} bags
@@ -1115,7 +1309,7 @@ function BookingsAdminPanel() {
                   )}
                 </div>
 
-                {/* Right: price & status */}
+                {/* Right: price & status & delete */}
                 <div className="flex flex-col items-start sm:items-end gap-1 flex-shrink-0 mt-2 sm:mt-0">
                   <div className="text-lg font-bold" style={{ color: PRIMARY_COLOR }}>
                     {amount !== '—' ? `${amount} ${b.currency || 'AUD'}` : '—'}
@@ -1134,6 +1328,13 @@ function BookingsAdminPanel() {
                       Created: {new Date(b.createdAt).toLocaleString()}
                     </div>
                   )}
+
+                  <button
+                    className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
+                    onClick={() => handleDeleteBooking(b.id)}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             </li>

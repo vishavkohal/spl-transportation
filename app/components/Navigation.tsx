@@ -103,8 +103,8 @@ export default function Navigation({
                            text-white font-bold text-sm shadow-lg transition-all 
                            hover:-translate-y-0.5 active:translate-y-0"
                 style={{
-                  backgroundColor: ACCENT_COLOR,
-                  boxShadow: `0 4px 10px ${ACCENT_COLOR}40`
+                  backgroundColor: PRIMARY_COLOR,
+                  boxShadow: `0 4px 10px ${PRIMARY_COLOR}40`
                 }}
               >
                 <span>Book Now</span>

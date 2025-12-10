@@ -14,6 +14,9 @@ import CustomerReviews from './components/CustomerReviews';
 import RoutesSection from './components/RoutesSection';
 import PlaceCarousel from './components/PlaceCarousal';
 import HowToBookModern from './components/HowToBook';
+import { Services } from './components/Services';
+import PopularDestinations from './components/PopularDestinations';
+import Faqsection from './components/FaqSection';
 
 export type PageKey = 'home' | 'routes' | 'about' | 'terms' | 'contact';
 
@@ -30,10 +33,12 @@ const initialFormData: BookingFormData = {
   childSeat: false,
   fullName: '',
   email: '',
-  contactNumber: ''
+  contactNumber: '',
+  hourlyPickupLocation: '',
+  hourlyHours: 0,
+  hourlyVehicleType: ''
 };
 
-// ⭐ helper to normalize locations
 const normalizeLocation = (value: string) => value.trim();
 
 export default function TaxiBookingApp() {
@@ -47,9 +52,37 @@ export default function TaxiBookingApp() {
   const [routesLoading, setRoutesLoading] = useState(true);
   const [routesError, setRoutesError] = useState<string | null>(null);
 
-  // -------------------------------
-  // LOAD ROUTES FROM API
-  // -------------------------------
+  // ----------------------------------
+  // 🟢 Internet Connectivity State
+  // ----------------------------------
+  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [retryFlag, setRetryFlag] = useState<boolean>(false);
+
+  // Detect online/offline events
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      setRetryFlag(true); // auto-reload routes
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // ----------------------------------
+  // 🟢 Load Routes with Auto-Retry
+  // ----------------------------------
   useEffect(() => {
     let ignore = false;
 
@@ -57,185 +90,140 @@ export default function TaxiBookingApp() {
       setRoutesLoading(true);
 
       try {
-        const res = await fetch('/api/routes', {
-          cache: 'no-store'
-        });
+        const res = await fetch('/api/routes', { cache: 'no-store' });
 
-        if (!res.ok) {
-          throw new Error(`Failed to fetch routes (status ${res.status})`);
-        }
+        if (!res.ok) throw new Error('Failed to fetch routes');
 
         const json = await res.json();
         const data = Array.isArray(json) ? json : json.routes;
 
-        if (!Array.isArray(data)) {
-          throw new Error('Invalid routes format from API');
-        }
+        if (!Array.isArray(data)) throw new Error('Invalid routes format');
 
-        const sanitizedRoutes: Route[] = (data as Route[]).map(r => ({
+        const sanitized: Route[] = data.map((r: Route) => ({
           ...r,
           from: normalizeLocation(String(r.from)),
           to: normalizeLocation(String(r.to))
         }));
 
         if (!ignore) {
-          setRoutes(sanitizedRoutes);
+          setRoutes(sanitized);
           setRoutesError(null);
         }
-      } catch (e) {
-        console.error('Error loading routes', e);
+      } catch (err) {
         if (!ignore) {
-          setRoutes([]);
-          setRoutesError(
-            e instanceof Error ? e.message : 'Failed to load routes'
-          );
+          setRoutesError(isOnline ? 'Failed to load routes' : 'No internet connection');
         }
       } finally {
         if (!ignore) {
           setRoutesLoading(false);
+          setRetryFlag(false);
         }
       }
     };
 
-    loadRoutes();
+    // Only run fetch when online
+    if (isOnline) loadRoutes();
 
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [isOnline, retryFlag]);
 
-  // -------------------------------
-  // AVAILABLE LOCATIONS
-  // -------------------------------
+  // ----------------------------------
+  // LOCATION OPTIONS
+  // ----------------------------------
   const availableLocations = useMemo(
     () =>
       Array.from(
-        new Set(
-          routes.flatMap(r => [
-            normalizeLocation(r.from),
-            normalizeLocation(r.to)
-          ])
-        )
+        new Set(routes.flatMap(r => [normalizeLocation(r.from), normalizeLocation(r.to)]))
       ).sort(),
     [routes]
   );
 
-  // -------------------------------
-  // DROPOFF OPTIONS
-  // -------------------------------
   const dropoffOptions = useMemo(() => {
     if (!formData.pickupLocation) return availableLocations;
 
-    const connectedLocations = new Set<string>();
     const pickup = normalizeLocation(formData.pickupLocation);
+    const connected = new Set<string>();
 
     routes.forEach(r => {
       const from = normalizeLocation(r.from);
       const to = normalizeLocation(r.to);
 
-      if (from === pickup) {
-        connectedLocations.add(to);
-      } else if (to === pickup) {
-        connectedLocations.add(from);
-      }
+      if (from === pickup) connected.add(to);
+      if (to === pickup) connected.add(from);
     });
 
-    return Array.from(connectedLocations)
+    return Array.from(connected)
       .filter(loc => loc !== pickup)
       .sort();
   }, [availableLocations, formData.pickupLocation, routes]);
 
-  // -------------------------------
+  // ----------------------------------
   // CURRENT ROUTE
-  // -------------------------------
+  // ----------------------------------
   const currentRoute: Route | null = useMemo(() => {
-    const pickup = formData.pickupLocation
-      ? normalizeLocation(formData.pickupLocation)
-      : '';
-    const dropoff = formData.dropoffLocation
-      ? normalizeLocation(formData.dropoffLocation)
-      : '';
+    const pickup = normalizeLocation(formData.pickupLocation);
+    const dropoff = normalizeLocation(formData.dropoffLocation);
 
     if (!pickup || !dropoff) return null;
 
-    // 1. Try P -> D
     let route = routes.find(
-      r =>
-        normalizeLocation(r.from) === pickup &&
-        normalizeLocation(r.to) === dropoff
+      r => normalizeLocation(r.from) === pickup && normalizeLocation(r.to) === dropoff
     );
 
-    // 2. Try D -> P (reverse)
     if (!route) {
       const reverse = routes.find(
-        r =>
-          normalizeLocation(r.from) === dropoff &&
-          normalizeLocation(r.to) === pickup
+        r => normalizeLocation(r.from) === dropoff && normalizeLocation(r.to) === pickup
       );
 
       if (reverse) {
-        return {
-          ...reverse,
-          from: pickup,
-          to: dropoff
-        } as Route;
+        return { ...reverse, from: pickup, to: dropoff } as Route;
       }
     }
 
     return route ?? null;
   }, [routes, formData.pickupLocation, formData.dropoffLocation]);
 
-  // -------------------------------
+  // ----------------------------------
   // PRICE CALCULATION
-  // -------------------------------
+  // ----------------------------------
   const calculatedPrice = useMemo(() => {
     if (!currentRoute) return 0;
 
     let basePrice = 0;
     const pax = formData.passengers;
 
-    if (pax <= 4) {
-      basePrice = currentRoute.pricing?.[0]?.price || 0;
-    } else if (pax <= 6) {
-      basePrice = currentRoute.pricing?.[1]?.price || 0;
-    } else {
-      basePrice = currentRoute.pricing?.[2]?.price || 0;
-    }
+    if (pax <= 4) basePrice = currentRoute.pricing?.[0]?.price || 0;
+    else if (pax <= 6) basePrice = currentRoute.pricing?.[1]?.price || 0;
+    else basePrice = currentRoute.pricing?.[2]?.price || 0;
 
     if (basePrice === 0 && currentRoute.pricing) {
-      basePrice =
-        currentRoute.pricing[currentRoute.pricing.length - 1].price || 0;
+      basePrice = currentRoute.pricing[currentRoute.pricing.length - 1].price || 0;
     }
 
-    const childSeatCost = formData.childSeat ? 20 : 0;
-
-    return basePrice + childSeatCost;
+    return basePrice + (formData.childSeat ? 20 : 0);
   }, [currentRoute, formData.passengers, formData.childSeat]);
 
-  // -------------------------------
-  // CENTRALIZED INPUT HANDLER
-  // -------------------------------
+  // ----------------------------------
+  // INPUT HANDLER
+  // ----------------------------------
   const handleInputChange = useCallback(
     (field: keyof BookingFormData, value: string | number | boolean) => {
       setFormData(prev => {
         if (field === 'pickupLocation') {
           const newPickup = normalizeLocation(String(value));
-          const connectedLocations = new Set<string>();
+          const connected = new Set<string>();
 
           routes.forEach(r => {
             const from = normalizeLocation(r.from);
             const to = normalizeLocation(r.to);
 
-            if (from === newPickup) {
-              connectedLocations.add(to);
-            } else if (to === newPickup) {
-              connectedLocations.add(from);
-            }
+            if (from === newPickup) connected.add(to);
+            if (to === newPickup) connected.add(from);
           });
 
-          const dropoffValid = connectedLocations.has(
-            normalizeLocation(prev.dropoffLocation)
-          );
+          const dropoffValid = connected.has(normalizeLocation(prev.dropoffLocation));
 
           return {
             ...prev,
@@ -244,35 +232,15 @@ export default function TaxiBookingApp() {
           };
         }
 
-        if (field === 'passengers') {
-          const parsed = Number(value);
-          const n = Number.isFinite(parsed)
-            ? Math.max(1, Math.min(10, Math.floor(parsed)))
-            : prev.passengers;
-          return { ...prev, passengers: n };
-        }
-
-        if (field === 'luggage') {
-          const parsed = Number(value);
-          const n = Number.isFinite(parsed)
-            ? Math.max(0, Math.min(10, Math.floor(parsed)))
-            : prev.luggage;
-          return { ...prev, luggage: n };
-        }
-
-        if (field === 'dropoffLocation') {
-          return { ...prev, dropoffLocation: normalizeLocation(String(value)) };
-        }
-
         return { ...prev, [field]: value };
       });
     },
     [routes]
   );
 
-  // -------------------------------
-  // HANDLE ROUTE SELECTION
-  // -------------------------------
+  // ----------------------------------
+  // ROUTE SELECT HANDLER
+  // ----------------------------------
   const handleRouteSelect = useCallback((route: Route) => {
     setFormData(prev => ({
       ...prev,
@@ -288,11 +256,20 @@ export default function TaxiBookingApp() {
     }
   }, []);
 
-  // -------------------------------
-  // RENDER PAGES
-  // -------------------------------
+  // -------------------------------------------------------------------------
+  // RENDER
+  // -------------------------------------------------------------------------
+
   return (
     <div className="min-h-screen bg-gray-50">
+
+      {/* 🔴 Notification if offline */}
+      {!isOnline && (
+        <div className="bg-red-600 text-white text-center py-2 text-sm font-medium">
+          No internet connection. Some features may be unavailable.
+        </div>
+      )}
+
       <Navigation
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
@@ -312,9 +289,12 @@ export default function TaxiBookingApp() {
             dropoffOptions={dropoffOptions}
             selectedRoute={currentRoute}
             calculatedPrice={calculatedPrice}
-            routesLoading={routesLoading} // 👈 PASSED IN
+            routesLoading={routesLoading}
           />
+
           <PlaceCarousel />
+          <FeatureSection />
+          <PopularDestinations />
           <HowToBookModern />
           <RoutesSection
             routes={routes}
@@ -323,8 +303,9 @@ export default function TaxiBookingApp() {
             setCurrentPage={(page: string) => setCurrentPage(page as PageKey)}
             onSelectRoute={handleRouteSelect}
           />
-          <FeatureSection />
+          <Services />
           <CustomerReviews />
+          <Faqsection />
         </main>
       )}
 

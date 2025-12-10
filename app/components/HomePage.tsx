@@ -14,6 +14,7 @@ import {
   AlertCircle,
   ChevronDown
 } from 'lucide-react';
+import { Phone as Phone } from 'lucide-react';
 import Image from 'next/image';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import type { BookingFormData, Route } from '../types';
@@ -21,10 +22,12 @@ import { Services } from './Services';
 import CustomerReviews from './CustomerReviews';
 import HeroSection from './FeatureSection';
 import { PHONE_COUNTRIES_LIST } from '../lib/phonecodes';
+
 // Custom colors
 const PRIMARY_COLOR = '#18234B';
 const ACCENT_COLOR = '#A61924';
 const COMPANY_PHONE = '+61470032460';
+
 // Business rules
 const MAX_PASSENGERS = 8;
 const MAX_LUGGAGE = 4;
@@ -37,8 +40,19 @@ const VEHICLE_CONSTRAINTS: { maxPax: number; maxBags: number }[] = [
 ];
 
 // slideshow images
-const heroImages = [ '/home.jpg','/copy.jpg', '/copy3.png'];
-const PHONE_COUNTRIES = PHONE_COUNTRIES_LIST
+const heroImages = ['/home.jpg', '/copy.jpg', '/copy3.png'];
+const PHONE_COUNTRIES = PHONE_COUNTRIES_LIST;
+
+// NEW: Hourly Hire rates (hardcoded)
+const HOURLY_RATES: Record<
+  string,
+  { hourly: number; fullDay: number }
+> = {
+  Sedan: { hourly: 120, fullDay: 820 },
+  SUV: { hourly: 150, fullDay: 1050 },
+  Van: { hourly: 150, fullDay: 1050 }
+};
+
 // Helper: max bags for pax
 function getMaxBagsForCurrentPax(pax: number): number {
   if (pax >= 1 && pax <= 4) return 3;
@@ -76,6 +90,25 @@ function isPickupAtLeast30Mins(pickupDate: string, pickupTime: string) {
   const dt = new Date(pickupDate);
   dt.setHours(h, m, 0, 0);
   return dt.getTime() - Date.now() >= 30 * 60_000;
+}
+
+// NEW: Hourly price helper
+function getHourlyPrice(formData: BookingFormData): number {
+  const vehicle = formData.hourlyVehicleType;
+  const hours = Number(formData.hourlyHours || 0);
+
+  if (!vehicle || !HOURLY_RATES[vehicle] || hours <= 0) return 0;
+
+  const rate = HOURLY_RATES[vehicle];
+
+  // Full-day private charter (8h+) flat rate
+  if (hours >= 8) {
+    return rate.fullDay;
+  }
+
+  // 2-hour minimum
+  const billableHours = Math.max(2, hours);
+  return billableHours * rate.hourly;
 }
 
 /* -----------------------------
@@ -118,6 +151,8 @@ const stepTransitionVariants: Variants = {
   exit: { opacity: 0, y: -10, transition: { duration: 0.2, ease: 'easeIn' } }
 };
 
+type BookingMode = 'standard' | 'hourly';
+
 export default function HomePage(props: {
   formData: BookingFormData;
   handleInputChange: (
@@ -130,8 +165,8 @@ export default function HomePage(props: {
   AVAILABLE_LOCATIONS: string[];
   dropoffOptions: string[];
   selectedRoute: Route | null;
-  calculatedPrice: number;
-  routesLoading: boolean; // 👈 NEW
+  calculatedPrice: number; // standard transfer price
+  routesLoading: boolean;
 }) {
   const {
     formData,
@@ -155,7 +190,7 @@ export default function HomePage(props: {
   );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [firstHeroLoaded, setFirstHeroLoaded] = useState(false);
+  const [bookingMode, setBookingMode] = useState<BookingMode>('standard');
 
   const minDateForInput = getMinDateForInput();
 
@@ -208,6 +243,7 @@ export default function HomePage(props: {
     const bags = formData.luggage;
 
     switch (field) {
+      // Shared / standard fields
       case 'pickupLocation':
       case 'dropoffLocation':
       case 'pickupDate':
@@ -242,6 +278,22 @@ export default function HomePage(props: {
         return null;
       }
 
+      // NEW: hourly fields
+      case 'hourlyPickupLocation':
+        return value ? null : 'Required';
+
+      case 'hourlyHours': {
+  const hours = Number(value);
+  if (!hours || Number.isNaN(hours)) return 'Required';
+  if (hours < 2) return 'Min 2 hours';
+  if (hours > 8) return 'Max 8 hours';
+  return null;
+}
+
+
+      case 'hourlyVehicleType':
+        return value ? null : 'Required';
+
       default:
         return null;
     }
@@ -272,8 +324,8 @@ export default function HomePage(props: {
     );
   };
 
-  // STEP 1 validity
-  const isStep1Valid = () => {
+  // STEP 1 validity (STANDARD TRANSFER)
+  const isStandardStep1Valid = () => {
     if (!selectedRoute || calculatedPrice <= 0) return false;
 
     const mandatoryFields = [
@@ -316,7 +368,27 @@ export default function HomePage(props: {
     });
   };
 
-  // STEP 2 validity
+  // STEP 1 validity (HOURLY)
+  const hourlyPrice = getHourlyPrice(formData);
+
+const isHourlyStep1Valid = () => {
+  if (!formData.hourlyPickupLocation) return false;
+  if (!formData.pickupDate || !formData.pickupTime) return false;
+  if (!isPickupAtLeast30Mins(formData.pickupDate, formData.pickupTime))
+    return false;
+
+  const hours = Number(formData.hourlyHours || 0);
+  if (!hours || hours < 2) return false;
+  if (hours > 8) return false;          // 👈 new line
+
+  if (!formData.hourlyVehicleType) return false;
+  if (hourlyPrice <= 0) return false;
+
+  return true;
+};
+
+
+  // STEP 2 validity (shared)
   const isStep2FormValid = () => {
     const { fullName, email, contactNumber } = formData;
     if (!fullName || !email || !contactNumber) return false;
@@ -401,7 +473,8 @@ export default function HomePage(props: {
     }
   };
 
-  const goToStep2 = () => {
+  // STANDARD: go to step 2
+  const goToStep2Standard = () => {
     const fields = [
       'pickupLocation',
       'dropoffLocation',
@@ -416,7 +489,27 @@ export default function HomePage(props: {
     });
     setTouched(newTouched);
 
-    if (isStep1Valid()) {
+    if (isStandardStep1Valid()) {
+      setBookingStep(2);
+    }
+  };
+
+  // HOURLY: go to step 2
+  const goToStep2Hourly = () => {
+    const fields = [
+      'hourlyPickupLocation',
+      'pickupDate',
+      'pickupTime',
+      'hourlyHours',
+      'hourlyVehicleType'
+    ];
+    const newTouched = { ...touched };
+    fields.forEach(f => {
+      newTouched[f] = true;
+    });
+    setTouched(newTouched);
+
+    if (isHourlyStep1Valid()) {
       setBookingStep(2);
     }
   };
@@ -424,7 +517,7 @@ export default function HomePage(props: {
   return (
     <div className="min-h-screen bg-white-50 pt-2 md:pt-14">
       {/* Hero Section */}
-      <div className="relative h-[550px] lg:h-[500px] overflow-hidden">
+      <div className="relative h-[560px] lg:h-[520px] xl:h-[580px] overflow-hidden">
         <div className="absolute inset-0">
           {heroImages.map((src, index) => (
             <div
@@ -440,47 +533,71 @@ export default function HomePage(props: {
           ))}
         </div>
 
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/70 to-black/20 z-10"></div>
+<motion.div
+  className="relative z-20 h-full container mx-auto px-4 flex items-center"
+  variants={heroContentVariants}
+  initial="hidden"
+  animate="visible"
+>
+  <div className="py-10 lg:py-0 max-w-5xl lg:max-w-6xl mx-auto">
+    {/* Tag */}
 
-        <motion.div
-          className="relative z-20 h-full container mx-auto px-4 flex items-center justify-center text-center"
-          variants={heroContentVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <div className="py-10 lg:py-0 max-w-5xl lg:max-w-7xl mx-auto">
-            <span
-              className="inline-block py-1 px-3 rounded-full text-xs font-bold tracking-wider mb-4 backdrop-blur-sm border"
-              style={{
-                backgroundColor: `${ACCENT_COLOR}20`,
-                color: ACCENT_COLOR,
-                borderColor: `${ACCENT_COLOR}30`
-              }}
-            >
-              PREMIUM TRANSFERS
-            </span>
+      <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white mt-3 mb-4 leading-tight">
+        Seamless Transfers
+        <br />
+        Across Queensland
+      </h1>
 
-            <h1 className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-6xl font-extrabold text-white mt-5 mb-6 leading-tight">
-              Spl Transportation
-              <br />
-              <span className="text-2xl md:text-3xl lg:text-4xl font-normal text-red-500">
-                Smoothest Start to the Tropics.
-              </span>
-            </h1>
+      <p className="text-gray-200 text-sm sm:text-base mt-2 max-w-xl mx-auto lg:mx-0">
+        Reliable, private transport for airport pickups, hotels, events and business travel
+        in Cairns & surrounding regions.
+      </p>
 
-            <p className="text-gray-200 text-xs mt-4 max-w-xl mx-auto">
-              Experience reliable, comfortable transportation across Queensland.
-            </p>
+    <p className="text-gray-200 text-xs sm:text-sm mt-2 mb-6 max-w-xl">
+      Free quotes for all destinations.
+    </p>
 
-            <p className="text-gray-200 text-xs mb-8 max-w-xl mx-auto">
-              Free quotes for all destinations. Book online or call us at{' '}
-              <strong>
-                <a href="tel:+61470032460">+61 470 032 460</a>
-              </strong>
-              .
-            </p>
-          </div>
-        </motion.div>
+    {/* CTAs */}
+    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center lg:justify-center">
+      <button
+        type="button"
+        onClick={() =>
+          formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }
+        className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-black/30 bg-white text-gray-900 hover:bg-gray-100 transition"
+      >
+        Book your transfer
+        <ArrowRight className="w-4 h-4 ml-2" />
+      </button>
+
+      <a
+        href={`tel:${COMPANY_PHONE}`}
+        className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold border border-white/40 text-white hover:bg-white/10 transition"
+      >
+        Call now
+        <Phone className="w-4 h-4 ml-2" />
+      </a>
+    </div>
+
+    {/* Trust row */}
+    <div className="mt-5 flex flex-wrap gap-3 text-[11px] text-gray-200 justify-center lg:justify-center">
+      <span className="inline-flex items-center gap-1.5">
+        <CheckCircle className="w-3 h-3 text-emerald-400" />
+        Professional, licensed drivers
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <Clock className="w-3 h-3 text-amber-300" />
+        On-time airport pickups
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <Users className="w-3 h-3 text-sky-300" />
+        Private rides
+      </span>
+    </div>
+  </div>
+</motion.div>
+
 
         <motion.div
           className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2"
@@ -505,15 +622,24 @@ export default function HomePage(props: {
       </div>
 
       {/* Booking Card */}
-      <div className="container max-w-5xl mx-auto px-4 relative z-30 -mt-32 lg:-mt-24 mb-20">
-        <motion.div
-          ref={formTopRef}
-          className="bg-white rounded-2xl shadow-2xl border border-gray-100 backdrop-blur-xl overflow-hidden transition-colors duration-300"
-          variants={bookingCardVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
+     <div className="container max-w-5xl mx-auto px-4 relative z-30 -mt-24 lg:-mt-16 xl:-mt-20 mb-16">
+       <motion.div
+  ref={formTopRef}
+  className="
+    rounded-2xl 
+    bg-white/95 lg:bg-white/90 
+    backdrop-blur-sm lg:backdrop-blur-xl 
+    shadow-xl lg:shadow-2xl 
+    border border-white/70 
+    overflow-hidden 
+    transition-all duration-300
+  "
+  variants={bookingCardVariants}
+  initial="hidden"
+  whileInView="visible"
+  viewport={{ once: true, amount: 0.2 }}
+>
+
           {/* Progress bar */}
           <div className="h-1 w-full bg-gray-100">
             <div
@@ -525,7 +651,53 @@ export default function HomePage(props: {
             ></div>
           </div>
 
-          <div className="p-6 lg:p-8">
+     <div className="p-6 lg:p-8">
+  <div className="flex flex-wrap gap-3 mb-4">
+    {/* Standard */}
+    <button
+      type="button"
+      onClick={() => {
+        setBookingMode('standard');
+        setBookingStep(1);
+      }}
+      style={{
+        borderColor: bookingMode === 'standard' ? PRIMARY_COLOR : '#d1d5db',
+        backgroundColor: bookingMode === 'standard' ? PRIMARY_COLOR : '#f3f4f6',
+        color: bookingMode === 'standard' ? '#ffffff' : PRIMARY_COLOR,
+      }}
+      className={`
+        px-4 py-2 rounded-lg text-sm font-semibold border transition-all 
+        shadow-sm cursor-pointer select-none 
+        hover:scale-[1.02] active:scale-[0.98]
+        focus:outline-none focus:ring-2 focus:ring-offset-2
+      `}
+    >
+      Standard Transfer
+    </button>
+
+    {/* Hourly */}
+    <button
+      type="button"
+      onClick={() => {
+        setBookingMode('hourly');
+        setBookingStep(1);
+      }}
+      style={{
+        borderColor: bookingMode === 'hourly' ? PRIMARY_COLOR : '#d1d5db',
+        backgroundColor: bookingMode === 'hourly' ? PRIMARY_COLOR : '#f3f4f6',
+        color: bookingMode === 'hourly' ? '#ffffff' : PRIMARY_COLOR,
+      }}
+      className={`
+        px-4 py-2 rounded-lg text-sm font-semibold border transition-all 
+        shadow-sm cursor-pointer select-none 
+        hover:scale-[1.02] active:scale-[0.98]
+        focus:outline-none focus:ring-2 focus:ring-offset-2
+      `}
+    >
+      Chauffeur & Hourly Hire
+    </button>
+  </div>
+
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
               <div>
@@ -533,26 +705,36 @@ export default function HomePage(props: {
                   className="text-2xl font-bold text-gray-900 tracking-tight"
                   style={{ color: PRIMARY_COLOR }}
                 >
-                  {bookingStep === 1 ? 'Booking Details' : 'Confirm & Pay'}
+                  {bookingStep === 1
+                    ? bookingMode === 'standard'
+                      ? 'Booking Details'
+                      : 'Hourly Hire Details'
+                    : 'Confirm & Pay'}
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
                   {bookingStep === 1
-                    ? 'Enter your trip information below'
+                    ? bookingMode === 'standard'
+                      ? 'Enter your trip information below'
+                      : 'Tell us where to pick you up and how long you need the chauffeur'
                     : 'Review your trip, add contact info & pay securely via Stripe'}
                 </p>
               </div>
 
-              <div className="flex items-center bg-gray-100 rounded-lg p-1 self-start md:self-auto">
+             <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-1 self-start md:self-auto">
                 <div
                   className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-default ${
-                    bookingStep === 1 ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                    bookingStep === 1
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500'
                   }`}
                 >
                   1. Ride
                 </div>
                 <div
                   className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-default ${
-                    bookingStep === 2 ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+                    bookingStep === 2
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500'
                   }`}
                 >
                   2. Checkout
@@ -562,21 +744,71 @@ export default function HomePage(props: {
 
             {/* Step content with animation */}
             <AnimatePresence mode="wait">
-              {bookingStep === 1 ? (
+              {bookingMode === 'standard' ? (
+                bookingStep === 1 ? (
+                  <motion.div
+                    key="standard-step1"
+                    variants={stepTransitionVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <Step1StandardContent
+                      formData={formData}
+                      handleInputChange={handleInputChange}
+                      AVAILABLE_LOCATIONS={AVAILABLE_LOCATIONS}
+                      dropoffOptions={dropoffOptions}
+                      selectedRoute={selectedRoute}
+                      calculatedPrice={calculatedPrice}
+                      getFieldError={getFieldError}
+                      getInputClass={getInputClass}
+                      minDateForInput={minDateForInput}
+                      onPickupDateChange={onPickupDateChange}
+                      passengerInput={passengerInput}
+                      luggageInput={luggageInput}
+                      onPassengersChange={onPassengersChange}
+                      onPassengersBlur={onPassengersBlur}
+                      onLuggageChange={onLuggageChange}
+                      onLuggageBlur={onLuggageBlur}
+                      markTouched={markTouched}
+                      isStep1Valid={isStandardStep1Valid}
+                      goToStep2={goToStep2Standard}
+                      routesLoading={routesLoading}
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="standard-step2"
+                    variants={stepTransitionVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <Step2StandardContent
+                      formData={formData}
+                      selectedRoute={selectedRoute}
+                      calculatedPrice={calculatedPrice}
+                      getFieldError={getFieldError}
+                      getInputClass={getInputClass}
+                      markTouched={markTouched}
+                      setBookingStep={setBookingStep}
+                      isStep2FormValid={isStep2FormValid}
+                      validateStep2={validateStep2}
+                      handleInputChange={handleInputChange}
+                    />
+                  </motion.div>
+                )
+              ) : bookingStep === 1 ? (
                 <motion.div
-                  key="step1"
+                  key="hourly-step1"
                   variants={stepTransitionVariants}
                   initial="hidden"
                   animate="visible"
                   exit="exit"
                 >
-                  <Step1Content
+                  <Step1HourlyContent
                     formData={formData}
                     handleInputChange={handleInputChange}
-                    AVAILABLE_LOCATIONS={AVAILABLE_LOCATIONS}
-                    dropoffOptions={dropoffOptions}
-                    selectedRoute={selectedRoute}
-                    calculatedPrice={calculatedPrice}
                     getFieldError={getFieldError}
                     getInputClass={getInputClass}
                     minDateForInput={minDateForInput}
@@ -588,23 +820,22 @@ export default function HomePage(props: {
                     onLuggageChange={onLuggageChange}
                     onLuggageBlur={onLuggageBlur}
                     markTouched={markTouched}
-                    isStep1Valid={isStep1Valid}
-                    goToStep2={goToStep2}
-                    routesLoading={routesLoading}
+                    isStep1Valid={isHourlyStep1Valid}
+                    goToStep2={goToStep2Hourly}
+                    hourlyPrice={hourlyPrice}
                   />
                 </motion.div>
               ) : (
                 <motion.div
-                  key="step2"
+                  key="hourly-step2"
                   variants={stepTransitionVariants}
                   initial="hidden"
                   animate="visible"
                   exit="exit"
                 >
-                  <Step2Content
+                  <Step2HourlyContent
                     formData={formData}
-                    selectedRoute={selectedRoute}
-                    calculatedPrice={calculatedPrice}
+                    hourlyPrice={hourlyPrice}
                     getFieldError={getFieldError}
                     getInputClass={getInputClass}
                     markTouched={markTouched}
@@ -624,9 +855,9 @@ export default function HomePage(props: {
 }
 
 /* -----------------------------
-   STEP 1 CONTENT (extracted)
+   STEP 1 CONTENT (STANDARD)
 ------------------------------*/
-function Step1Content(props: {
+function Step1StandardContent(props: {
   formData: BookingFormData;
   handleInputChange: (
     field: keyof BookingFormData,
@@ -685,7 +916,10 @@ function Step1Content(props: {
       {routesLoading && (
         <div className="flex items-center gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-xs text-blue-800 mb-2">
           <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
-          <span>Fetching available routes and prices… this usually takes just a moment.</span>
+          <span>
+            Fetching available routes and prices… this usually takes just a
+            moment.
+          </span>
         </div>
       )}
 
@@ -706,10 +940,14 @@ function Step1Content(props: {
                 Pickup
               </label>
               {routesLoading ? (
-                <span className="text-[11px] text-gray-400 italic">Loading routes…</span>
+                <span className="text-[11px] text-gray-400 italic">
+                  Loading routes…
+                </span>
               ) : (
                 getFieldError('pickupLocation') && (
-                  <span className="text-xs font-bold text-red-500 animate-pulse">Required</span>
+                  <span className="text-xs font-bold text-red-500 animate-pulse">
+                    Required
+                  </span>
                 )
               )}
             </div>
@@ -725,7 +963,7 @@ function Step1Content(props: {
               }
             >
               {routesLoading ? (
-                <option value="">Loading routes…</option>
+                <option value="">..</option>
               ) : (
                 <>
                   <option value="">Select Location</option>
@@ -751,10 +989,14 @@ function Step1Content(props: {
                 Dropoff
               </label>
               {routesLoading && formData.pickupLocation ? (
-                <span className="text-[11px] text-gray-400 italic">Loading destinations…</span>
+                <span className="text-[11px] text-gray-400 italic">
+                  Loading destinations…
+                </span>
               ) : (
                 getFieldError('dropoffLocation') && (
-                  <span className="text-xs font-bold text-red-500 animate-pulse">Required</span>
+                  <span className="text-xs font-bold text-red-500 animate-pulse">
+                    Required
+                  </span>
                 )
               )}
             </div>
@@ -777,20 +1019,24 @@ function Step1Content(props: {
                 <option value="">Loading destinations…</option>
               )}
 
-              {formData.pickupLocation && !routesLoading && dropoffOptions.length === 0 && (
-                <option value="">No destinations available</option>
-              )}
+              {formData.pickupLocation &&
+                !routesLoading &&
+                dropoffOptions.length === 0 && (
+                  <option value="">No destinations available</option>
+                )}
 
-              {formData.pickupLocation && !routesLoading && dropoffOptions.length > 0 && (
-                <>
-                  <option value="">Select Destination</option>
-                  {dropoffOptions.map(loc => (
-                    <option key={loc} value={loc}>
-                      {loc}
-                    </option>
-                  ))}
-                </>
-              )}
+              {formData.pickupLocation &&
+                !routesLoading &&
+                dropoffOptions.length > 0 && (
+                  <>
+                    <option value="">Select Destination</option>
+                    {dropoffOptions.map(loc => (
+                      <option key={loc} value={loc}>
+                        {loc}
+                      </option>
+                    ))}
+                  </>
+                )}
             </select>
           </div>
         </div>
@@ -806,7 +1052,9 @@ function Step1Content(props: {
                     Date
                   </label>
                   {getFieldError('pickupDate') && (
-                    <span className="text-xs font-bold text-red-500">Required</span>
+                    <span className="text-xs font-bold text-red-500">
+                      Required
+                    </span>
                   )}
                 </div>
                 <div className="relative">
@@ -926,7 +1174,10 @@ function Step1Content(props: {
                   value={formData.flightNumber}
                   onChange={e => handleInputChange('flightNumber', e.target.value)}
                   placeholder="       Optional"
-                  className={getInputClass('flightNumber', false).replace('pl-10', 'pl-9')}
+                  className={getInputClass('flightNumber', false).replace(
+                    'pl-10',
+                    'pl-9'
+                  )}
                 />
               </div>
             </div>
@@ -969,7 +1220,10 @@ function Step1Content(props: {
               >
                 <span className="text-gray-500 font-normal">Route:</span>
                 <span className="truncate">{formData.pickupLocation}</span>
-                <ArrowRight className="w-4 h-4 flex-shrink-0" style={{ color: ACCENT_COLOR }} />
+                <ArrowRight
+                  className="w-4 h-4 flex-shrink-0"
+                  style={{ color: ACCENT_COLOR }}
+                />
                 <span className="truncate">{formData.dropoffLocation}</span>
               </div>
               <div className="flex items-center gap-4 text-xs text-gray-500">
@@ -977,7 +1231,10 @@ function Step1Content(props: {
                   <Navigation className="w-3 h-3" style={{ color: ACCENT_COLOR }} />
                   <span>
                     Distance:{' '}
-                    <span className="font-semibold" style={{ color: PRIMARY_COLOR }}>
+                    <span
+                      className="font-semibold"
+                      style={{ color: PRIMARY_COLOR }}
+                    >
                       {selectedRoute.distance || '-- km'}
                     </span>
                   </span>
@@ -986,7 +1243,10 @@ function Step1Content(props: {
                   <Clock className="w-3 h-3" style={{ color: ACCENT_COLOR }} />
                   <span>
                     Duration:{' '}
-                    <span className="font-semibold" style={{ color: PRIMARY_COLOR }}>
+                    <span
+                      className="font-semibold"
+                      style={{ color: PRIMARY_COLOR }}
+                    >
                       {selectedRoute.duration || '-- min'}
                     </span>
                   </span>
@@ -1010,16 +1270,19 @@ function Step1Content(props: {
       ) : (
         <div className="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl p-4 flex items-center gap-3">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <span className="text-sm font-medium">
-            Please contact us prior to booking. For assistance with any details (time,
-            destination, passengers, luggage, vehicle, price, or payment), please reach us via
-            <a href="tel:+61470032460"> phone</a> or email. We are happy to help.
-          </span>
+       <p className="text-sm font-medium leading-relaxed">
+  For questions about bookings, routes, luggage, vehicles or pricing, feel free to contact us.  
+  For destinations outside our listed routes, we offer a rate of <span className="font-semibold">$3.80 per kilometre</span>.  
+  Reach us anytime by <a href="tel:+61470032460" className="underline">phone</a> or email.
+</p>
+
+
         </div>
       )}
 
       {/* Footer Actions */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-2">
+        {/* Child seat only for STANDARD transfer */}
         <label className="flex items-center space-x-2 cursor-pointer group">
           <div
             className="w-5 h-5 rounded border flex items-center justify-center transition-colors"
@@ -1028,7 +1291,9 @@ function Step1Content(props: {
               borderColor: formData.childSeat ? ACCENT_COLOR : 'rgb(209 213 219)'
             }}
           >
-            {formData.childSeat && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+            {formData.childSeat && (
+              <CheckCircle className="w-3.5 h-3.5 text-white" />
+            )}
           </div>
           <input
             type="checkbox"
@@ -1040,6 +1305,373 @@ function Step1Content(props: {
             Child Seat (+$20)
           </span>
         </label>
+
+        <button
+          onClick={goToStep2}
+          type="button"
+          disabled={!isStep1Valid()}
+          className="w-full md:w-auto text-white px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide uppercase transition-all shadow-lg flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
+          style={{
+            backgroundColor: isStep1Valid() ? PRIMARY_COLOR : undefined,
+            boxShadow: isStep1Valid() ? `0 8px 15px ${PRIMARY_COLOR}30` : undefined
+          }}
+        >
+          Continue Booking <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* -----------------------------
+   STEP 1 CONTENT (HOURLY)
+------------------------------*/
+function Step1HourlyContent(props: {
+  formData: BookingFormData;
+  handleInputChange: (
+    field: keyof BookingFormData,
+    value: string | number | boolean
+  ) => void;
+  getFieldError: (field: string) => string | null;
+  getInputClass: (field: string, hasIconPadding?: boolean) => string;
+  minDateForInput: string;
+  onPickupDateChange: (v: string) => void;
+  passengerInput: string;
+  luggageInput: string;
+  onPassengersChange: (v: string) => void;
+  onPassengersBlur: () => void;
+  onLuggageChange: (v: string) => void;
+  onLuggageBlur: () => void;
+  markTouched: (field: string) => void;
+  isStep1Valid: () => boolean;
+  goToStep2: () => void;
+  hourlyPrice: number;
+}) {
+  const {
+    formData,
+    handleInputChange,
+    getFieldError,
+    getInputClass,
+    minDateForInput,
+    onPickupDateChange,
+    passengerInput,
+    luggageInput,
+    onPassengersChange,
+    onPassengersBlur,
+    onLuggageChange,
+    onLuggageBlur,
+    markTouched,
+    isStep1Valid,
+    goToStep2,
+    hourlyPrice
+  } = props;
+
+return (
+  <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="lg:col-span-5 space-y-2">
+        {/* Label + error */}
+        <div className="flex justify-between items-center">
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+            Pickup Location
+          </label>
+          {getFieldError('hourlyPickupLocation') && (
+            <span className="text-xs font-bold text-red-500 animate-pulse">
+              Required
+            </span>
+          )}
+        </div>
+
+        {/* Input + icon */}
+        <div className="relative group">
+          <MapPin
+            className={`absolute left-3 top-1/2 -translate-y-1/2 ${
+              getFieldError('hourlyPickupLocation') ? 'text-red-500' : 'text-gray-400'
+            } w-5 h-5 z-20 pointer-events-none transition-colors`}
+          />
+
+          <input
+            type="text"
+            value={formData.hourlyPickupLocation}
+            onChange={e =>
+              handleInputChange('hourlyPickupLocation', e.target.value)
+            }
+            onBlur={() => markTouched('hourlyPickupLocation')}
+            placeholder="Address, hotel, venue, etc."
+            className={`${getInputClass('hourlyPickupLocation', false)} pl-10`}
+          />
+        </div>
+
+          {/* Hours */}
+          <div className="group relative">
+            <div className="flex justify-between items-center">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                No. of Hours
+              </label>
+              {getFieldError('hourlyHours') && (
+                <span className="text-xs font-bold text-red-500">
+                  {getFieldError('hourlyHours')}
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <Clock className="absolute left-3 top-3.5 text-gray-400 w-4 h-4 pointer-events-none z-20" />
+              <input
+                type="number"
+                min={2}
+                max={8}
+                value={formData.hourlyHours || ''}
+                onChange={e =>
+                  handleInputChange('hourlyHours', Number(e.target.value))
+                }
+                onBlur={() => markTouched('hourlyHours')}
+                placeholder="2+"
+                className={getInputClass('hourlyHours').replace('pl-10', 'pl-9')}
+              />
+            </div>
+          </div>
+
+          {/* Vehicle type */}
+          <div className="group relative">
+            <div className="flex justify-between items-center">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                Vehicle Type
+              </label>
+              {getFieldError('hourlyVehicleType') && (
+                <span className="text-xs font-bold text-red-500 animate-pulse">
+                  Required
+                </span>
+              )}
+            </div>
+            <select
+              value={formData.hourlyVehicleType || ''}
+              onChange={e =>
+                handleInputChange('hourlyVehicleType', e.target.value)
+              }
+              onBlur={() => markTouched('hourlyVehicleType')}
+              className={getInputClass('hourlyVehicleType', false)}
+            >
+              <option value="">Select vehicle</option>
+              <option value="Sedan">Sedan (1–3 pax)</option>
+              <option value="SUV">SUV (up to 5 pax)</option>
+              <option value="Van">Van (group / luggage)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Date / Time / Pax / Bags / Flight */}
+        <div className="lg:col-span-7">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+            {/* Date */}
+            <div className="col-span-1 sm:col-span-2">
+              <div className="relative group">
+                <div className="flex justify-between">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                    Date
+                  </label>
+                  {getFieldError('pickupDate') && (
+                    <span className="text-xs font-bold text-red-500">
+                      Required
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <Calendar
+                    className={`absolute left-3 top-1/2 -translate-y-1/2 ${
+                      getFieldError('pickupDate') ? 'text-red-500' : 'text-gray-400'
+                    } w-5 h-5 pointer-events-none z-20 transition-colors`}
+                  />
+                  <input
+                    type="date"
+                    value={formData.pickupDate}
+                    min={minDateForInput}
+                    onChange={e => onPickupDateChange(e.target.value)}
+                    onBlur={() => markTouched('pickupDate')}
+                    className={`${getInputClass(
+                      'pickupDate'
+                    )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Time */}
+            <div className="col-span-1 sm:col-span-2">
+              <div className="relative group">
+                <div className="flex justify-between">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                    Time
+                  </label>
+                  {getFieldError('pickupTime') && (
+                    <span className="text-xs font-bold text-red-500">
+                      {getFieldError('pickupTime')}
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <Clock
+                    className={`absolute left-3 top-1/2 -translate-y-1/2 ${
+                      getFieldError('pickupTime') ? 'text-red-500' : 'text-gray-400'
+                    } w-5 h-5 pointer-events-none z-20 transition-colors`}
+                  />
+                  <input
+                    type="time"
+                    value={formData.pickupTime}
+                    min={getMinTimeForDate(formData.pickupDate)}
+                    onChange={e => handleInputChange('pickupTime', e.target.value)}
+                    onBlur={() => markTouched('pickupTime')}
+                    className={`${getInputClass(
+                      'pickupTime'
+                    )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Pax */}
+            <div className="col-span-1 md:col-span-1">
+              <div className="flex justify-between">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                  Pax
+                </label>
+                {getFieldError('passengers') && (
+                  <span className="text-xs font-bold text-red-500">
+                    {getFieldError('passengers')}
+                  </span>
+                )}
+              </div>
+              <div className="relative group">
+                <Users className="absolute left-3 top-3.5 text-gray-400 w-4 h-4 pointer-events-none z-20 transition-colors" />
+                <input
+                  type="number"
+                  min={1}
+                  max={MAX_PASSENGERS}
+                  value={passengerInput}
+                  onChange={e => onPassengersChange(e.target.value)}
+                  onBlur={onPassengersBlur}
+                  className={getInputClass('passengers').replace('pl-10', 'pl-9')}
+                />
+              </div>
+            </div>
+
+            {/* Luggage */}
+            <div className="col-span-1 md:col-span-1">
+              <div className="flex justify-between">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                  Bags
+                </label>
+                {getFieldError('luggage') && (
+                  <span className="text-xs font-bold text-red-500">
+                    {getFieldError('luggage')}
+                  </span>
+                )}
+              </div>
+              <div className="relative group">
+                <Briefcase className="absolute left-3 top-3.5 text-gray-400 w-4 h-4 pointer-events-none z-20 transition-colors" />
+                <input
+                  type="number"
+                  min={0}
+                  max={getMaxBagsForCurrentPax(formData.passengers)}
+                  value={luggageInput}
+                  onChange={e => onLuggageChange(e.target.value)}
+                  onBlur={onLuggageBlur}
+                  className={getInputClass('luggage').replace('pl-10', 'pl-9')}
+                />
+              </div>
+            </div>
+
+            {/* Flight # */}
+            <div className="col-span-2 md:col-span-2">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                Flight #
+              </label>
+              <div className="relative group">
+                <Plane className="absolute left-3 top-3.5 text-gray-400 w-4 h-4 pointer-events-none z-20 transition-colors" />
+                <input
+                  type="text"
+                  value={formData.flightNumber}
+                  onChange={e => handleInputChange('flightNumber', e.target.value)}
+                  placeholder="       Optional"
+                  className={getInputClass('flightNumber', false).replace(
+                    'pl-10',
+                    'pl-9'
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Hourly Summary & Price */}
+      {isStep1Valid() && hourlyPrice > 0 ? (
+        <div className="mt-4 bg-gray-50 border border-gray-200 rounded-xl p-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex-1 w-full">
+              <div
+                className="flex items-center gap-2 text-sm font-bold mb-2"
+                style={{ color: PRIMARY_COLOR }}
+              >
+                <span className="text-gray-500 font-normal">
+                  Chauffeur & Hourly Hire:
+                </span>
+                <span className="truncate">
+                  {formData.hourlyVehicleType || 'Vehicle'}
+                </span>
+                <ArrowRight
+                  className="w-4 h-4 flex-shrink-0"
+                  style={{ color: ACCENT_COLOR }}
+                />
+                <span className="truncate">
+                  {formData.hourlyHours} hour
+                  {Number(formData.hourlyHours || 0) > 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="text-xs text-gray-600 space-y-1">
+                <p>
+                  • Dedicated professional driver & wait time included for the
+                  booked period.
+                </p>
+                <p>
+                  • Business travel, weddings, events & custom itineraries
+                  tailored to you.
+                </p>
+                <p className="text-[11px] text-gray-500">
+                  Sedan: $120/hr (full-day: $820) • SUV/Van: $150/hr (full-day:
+                  $1050)
+                </p>
+              </div>
+            </div>
+
+            <div className="w-full md:w-auto text-right border-t md:border-t-0 md:border-l border-gray-200 pt-3 md:pt-0 md:pl-6 flex flex-row md:flex-col justify-between items-center md:items-end">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                Total Quote
+              </span>
+              <span
+                className="text-3xl font-extrabold tracking-tight"
+                style={{ color: PRIMARY_COLOR }}
+              >
+                ${hourlyPrice}
+              </span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl p-4 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span className="text-sm font-medium">
+            Set pickup date & time, number of hours (min 2), and choose a
+            vehicle type to see your hourly hire quote.
+          </span>
+        </div>
+      )}
+
+      {/* Footer Actions (NO Child Seat here) */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-2">
+        <div className="text-xs text-gray-500">
+          2-hour minimum applies. 8 hours or more is charged at full-day
+          charter rate.
+        </div>
 
         <button
           onClick={goToStep2}
@@ -1059,9 +1691,9 @@ function Step1Content(props: {
 }
 
 /* -----------------------------
-   STEP 2 CONTENT (Stripe Checkout)
+   STEP 2 CONTENT (STANDARD)
 ------------------------------*/
-function Step2Content(props: {
+function Step2StandardContent(props: {
   formData: BookingFormData;
   selectedRoute: Route | null;
   calculatedPrice: number;
@@ -1109,7 +1741,10 @@ function Step2Content(props: {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: calculatedPrice,
-          booking: formData
+          booking: {
+            ...formData,
+            bookingType: 'standard'
+          }
         })
       });
 
@@ -1141,7 +1776,10 @@ function Step2Content(props: {
           className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"
           style={{ color: PRIMARY_COLOR }}
         >
-          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ACCENT_COLOR }}></span>
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: ACCENT_COLOR }}
+          ></span>
           Trip Summary
         </h3>
 
@@ -1149,7 +1787,10 @@ function Step2Content(props: {
           <div className="flex justify-between items-start">
             <div className="flex flex-col">
               <span className="text-xs text-gray-500">From</span>
-              <span className="font-bold text-gray-900" style={{ color: PRIMARY_COLOR }}>
+              <span
+                className="font-bold text-gray-900"
+                style={{ color: PRIMARY_COLOR }}
+              >
                 {formData.pickupLocation}
               </span>
               <span className="text-xs text-gray-500 truncate max-w-[200px]">
@@ -1158,7 +1799,9 @@ function Step2Content(props: {
             </div>
             <div className="text-right flex flex-col items-end">
               <span className="text-xs text-gray-500">Date</span>
-              <span className="font-semibold text-gray-900">{formData.pickupDate}</span>
+              <span className="font-semibold text-gray-900">
+                {formData.pickupDate}
+              </span>
               <span
                 className="text-xs font-mono px-1 rounded"
                 style={{ color: ACCENT_COLOR, backgroundColor: `${ACCENT_COLOR}20` }}
@@ -1173,7 +1816,10 @@ function Step2Content(props: {
           <div className="flex justify-between items-start">
             <div className="flex flex-col">
               <span className="text-xs text-gray-500">To</span>
-              <span className="font-bold text-gray-900" style={{ color: PRIMARY_COLOR }}>
+              <span
+                className="font-bold text-gray-900"
+                style={{ color: PRIMARY_COLOR }}
+              >
                 {formData.dropoffLocation}
               </span>
               <span className="text-xs text-gray-500 truncate max-w-[200px]">
@@ -1185,7 +1831,9 @@ function Step2Content(props: {
               <span className="font-medium text-gray-900">
                 {formData.passengers} Pax, {formData.luggage} Bags
               </span>
-              {formData.childSeat && <span className="text-xs text-green-600">+ Child Seat</span>}
+              {formData.childSeat && (
+                <span className="text-xs text-green-600">+ Child Seat</span>
+              )}
             </div>
           </div>
 
@@ -1200,7 +1848,10 @@ function Step2Content(props: {
                 )}
               </div>
             </div>
-            <span className="text-3xl font-bold text-gray-900" style={{ color: PRIMARY_COLOR }}>
+            <span
+              className="text-3xl font-bold text-gray-900"
+              style={{ color: PRIMARY_COLOR }}
+            >
               ${calculatedPrice}
             </span>
           </div>
@@ -1210,7 +1861,10 @@ function Step2Content(props: {
       {/* Contact + Payment */}
       <div className="w-full md:w-1/2 flex flex-col justify-between order-2">
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-gray-900" style={{ color: PRIMARY_COLOR }}>
+          <h3
+            className="text-lg font-bold text-gray-900"
+            style={{ color: PRIMARY_COLOR }}
+          >
             Contact Details
           </h3>
 
@@ -1276,18 +1930,20 @@ function Step2Content(props: {
             <span className="font-bold uppercase tracking-wider block mb-0.5">
               Note: Please contact us before booking.
             </span>
-            For any questions or issues—time, passengers, luggage, car type, price, or payment—
-            reach us by phone or email. We’re happy to assist!
+            For any questions or issues—time, passengers, luggage, car type,
+            price, or payment— reach us by phone or email. We’re happy to assist!
           </div>
         </div>
 
         {/* Payment Section */}
         <div className="mt-6 space-y-3">
           <h4 className="text-sm font-semibold text-gray-800">
-            Pay securely via Stripe Checkout
+            Pay securely
           </h4>
 
-          {paymentError && <p className="text-xs text-red-500 mt-1">{paymentError}</p>}
+          {paymentError && (
+            <p className="text-xs text-red-500 mt-1">{paymentError}</p>
+          )}
 
           {/* Buttons */}
           <div className="flex gap-3 mt-4">
@@ -1302,6 +1958,272 @@ function Step2Content(props: {
               onClick={handlePayAndRedirect}
               type="button"
               disabled={!isStep2FormValid() || loadingPayment}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
+            >
+              {loadingPayment ? 'Redirecting...' : 'Pay & Confirm Booking'}
+              <CheckCircle className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* -----------------------------
+   STEP 2 CONTENT (HOURLY)
+------------------------------*/
+function Step2HourlyContent(props: {
+  formData: BookingFormData;
+  hourlyPrice: number;
+  getFieldError: (field: string) => string | null;
+  getInputClass: (field: string, hasIconPadding?: boolean) => string;
+  markTouched: (field: string) => void;
+  setBookingStep: (n: 1 | 2) => void;
+  isStep2FormValid: () => boolean;
+  validateStep2: () => boolean;
+  handleInputChange: (
+    field: keyof BookingFormData,
+    value: string | number | boolean
+  ) => void;
+}) {
+  const {
+    formData,
+    hourlyPrice,
+    getFieldError,
+    getInputClass,
+    markTouched,
+    setBookingStep,
+    isStep2FormValid,
+    validateStep2,
+    handleInputChange
+  } = props;
+
+  const [loadingPayment, setLoadingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  const handlePayAndRedirect = async () => {
+    setPaymentError(null);
+
+    const valid = validateStep2();
+    if (!valid) {
+      setPaymentError('Please fill in your contact details correctly.');
+      return;
+    }
+
+    if (!hourlyPrice || hourlyPrice <= 0) {
+      setPaymentError('Invalid quote amount. Please adjust your booking.');
+      return;
+    }
+
+    try {
+      setLoadingPayment(true);
+
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: hourlyPrice,
+          booking: {
+            ...formData,
+            bookingType: 'hourly'
+          }
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        setPaymentError(data.error || 'Could not start payment. Please try again.');
+        setLoadingPayment(false);
+        return;
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    } catch (err) {
+      console.error(err);
+      setPaymentError('Payment failed. Please try again.');
+      setLoadingPayment(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row gap-8">
+      {/* Summary */}
+      <div className="w-full md:w-1/2 bg-gray-50 rounded-xl border border-dashed border-gray-300 p-6 relative order-1">
+        <div className="absolute -left-3 top-1/2 -mt-3 w-6 h-6 bg-white rounded-full"></div>
+        <div className="absolute -right-3 top-1/2 -mt-3 w-6 h-6 bg-white rounded-full"></div>
+
+        <h3
+          className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"
+          style={{ color: PRIMARY_COLOR }}
+        >
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: ACCENT_COLOR }}
+          ></span>
+          Hourly Hire Summary
+        </h3>
+
+        <div className="space-y-4 text-sm">
+          <div className="flex justify-between items-start">
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-500">Pickup</span>
+              <span
+                className="font-bold text-gray-900"
+                style={{ color: PRIMARY_COLOR }}
+              >
+                {formData.hourlyPickupLocation}
+              </span>
+            </div>
+            <div className="text-right flex flex-col items-end">
+              <span className="text-xs text-gray-500">Date</span>
+              <span className="font-semibold text-gray-900">
+                {formData.pickupDate}
+              </span>
+              <span
+                className="text-xs font-mono px-1 rounded"
+                style={{ color: ACCENT_COLOR, backgroundColor: `${ACCENT_COLOR}20` }}
+              >
+                {formData.pickupTime}
+              </span>
+            </div>
+          </div>
+
+          <div className="w-full h-[1px] bg-gray-200"></div>
+
+          <div className="flex justify-between items-start">
+            <div className="flex flex-col">
+              <span className="text-xs text-gray-500">Details</span>
+              <span className="font-medium text-gray-900">
+                {formData.hourlyHours} hour
+                {Number(formData.hourlyHours || 0) > 1 ? 's' : ''} •{' '}
+                {formData.hourlyVehicleType || 'Vehicle'}
+              </span>
+              <span className="text-xs text-gray-500">
+                {formData.passengers} Pax, {formData.luggage} Bags
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-4 mt-4 border-t border-gray-200 flex justify-between items-end">
+            <div className="flex flex-col">
+              <span className="text-gray-500 font-medium">Total Quote</span>
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <span>Chauffeur & Hourly Hire</span>
+              </div>
+            </div>
+            <span
+              className="text-3xl font-bold text-gray-900"
+              style={{ color: PRIMARY_COLOR }}
+            >
+              ${hourlyPrice}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Contact + Payment */}
+      <div className="w-full md:w-1/2 flex flex-col justify-between order-2">
+        <div className="space-y-4">
+          <h3
+            className="text-lg font-bold text-gray-900"
+            style={{ color: PRIMARY_COLOR }}
+          >
+            Contact Details
+          </h3>
+
+          <div className="space-y-3">
+            {/* Name */}
+            <div>
+              <div className="flex justify-between">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                  Full Name
+                </label>
+                {getFieldError('fullName') && (
+                  <span className="text-xs text-red-500 font-bold">
+                    {getFieldError('fullName')}
+                  </span>
+                )}
+              </div>
+              <input
+                type="text"
+                value={formData.fullName}
+                onChange={e => handleInputChange('fullName', e.target.value)}
+                onBlur={() => markTouched('fullName')}
+                className={getInputClass('fullName', false)}
+                placeholder="e.g. John Doe"
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <div className="flex justify-between">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
+                  Email
+                </label>
+                {getFieldError('email') && (
+                  <span className="text-xs text-red-500 font-bold">
+                    {getFieldError('email')}
+                  </span>
+                )}
+              </div>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={e => handleInputChange('email', e.target.value)}
+                onBlur={() => markTouched('email')}
+                className={getInputClass('email', false)}
+                placeholder="john@example.com"
+              />
+            </div>
+
+            {/* Mobile: country code + number */}
+            <PhoneInput
+              formData={formData}
+              getFieldError={getFieldError}
+              markTouched={markTouched}
+              handleInputChange={handleInputChange}
+            />
+          </div>
+        </div>
+
+        {/* Note */}
+        <div className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-2 text-xs">
+          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <div>
+            <span className="font-bold uppercase tracking-wider block mb-0.5">
+              Note: Please contact us before booking.
+            </span>
+            For any questions or issues—time, passengers, luggage, car type,
+            price, or payment— reach us by phone or email. We’re happy to assist!
+          </div>
+        </div>
+
+        {/* Payment Section */}
+        <div className="mt-6 space-y-3">
+          <h4 className="text-sm font-semibold text-gray-800">
+            Pay securely
+          </h4>
+
+          {paymentError && (
+            <p className="text-xs text-red-500 mt-1">{paymentError}</p>
+          )}
+
+          {/* Buttons */}
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={() => setBookingStep(1)}
+              className="px-6 py-3 rounded-xl font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
+              type="button"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <button
+              onClick={handlePayAndRedirect}
+              type="button"
+              disabled={!isStep2FormValid() || loadingPayment || !hourlyPrice}
               className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
             >
               {loadingPayment ? 'Redirecting...' : 'Pay & Confirm Booking'}
@@ -1351,10 +2273,13 @@ function PhoneInput({
 
     // Find matching country by dial code if possible
     const match =
-      PHONE_COUNTRIES.find(c => existing.startsWith(c.dialCode)) ?? defaultCountry;
+      PHONE_COUNTRIES.find(c => existing.startsWith(c.dialCode)) ??
+      defaultCountry;
 
     const strippedDial = match.dialCode;
-    const numericPart = existing.replace(strippedDial, '').replace(/\D/g, '');
+    const numericPart = existing
+      .replace(strippedDial, '')
+      .replace(/\D/g, '');
 
     setSelectedCountry(match);
     setDialCode(strippedDial);
@@ -1386,8 +2311,7 @@ function PhoneInput({
 
   const onDialCodeChange = (value: string) => {
     // Allow only "+" and digits, and force a single leading "+"
-    let v = value.replace(/[^\d+]/g, ''); // strip non +/digits
-    // Ensure exactly one leading +
+    let v = value.replace(/[^\d+]/g, '');
     v = v.replace(/\+/g, '');
     v = '+' + v;
     setDialCode(v);
@@ -1405,7 +2329,9 @@ function PhoneInput({
         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
           Mobile
         </label>
-        {error && <span className="text-xs text-red-500 font-bold">{error}</span>}
+        {error && (
+          <span className="text-xs text-red-500 font-bold">{error}</span>
+        )}
       </div>
 
       <div
@@ -1415,10 +2341,9 @@ function PhoneInput({
       >
         {/* Country selector + editable dial code */}
         <div className="flex items-center bg-gray-50 border-r border-gray-200 px-2 py-2 gap-1.5 shrink-0">
-          {/* Flag + dropdown trigger */}
+          {/* Flag + dropdown trigger (dropdown disabled visually for now) */}
           <button
             type="button"
-           // onClick={() => setIsOpen(o => !o)}
             className="inline-flex items-center gap-1 px-1 py-0.5 text-sm font-medium text-gray-700"
           >
             <span className="text-lg">{selectedCountry.flag}</span>
@@ -1451,7 +2376,7 @@ function PhoneInput({
         </div>
       </div>
 
-      {/* Dropdown */}
+      {/* Dropdown (if you want to enable country selection later) */}
       {isOpen && (
         <div className="absolute z-30 mt-1 w-full max-h-64 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg">
           <ul className="text-sm py-1">
@@ -1465,7 +2390,9 @@ function PhoneInput({
                   <span className="text-lg">{country.flag}</span>
                   <span className="flex-1">
                     {country.name}{' '}
-                    <span className="text-gray-500">({country.dialCode})</span>
+                    <span className="text-gray-500">
+                      ({country.dialCode})
+                    </span>
                   </span>
                 </button>
               </li>
