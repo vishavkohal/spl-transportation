@@ -17,10 +17,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET as string;
 
 export async function POST(req: NextRequest) {
-  // 1) Read the raw body (needed for Stripe signature verification)
+  // 1) raw body for Stripe signature verification
   const body = await req.text();
 
-  // 2) Read signature directly from the request headers
+  // 2) signature from headers
   const sig = req.headers.get('stripe-signature');
 
   if (!sig || !webhookSecret) {
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   try {
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err: any) {
-    console.error('❌ Webhook signature verification failed:', err.message);
+    //console.error('❌ Webhook signature verification failed:', err.message);
     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
@@ -43,7 +43,18 @@ export async function POST(req: NextRequest) {
       case 'checkout.session.async_payment_succeeded': {
         const session = event.data.object as Stripe.Checkout.Session;
 
+        // STRICT check: only treat as paid when payment_status === 'paid'
         const paid = session.payment_status === 'paid';
+
+        if (!paid) {
+          console.log(
+            'Webhook received completed/async event but payment_status is not paid. session.id=',
+            session.id,
+            'status=',
+            session.payment_status
+          );
+          break;
+        }
 
         if (!session.metadata?.booking) {
           console.warn(
@@ -66,36 +77,25 @@ export async function POST(req: NextRequest) {
           currency,
         };
 
-        // Idempotent save
+        // Idempotent save: keyed by session.id
         const saved = await saveBooking(session.id, booking);
 
-        if (paid) {
-          await sendEmailsOnce(session.id, booking, session);
-        } else {
-          console.log(
-            'Webhook: session not marked as paid yet, skipping emails. session.id=',
-            session.id
-          );
-        }
+        // Emails only once (sendEmailsOnce should check DB flag)
+        await sendEmailsOnce(session.id, booking, session);
 
-        console.log(
-          '✅ Webhook processed for session',
-          session.id,
-          'paid=',
-          paid
-        );
+       // console.log('✅ Webhook processed for session', session.id, 'paid=', paid);
         break;
       }
 
       default: {
-        // Ignore other event types for now
+        // other events ignored
         break;
       }
     }
 
     return new NextResponse('OK', { status: 200 });
   } catch (err: any) {
-    console.error('❌ Error handling webhook event:', event.type, err);
+    //console.error('❌ Error handling webhook event:', event.type, err);
     return new NextResponse('Webhook handler error', { status: 500 });
   }
 }

@@ -9,7 +9,7 @@ export type PricingItem = {
 };
 
 export type Route = {
-  id: number;
+  id: number;                                                                                                                                                                                                                          
   from: string;
   to: string;
   label: string | null;
@@ -990,6 +990,7 @@ function BookingsAdminPanel() {
   );
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
+  const [filterInvoice, setFilterInvoice] = useState('');
 
   async function loadBookings() {
     setLoading(true);
@@ -1029,9 +1030,29 @@ function BookingsAdminPanel() {
     }
   }
 
+  function getInvoiceNumber(b: Booking): string | null {
+    if (!b.createdAt) return null;
+    const created = new Date(b.createdAt);
+    if (Number.isNaN(created.getTime())) return null;
+
+    const y = created.getFullYear();
+    const m = String(created.getMonth() + 1).padStart(2, '0');
+    const d = String(created.getDate()).padStart(2, '0');
+    const datePart = `${y}${m}${d}`;
+
+    const hh = String(created.getHours()).padStart(2, '0');
+    const mm = String(created.getMinutes()).padStart(2, '0');
+    const ss = String(created.getSeconds()).padStart(2, '0');
+    const ms = String(created.getMilliseconds()).padStart(3, '0');
+    const timePart = `${hh}${mm}${ss}${ms}`;
+
+    return `INV-${datePart}-${timePart}`;
+  }
+
   // 🔎 Derived: filtered bookings
   const filteredBookings = React.useMemo(() => {
     const searchLower = search.trim().toLowerCase();
+    const invoiceFilterLower = filterInvoice.trim().toLowerCase();
 
     // Parse date filters (if provided)
     const fromDate = filterDateFrom ? new Date(filterDateFrom) : null;
@@ -1043,7 +1064,9 @@ function BookingsAdminPanel() {
     }
 
     return bookings.filter(b => {
-      // Search filter (name, email, phone, locations, session)
+      const invoiceNumber = (getInvoiceNumber(b) || '').toLowerCase();
+
+      // Search filter (name, email, phone, locations, session, invoice)
       if (searchLower) {
         const haystack = [
           b.fullName,
@@ -1053,12 +1076,18 @@ function BookingsAdminPanel() {
           b.pickupAddress || '',
           b.dropoffLocation,
           b.dropoffAddress || '',
-          b.stripeSessionId
+          b.id,
+          invoiceNumber
         ]
           .join(' ')
           .toLowerCase();
 
         if (!haystack.includes(searchLower)) return false;
+      }
+
+      // Invoice number filter
+      if (invoiceFilterLower) {
+        if (!invoiceNumber || !invoiceNumber.includes(invoiceFilterLower)) return false;
       }
 
       // Booking type filter
@@ -1078,7 +1107,15 @@ function BookingsAdminPanel() {
 
       return true;
     });
-  }, [bookings, search, filterBookingType, filterEmailStatus, filterDateFrom, filterDateTo]);
+  }, [
+    bookings,
+    search,
+    filterBookingType,
+    filterEmailStatus,
+    filterDateFrom,
+    filterDateTo,
+    filterInvoice
+  ]);
 
   return (
     <div className="bg-gray-50 rounded-lg">
@@ -1117,7 +1154,7 @@ function BookingsAdminPanel() {
           {/* Search */}
           <div className="col-span-1 md:col-span-2">
             <label className="block text-xs font-medium text-gray-600 mb-1">
-              Search (name, email, phone, locations, session)
+              Search (name, email, phone, locations, session, invoice)
             </label>
             <input
               className="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-offset-0"
@@ -1167,7 +1204,7 @@ function BookingsAdminPanel() {
           </div>
         </div>
 
-        {/* Date range */}
+        {/* Date range + Invoice filter */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -1194,7 +1231,21 @@ function BookingsAdminPanel() {
             />
           </div>
 
-          <div className="sm:col-span-2 flex items-end justify-start sm:justify-end gap-2">
+          {/* Invoice number filter */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Invoice number (INV-…)
+            </label>
+            <input
+              className="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-offset-0"
+              style={{ '--tw-ring-color': ACCENT_COLOR } as React.CSSProperties}
+              placeholder="e.g. INV-20251210-175427470"
+              value={filterInvoice}
+              onChange={e => setFilterInvoice(e.target.value)}
+            />
+          </div>
+
+          <div className="sm:col-span-1 flex items-end justify-start sm:justify-end gap-2">
             <button
               type="button"
               className="px-3 py-2 text-xs border rounded text-gray-700 hover:bg-gray-100"
@@ -1204,6 +1255,7 @@ function BookingsAdminPanel() {
                 setFilterEmailStatus('all');
                 setFilterDateFrom('');
                 setFilterDateTo('');
+                setFilterInvoice('');
               }}
             >
               Clear filters
@@ -1241,6 +1293,8 @@ function BookingsAdminPanel() {
             bookingType === 'hourly'
               ? 'bg-blue-50 border-blue-200 text-blue-700'
               : 'bg-gray-50 border-gray-200 text-gray-700';
+
+          const invoiceNumber = getInvoiceNumber(b);
 
           return (
             <li
@@ -1302,9 +1356,15 @@ function BookingsAdminPanel() {
                     {b.flightNumber && ` • Flight: ${b.flightNumber}`}
                   </div>
 
-                  {b.stripeSessionId && (
+                  {b.id && (
                     <div className="mt-1 text-xs text-gray-400 break-all">
-                      Session: {b.stripeSessionId}
+                      Session: {b.id}
+                    </div>
+                  )}
+
+                  {invoiceNumber && (
+                    <div className="mt-1 text-xs text-gray-500 break-all">
+                      Invoice: <span className="font-mono">{invoiceNumber}</span>
                     </div>
                   )}
                 </div>

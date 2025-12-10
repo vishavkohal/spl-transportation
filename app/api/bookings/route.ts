@@ -187,6 +187,6 @@ async function sendCompanyEmail(booking: BookingRequest) {
     Stripe Payment: ${booking.paymentIntentId ?? 'N/A'}
   `;
 
-  console.log(emailContent);
+  //console.log(emailContent);
   return true;
 }

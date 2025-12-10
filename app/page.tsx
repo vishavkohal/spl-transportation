@@ -18,7 +18,7 @@ import { Services } from './components/Services';
 import PopularDestinations from './components/PopularDestinations';
 import Faqsection from './components/FaqSection';
 
-export type PageKey = 'home' | 'routes' | 'about' | 'terms' | 'contact';
+export type PageKey = "home" | "routes" | "about" | "contact" | "terms" | "blog";
 
 const initialFormData: BookingFormData = {
   pickupLocation: '',
@@ -317,8 +317,8 @@ export default function TaxiBookingApp() {
       )}
 
       {currentPage === 'about' && <AboutPage />}
+        {currentPage === 'contact' && <ContactPage />}
       {currentPage === 'terms' && <TermsPage />}
-      {currentPage === 'contact' && <ContactPage />}
 
       <Footer setCurrentPage={(page: string) => setCurrentPage(page as PageKey)} />
     </div>

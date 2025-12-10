@@ -3,7 +3,8 @@
 import React from 'react';
 import { Menu, X, Phone } from 'lucide-react';
 import Image from 'next/image';
-import type { PageKey } from '../page'; // 👈 import the union type
+import Link from 'next/link';
+import type { PageKey } from '../page'; // 👈 union type
 
 // Define the custom colors for readability
 const PRIMARY_COLOR = '#18234B'; // Dark Navy
@@ -12,8 +13,8 @@ const ACCENT_COLOR = '#A61924'; // Deep Red
 // --- CONFIGURATION ---
 const COMPANY_PHONE = '+61470032460';
 
-// Pages we support in nav
-const PAGES: PageKey[] = ['home', 'routes', 'about', 'contact', 'terms'];
+// Pages we support in nav (state-based pages)
+const PAGES: PageKey[] = ['home', 'routes','contact', 'about', 'terms'];
 
 type NavigationProps = {
   currentPage: PageKey;
@@ -48,15 +49,15 @@ export default function Navigation({
             className="flex items-center gap-1 cursor-pointer group"
             onClick={() => handleNavClick('home')}
           >
-          <div className="flex items-center p-1 dark:bg-transparent dark:shadow-none lg:dark:bg-transparent lg:dark:shadow-none pt-0.5 pb-0.5">
-    <Image
-        src="/logo.png"
-        width={150}
-        height={30}
-        alt="SPL Transportation Logo"
-        className="object-contain"
-        priority
-    />
+            <div className="flex items-center p-1 dark:bg-transparent dark:shadow-none lg:dark:bg-transparent lg:dark:shadow-none pt-0.5 pb-0.5">
+              <Image
+                src="/logo.png"
+                width={150}
+                height={30}
+                alt="SPL Transportation Logo"
+                className="object-contain"
+                priority
+              />
             </div>
           </div>
 
@@ -67,17 +68,36 @@ export default function Navigation({
                 key={page}
                 onClick={() => handleNavClick(page)}
                 className="text-sm font-semibold transition-colors"
-                style={{ color: PRIMARY_COLOR }}
+                style={{
+                  color: currentPage === page ? ACCENT_COLOR : PRIMARY_COLOR
+                }}
                 onMouseEnter={e => {
                   e.currentTarget.style.color = ACCENT_COLOR;
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.color = PRIMARY_COLOR;
+                  e.currentTarget.style.color =
+                    currentPage === page ? ACCENT_COLOR : PRIMARY_COLOR;
                 }}
               >
                 {labelFor(page)}
               </button>
             ))}
+
+            {/* Blog link – real Next.js route for SEO */}
+            <Link
+              href="/blog"
+              className="text-sm font-semibold transition-colors"
+              style={{ color: PRIMARY_COLOR }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLAnchorElement).style.color = ACCENT_COLOR;
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLAnchorElement).style.color = PRIMARY_COLOR;
+              }}
+            >
+              Blog
+            </Link>
+              {/* Blog link – real Next.js route for SEO */}
           </div>
 
           {/* Right: CTA + Mobile Toggle */}
@@ -148,6 +168,21 @@ export default function Navigation({
               {labelFor(page)}
             </button>
           ))}
+
+          {/* Mobile Blog link */}
+          <Link
+            href="/blog"
+            className="block w-full text-left py-3 px-4 rounded-lg font-medium transition"
+            style={{ color: PRIMARY_COLOR }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLAnchorElement).style.color = ACCENT_COLOR;
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLAnchorElement).style.color = PRIMARY_COLOR;
+            }}
+          >
+            Blog
+          </Link>
 
           {/* Mobile CTA */}
           <div className="pt-4 mt-2 border-t border-gray-100">

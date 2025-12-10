@@ -58,49 +58,76 @@ export default function RoutesPage({
   };
 
   return (
-    <div className="min-h-screen max-w-7xl mx-auto px-4 md:px-6 pb-10 pt-20 mt-10 md:pt-28 transition-colors bg-gray-50">
-      {/* Heading + description (no refresh button) */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8 md:mb-10">
-        <div className="max-w-2xl">
+    <div className="min-h-screen max-w-7xl mx-auto px-4 md:px-6 pb-14 pt-20 mt-10 md:pt-28 bg-gray-50">
+      {/* ---------- INTRO / HERO COPY (SEO-FOCUSED) ---------- */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8 md:mb-10">
+        <div className="max-w-3xl">
           <p
             className="text-xs sm:text-sm font-semibold tracking-[0.22em] uppercase mb-2"
             style={{ color: ACCENT_COLOR }}
           >
-            Private Airport & City Transfers
+            Cairns Airport & Queensland Private Transfers
           </p>
 
           <h1
             className="text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight"
             style={{ color: PRIMARY_COLOR }}
           >
-            Private Transfer Routes&nbsp;
-            <span className="block sm:inline">and Fixed Pricing</span>
+            Fixed-Price Private Transfer Routes in Cairns, Port Douglas & Palm Cove
           </h1>
 
-          <p className="mt-2 text-sm sm:text-base text-gray-600">
-            Choose from our curated routes between airports, hotels, and popular
-            destinations. Enjoy upfront, fixed pricing with professional drivers
-            and private vehicles only.
+          <p className="mt-3 text-sm sm:text-base text-gray-600">
+            Browse our most popular <strong>airport and regional transfer routes in
+            Tropical North Queensland</strong>, including Cairns Airport, Cairns City,
+            Port Douglas, Palm Cove, Kuranda, the Atherton Tablelands and more.
+            Every journey is a <strong>door-to-door, private transfer</strong> with a
+            professional local driver – no ridesharing, no crowded shuttle buses.
           </p>
 
-          <p className="mt-1 text-xs sm:text-sm text-gray-500">
-            All transfers include meet & greet, taxes and basic tolls. No hidden
-            fees, no shared rides.
+          <p className="mt-2 text-xs sm:text-sm text-gray-500">
+            All prices shown are <strong>fixed in Australian dollars (AUD)</strong> and
+            include meet &amp; greet at Cairns Airport, basic tolls and taxes. What you
+            see here is what you pay – <strong>no surge pricing, no hidden fees.</strong>
           </p>
         </div>
-      </div>
+      </header>
+
+      {/* Supporting SEO text / reassurance */}
+      <section className="mb-8 text-xs sm:text-sm text-gray-600 space-y-2">
+        <p>
+          Whether you are landing at <strong>Cairns Airport</strong> and heading straight
+          to <strong>Port Douglas</strong>, relaxing at <strong>Palm Cove</strong>,
+          exploring <strong>Kuranda</strong> and the Skyrail, or travelling further
+          afield to the <strong>Atherton Tablelands</strong>, booking in advance guarantees
+          a comfortable vehicle, on-time pickup and luggage assistance.
+        </p>
+        <p>
+          Choose the route that best matches your itinerary below, select the vehicle size
+          for your group, then tap <strong>&ldquo;Book This Route&rdquo;</strong> to
+          continue your booking on our main form. You can change dates, flight numbers and
+          passenger details on the next step.
+        </p>
+      </section>
 
       {/* Error & empty states */}
       {error && (
-        <p className="text-red-500 font-medium text-sm mb-4">Error: {error}</p>
+        <p className="text-red-500 font-medium text-sm mb-4">
+          Error loading routes: {error}
+        </p>
       )}
       {!loading && !error && routes.length === 0 && (
-        <p className="text-gray-600 text-sm">No routes configured.</p>
+        <p className="text-gray-600 text-sm">
+          No transfer routes are currently configured. Please check back soon or contact
+          our team for a custom quote from Cairns Airport or Cairns City.
+        </p>
       )}
 
       {/* Skeleton Loading */}
       {loading && (
-        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <section
+          aria-label="Loading transfer routes"
+          className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+        >
           {Array.from({ length: 6 }).map((_, idx) => (
             <div
               key={idx}
@@ -137,14 +164,17 @@ export default function RoutesPage({
               <div className="h-9 w-full bg-gray-200 rounded-xl mt-4" />
             </div>
           ))}
-        </div>
+        </section>
       )}
 
-      {/* Actual Cards – same design as RoutesSection */}
+      {/* Actual Cards – SEO-friendly markup */}
       {!loading && !error && routes.length > 0 && (
-        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <section
+          aria-label="Available fixed-price transfer routes"
+          className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+        >
           {routes.map(route => (
-            <div
+            <article
               key={route.id}
               className="group flex flex-col rounded-2xl border border-gray-200 bg-white 
                          p-4 sm:p-5 shadow-sm hover:shadow-md hover:-translate-y-[2px] 
@@ -250,8 +280,10 @@ export default function RoutesPage({
                 className="mt-3 border-t border-gray-100 pt-2 text-[10px] leading-snug italic"
                 style={{ color: MUTED_TEXT_COLOR }}
               >
-                <span className="font-semibold text-gray-600">Note:</span> Child
-                seat available for additional $20.
+                <span className="font-semibold text-gray-600">Good to know:</span>{' '}
+                Child seats are available on request for an additional $20 per seat –
+                ideal for families travelling with young children to or from Cairns
+                Airport.
               </p>
 
               {/* Book Button – same accent style */}
@@ -266,13 +298,36 @@ export default function RoutesPage({
                   boxShadow:
                     '0 4px 6px -1px rgba(41, 78, 128, 0.4), 0 2px 4px -2px rgba(40, 54, 144, 0.4)'
                 }}
-                aria-label={`Book route from ${route.from} to ${route.to}`}
+                aria-label={`Book private transfer from ${route.from} to ${route.to}`}
               >
                 Book This Route
               </button>
-            </div>
+            </article>
           ))}
-        </div>
+        </section>
+      )}
+
+      {/* Extra SEO copy / FAQ style footer section */}
+      {!loading && !error && routes.length > 0 && (
+        <section className="mt-10 space-y-3 text-xs sm:text-sm text-gray-600">
+          <h2 className="text-base sm:text-lg font-semibold" style={{ color: PRIMARY_COLOR }}>
+            Why book a fixed-price private transfer in Cairns?
+          </h2>
+          <p>
+            Pre-booking a private transfer in Cairns means your driver is waiting when you
+            land, your vehicle is sized correctly for your group and luggage, and your
+            price is locked in before you travel. This is especially important for popular
+            routes such as <strong>Cairns Airport to Port Douglas</strong>,
+            <strong> Cairns Airport to Palm Cove</strong> and
+            <strong> Cairns City to Kuranda</strong>, where taxis and rideshare can be
+            limited in peak season.
+          </p>
+          <p>
+            Our local drivers monitor flight arrival times, help with bags and know the
+            best routes to avoid traffic when possible. Simply choose a route above to see
+            the price for your group size, then complete your booking on the next step.
+          </p>
+        </section>
       )}
     </div>
   );

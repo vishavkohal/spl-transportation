@@ -309,13 +309,27 @@ export async function sendAdminEmail(
   let opts: { invoiceNumber?: string; invoiceDate?: string; bookingRef?: string } | undefined = undefined;
   if (booking.id && booking.createdAt) {
     try {
-      const created = new Date(booking.createdAt);
-      const datePart = created.toISOString().split('T')[0].replace(/-/g, '');
-      opts = {
-        invoiceNumber: `${booking.id}-${datePart}`,
-        invoiceDate: created.toLocaleDateString(),
-        bookingRef: booking.id,
-      };
+    const created = new Date(booking.createdAt);
+
+// Get YYYYMMDD
+const y = created.getFullYear();
+const m = String(created.getMonth() + 1).padStart(2, "0");
+const d = String(created.getDate()).padStart(2, "0");
+const datePart = `${y}${m}${d}`;
+
+// Get HHMMSSmmm
+const hh = String(created.getHours()).padStart(2, "0");
+const mm = String(created.getMinutes()).padStart(2, "0");
+const ss = String(created.getSeconds()).padStart(2, "0");
+const ms = String(created.getMilliseconds()).padStart(3, "0");
+const timePart = `${hh}${mm}${ss}${ms}`;
+
+opts = {
+  invoiceNumber: `INV-${datePart}-${timePart}`,
+  invoiceDate: created.toLocaleDateString(),
+  bookingRef: booking.id,
+};
+
     } catch (e) {
       // ignore
     }

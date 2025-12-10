@@ -2237,7 +2237,7 @@ function Step2HourlyContent(props: {
 }
 
 /* -----------------------------
-   Phone Input Component
+   Phone Input Component (simplified)
 ------------------------------*/
 type PhoneInputProps = {
   formData: BookingFormData;
@@ -2249,75 +2249,95 @@ type PhoneInputProps = {
   ) => void;
 };
 
+type PhoneCountry = (typeof PHONE_COUNTRIES)[number];
+
 function PhoneInput({
   formData,
   getFieldError,
   markTouched,
   handleInputChange
 }: PhoneInputProps) {
-  // Default to Australia if present, otherwise first in list
-  const defaultCountry =
-    PHONE_COUNTRIES.find(c => c.code === 'AU') ?? PHONE_COUNTRIES[0];
-
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState(defaultCountry);
-  const [dialCode, setDialCode] = useState<string>(defaultCountry.dialCode);
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
-
   const error = getFieldError('contactNumber');
 
-  // Initialise from existing contactNumber if present
-  useEffect(() => {
-    const existing = String(formData.contactNumber || '');
-    if (!existing) return;
+  // Helper: parse initial full number into dialCode + localNumber
+  const parseInitialPhone = (full: string | number | undefined) => {
+    const existing = String(full || '').trim();
+    if (!existing) {
+      const fallback = PHONE_COUNTRIES.find(c => c.code === 'AU') ?? PHONE_COUNTRIES[0];
+      return {
+        country: fallback,
+        dialCode: fallback.dialCode,
+        number: ''
+      };
+    }
 
-    // Find matching country by dial code if possible
+    // Try to find a matching country by dialCode prefix
     const match =
-      PHONE_COUNTRIES.find(c => existing.startsWith(c.dialCode)) ??
-      defaultCountry;
+      PHONE_COUNTRIES
+        .slice()
+        .sort((a, b) => b.dialCode.length - a.dialCode.length)
+        .find(c => existing.startsWith(c.dialCode)) ??
+      (PHONE_COUNTRIES.find(c => c.code === 'AU') ?? PHONE_COUNTRIES[0]);
 
-    const strippedDial = match.dialCode;
-    const numericPart = existing
-      .replace(strippedDial, '')
-      .replace(/\D/g, '');
+    const dial = match.dialCode;
+    const local = existing.replace(dial, '').replace(/\D/g, '');
 
-    setSelectedCountry(match);
-    setDialCode(strippedDial);
-    setPhoneNumber(numericPart);
-  }, [formData.contactNumber]);
+    return {
+      country: match,
+      dialCode: dial,
+      number: local
+    };
+  };
 
-  // Update selected country when dialCode changes (if we can match)
+  const initial = parseInitialPhone(formData.contactNumber);
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<PhoneCountry>(initial.country);
+  const [dialCode, setDialCode] = useState<string>(initial.dialCode);
+  const [phoneNumber, setPhoneNumber] = useState<string>(initial.number);
+
+  // Whenever dialCode/phoneNumber change, push combined value up to the form
   useEffect(() => {
-    const match = PHONE_COUNTRIES.find(c => dialCode.startsWith(c.dialCode));
-    if (match) {
+    const combined = phoneNumber ? `${dialCode}${phoneNumber}` : '';
+    // Only update if actually changed, to avoid unnecessary parent re-renders
+    if (combined !== formData.contactNumber) {
+      handleInputChange('contactNumber', combined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dialCode, phoneNumber]);
+
+  // Ensure selected country follows dialCode, if it matches a known one
+  useEffect(() => {
+    const match = PHONE_COUNTRIES
+      .slice()
+      .sort((a, b) => b.dialCode.length - a.dialCode.length)
+      .find(c => dialCode.startsWith(c.dialCode));
+    if (match && match.code !== selectedCountry.code) {
       setSelectedCountry(match);
     }
-  }, [dialCode]);
-
-  // Keep formData.contactNumber in sync as "<dialCode><number>"
-  useEffect(() => {
-    if (phoneNumber) {
-      handleInputChange('contactNumber', `${dialCode}${phoneNumber}`);
-    } else {
-      handleInputChange('contactNumber', '');
-    }
-  }, [phoneNumber, dialCode, handleInputChange]);
+  }, [dialCode, selectedCountry.code]);
 
   const onPhoneChange = (value: string) => {
-    // allow only digits
     const numeric = value.replace(/\D/g, '');
     setPhoneNumber(numeric);
   };
 
-  const onDialCodeChange = (value: string) => {
-    // Allow only "+" and digits, and force a single leading "+"
-    let v = value.replace(/[^\d+]/g, '');
+  const onDialCodeChange = (raw: string) => {
+    // Keep only '+' and digits
+    let v = raw.replace(/[^\d+]/g, '');
+
+    // Ensure a single leading '+'
     v = v.replace(/\+/g, '');
     v = '+' + v;
-    setDialCode(v);
+
+    // Limit to + + 3 digits => max length 4
+    const digits = v.slice(1).replace(/\D/g, '').slice(0, 3);
+    const finalValue = '+' + digits;
+
+    setDialCode(finalValue);
   };
 
-  const onSelectCountry = (country: (typeof PHONE_COUNTRIES)[number]) => {
+  const onSelectCountry = (country: PhoneCountry) => {
     setSelectedCountry(country);
     setDialCode(country.dialCode);
     setIsOpen(false);
@@ -2341,26 +2361,25 @@ function PhoneInput({
       >
         {/* Country selector + editable dial code */}
         <div className="flex items-center bg-gray-50 border-r border-gray-200 px-2 py-2 gap-1.5 shrink-0">
-          {/* Flag + dropdown trigger (dropdown disabled visually for now) */}
+          {/* Flag + dropdown trigger */}
           <button
             type="button"
+            onClick={() => setIsOpen(prev => !prev)}
             className="inline-flex items-center gap-1 px-1 py-0.5 text-sm font-medium text-gray-700"
           >
             <span className="text-lg">{selectedCountry.flag}</span>
             <ChevronDown className="w-4 h-4 text-gray-500" />
           </button>
-{/* Editable dial code */}
-<input
-  type="tel"
-  inputMode="numeric"
-  maxLength={4}
-  className="w-20 bg-transparent outline-none border-none text-sm font-medium text-gray-900"
-  value={dialCode}
-  onChange={e => {
-    const value = e.target.value.replace(/\D/g, ""); // remove non-digits
-    onDialCodeChange(value.slice(0, 3)); // enforce max 3
-  }}
-/>
+
+          {/* Editable dial code (max 3 digits) */}
+          <input
+            type="tel"
+            inputMode="numeric"
+            maxLength={4} // '+' + 3 digits
+            className="w-20 bg-transparent outline-none border-none text-sm font-medium text-gray-900"
+            value={dialCode}
+            onChange={e => onDialCodeChange(e.target.value)}
+          />
         </div>
 
         {/* Phone number input – digits only */}
@@ -2379,7 +2398,7 @@ function PhoneInput({
         </div>
       </div>
 
-      {/* Dropdown (if you want to enable country selection later) */}
+      {/* Country dropdown */}
       {isOpen && (
         <div className="absolute z-30 mt-1 w-full max-h-64 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg">
           <ul className="text-sm py-1">

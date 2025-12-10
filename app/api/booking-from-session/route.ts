@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import {
   BookingPayload,
-  saveBooking,
+  saveBooking,          // still imported for future if needed, but not used here now
   getBookingBySession,
-  sendEmailsOnce,
+  sendEmailsOnce,       // same as above
 } from '../../lib/booking';
 
 export const runtime = 'nodejs';
@@ -34,12 +34,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const paid =
-      session.payment_status === 'paid' ||
-      session.status === 'complete' ||
-      !!session.payment_intent;
+    // STRICT: only paid if Stripe says so
+    const stripePaid = session.payment_status === 'paid';
 
-    // 1) Try to load an existing booking that webhook may have already created
+    // 1) Try to load booking from DB (expected to be created by webhook)
     const existing = await getBookingBySession(session.id);
 
     if (existing) {
@@ -73,14 +71,17 @@ export async function POST(req: NextRequest) {
         hourlyVehicleType: (existing as any).hourlyVehicleType ?? undefined,
       };
 
+      // Here, booking exists in DB → we consider it confirmed.
+      // `paid` reflects Stripe payment status (should normally be true).
       return NextResponse.json({
         ok: true,
-        paid,
+        paid: stripePaid,
         booking: bookingForClient,
       });
     }
 
-    // 2) Fallback: no booking yet (e.g. webhook hasn’t fired / you’re on localhost)
+    // 2) Fallback: no booking found in DB (webhook hasn't saved it yet)
+    // We use metadata only to show trip details, but DO NOT save or email here.
     if (!session.metadata?.booking) {
       return NextResponse.json(
         { error: 'Missing booking metadata' },
@@ -91,64 +92,31 @@ export async function POST(req: NextRequest) {
     const rawBooking = JSON.parse(
       session.metadata.booking
     ) as BookingPayload;
+
     const currency = (session.currency ?? 'aud').toUpperCase();
     const amountTotal = (session.amount_total ?? 0) / 100;
 
-    const booking: BookingPayload = {
+    const bookingFromMetadata: BookingPayload = {
       ...rawBooking,
       totalPrice: amountTotal || rawBooking.totalPrice,
       currency,
     };
 
-    const saved = await saveBooking(session.id, booking);
+    console.log(
+      '[booking-from-session] No existing DB booking for session. Returning metadata booking as PENDING.',
+      {
+        sessionId,
+        stripePaymentStatus: session.payment_status,
+        stripePaid,
+      }
+    );
 
-    if (paid) {
-      await sendEmailsOnce(session.id, booking, session);
-    } else {
-      console.log(
-        'Session not paid yet — skipping emails for session',
-        sessionId
-      );
-    }
-
-    // Map saved DB record back to payload
-    let bookingForClient = booking;
-    if (saved) {
-      bookingForClient = {
-        id: (saved as any).id,
-        createdAt: (saved as any).createdAt
-          ? new Date((saved as any).createdAt).toISOString()
-          : undefined,
-        pickupLocation: (saved as any).pickupLocation,
-        pickupAddress: (saved as any).pickupAddress ?? undefined,
-        dropoffLocation: (saved as any).dropoffLocation,
-        dropoffAddress: (saved as any).dropoffAddress ?? undefined,
-        pickupDate: (saved as any).pickupDate,
-        pickupTime: (saved as any).pickupTime,
-        passengers: (saved as any).passengers,
-        luggage: (saved as any).luggage,
-        flightNumber: (saved as any).flightNumber ?? undefined,
-        childSeat: (saved as any).childSeat,
-        fullName: (saved as any).fullName,
-        email: (saved as any).email,
-        contactNumber: (saved as any).contactNumber,
-        totalPrice: ((saved as any).totalPriceCents ?? 0) / 100,
-        currency: (saved as any).currency ?? booking.currency,
-        bookingType: (saved as any).bookingType ?? booking.bookingType,
-        hourlyPickupLocation:
-          (saved as any).hourlyPickupLocation ?? undefined,
-        hourlyHours:
-          typeof (saved as any).hourlyHours === 'number'
-            ? (saved as any).hourlyHours
-            : (saved as any).hourlyHours ?? undefined,
-        hourlyVehicleType: (saved as any).hourlyVehicleType ?? undefined,
-      } as BookingPayload;
-    }
-
+    // Important: we force paid = false here so UI shows "Payment pending / not confirmed"
+    // even if Stripe already marked it as paid, because webhook has not created DB record yet.
     return NextResponse.json({
       ok: true,
-      paid,
-      booking: bookingForClient,
+      paid: false, // booking NOT confirmed yet (no DB record)
+      booking: bookingFromMetadata,
     });
   } catch (err) {
     console.error('booking-from-session error:', err);

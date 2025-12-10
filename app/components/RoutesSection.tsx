@@ -392,7 +392,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
             Private Airport & City Transfers
           </p>
 
-          <h1
+          <h2
             className="text-3xl sm:text-3xl md:text-4xl font-extrabold leading-tight"
             style={{ color: PRIMARY_COLOR }}
           >
@@ -402,7 +402,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
               className="w-24 h-1.5 mx-auto mt-4 rounded-full"
               style={{ backgroundColor: ACCENT_COLOR }}
             />
-          </h1>
+          </h2>
 
           <motion.p
             className="mt-3 text-[12px] sm:text-sm md:text-base text-gray-600 max-w-xl md:max-w-2xl leading-relaxed"
