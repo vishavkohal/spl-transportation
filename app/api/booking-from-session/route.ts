@@ -1,5 +1,3 @@
-
-
 // app/api/booking-from-session/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
@@ -7,9 +5,11 @@ import {
   BookingPayload,
   saveBooking,
   getBookingBySession,
-  sendEmailsOnce
+  sendEmailsOnce,
 } from '../../lib/booking';
+
 export const runtime = 'nodejs';
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: '2025-11-17.clover',
 });
@@ -19,13 +19,19 @@ export async function POST(req: NextRequest) {
     const { sessionId } = await req.json();
 
     if (!sessionId) {
-      return NextResponse.json({ error: 'sessionId is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'sessionId is required' },
+        { status: 400 }
+      );
     }
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     if (!session) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Session not found' },
+        { status: 404 }
+      );
     }
 
     const paid =
@@ -33,12 +39,58 @@ export async function POST(req: NextRequest) {
       session.status === 'complete' ||
       !!session.payment_intent;
 
-    if (!session.metadata?.booking) {
-      return NextResponse.json({ error: 'Missing booking metadata' }, { status: 500 });
+    // 1) Try to load an existing booking that webhook may have already created
+    const existing = await getBookingBySession(session.id);
+
+    if (existing) {
+      const bookingForClient: BookingPayload = {
+        id: (existing as any).id,
+        createdAt: (existing as any).createdAt
+          ? new Date((existing as any).createdAt).toISOString()
+          : undefined,
+        pickupLocation: (existing as any).pickupLocation,
+        pickupAddress: (existing as any).pickupAddress ?? undefined,
+        dropoffLocation: (existing as any).dropoffLocation,
+        dropoffAddress: (existing as any).dropoffAddress ?? undefined,
+        pickupDate: (existing as any).pickupDate,
+        pickupTime: (existing as any).pickupTime,
+        passengers: (existing as any).passengers,
+        luggage: (existing as any).luggage,
+        flightNumber: (existing as any).flightNumber ?? undefined,
+        childSeat: (existing as any).childSeat,
+        fullName: (existing as any).fullName,
+        email: (existing as any).email,
+        contactNumber: (existing as any).contactNumber,
+        totalPrice: ((existing as any).totalPriceCents ?? 0) / 100,
+        currency: (existing as any).currency ?? 'AUD',
+        bookingType: (existing as any).bookingType ?? undefined,
+        hourlyPickupLocation:
+          (existing as any).hourlyPickupLocation ?? undefined,
+        hourlyHours:
+          typeof (existing as any).hourlyHours === 'number'
+            ? (existing as any).hourlyHours
+            : (existing as any).hourlyHours ?? undefined,
+        hourlyVehicleType: (existing as any).hourlyVehicleType ?? undefined,
+      };
+
+      return NextResponse.json({
+        ok: true,
+        paid,
+        booking: bookingForClient,
+      });
     }
 
-    // Parse booking from metadata
-    const rawBooking = JSON.parse(session.metadata.booking) as BookingPayload;
+    // 2) Fallback: no booking yet (e.g. webhook hasn’t fired / you’re on localhost)
+    if (!session.metadata?.booking) {
+      return NextResponse.json(
+        { error: 'Missing booking metadata' },
+        { status: 500 }
+      );
+    }
+
+    const rawBooking = JSON.parse(
+      session.metadata.booking
+    ) as BookingPayload;
     const currency = (session.currency ?? 'aud').toUpperCase();
     const amountTotal = (session.amount_total ?? 0) / 100;
 
@@ -48,17 +100,18 @@ export async function POST(req: NextRequest) {
       currency,
     };
 
-    // Save (idempotent) - returns the Prisma Booking record
     const saved = await saveBooking(session.id, booking);
 
-    // Send emails only once if paid (sendEmailsOnce will check DB flag)
     if (paid) {
       await sendEmailsOnce(session.id, booking, session);
     } else {
-      console.log('Session not paid yet — skipping emails for session', sessionId);
+      console.log(
+        'Session not paid yet — skipping emails for session',
+        sessionId
+      );
     }
 
-    // Map saved DB record to a client-friendly shape (if available)
+    // Map saved DB record back to payload
     let bookingForClient = booking;
     if (saved) {
       bookingForClient = {
@@ -82,7 +135,8 @@ export async function POST(req: NextRequest) {
         totalPrice: ((saved as any).totalPriceCents ?? 0) / 100,
         currency: (saved as any).currency ?? booking.currency,
         bookingType: (saved as any).bookingType ?? booking.bookingType,
-        hourlyPickupLocation: (saved as any).hourlyPickupLocation ?? undefined,
+        hourlyPickupLocation:
+          (saved as any).hourlyPickupLocation ?? undefined,
         hourlyHours:
           typeof (saved as any).hourlyHours === 'number'
             ? (saved as any).hourlyHours
