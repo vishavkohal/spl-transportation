@@ -13,5 +13,5 @@ export function slugify(text: string): string {
 export function routeToSlug(route: Route): string {
   const from = route.from.trim();
   const to = route.to.trim();
-  return slugify(`${from}-${to}`);
+  return slugify(`${from}-to-${to}`);
 }
