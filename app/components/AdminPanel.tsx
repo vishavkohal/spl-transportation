@@ -9,7 +9,7 @@ export type PricingItem = {
 };
 
 export type Route = {
-  id: number;                                                                                                                                                                                                                          
+  id: number;
   from: string;
   to: string;
   label: string | null;
@@ -972,7 +972,8 @@ function RoutesAdminPanel() {
 }
 
 /* =======================
-   Bookings Admin UI
+   Bookings Admin UI (FULL PAGE)
+   includes Stripe session id filter
 ======================= */
 
 function BookingsAdminPanel() {
@@ -991,6 +992,8 @@ function BookingsAdminPanel() {
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
   const [filterInvoice, setFilterInvoice] = useState('');
+  // NEW: stripe session id filter
+  const [filterSessionId, setFilterSessionId] = useState('');
 
   async function loadBookings() {
     setLoading(true);
@@ -1053,6 +1056,7 @@ function BookingsAdminPanel() {
   const filteredBookings = React.useMemo(() => {
     const searchLower = search.trim().toLowerCase();
     const invoiceFilterLower = filterInvoice.trim().toLowerCase();
+    const sessionFilterLower = filterSessionId.trim().toLowerCase();
 
     // Parse date filters (if provided)
     const fromDate = filterDateFrom ? new Date(filterDateFrom) : null;
@@ -1077,12 +1081,19 @@ function BookingsAdminPanel() {
           b.dropoffLocation,
           b.dropoffAddress || '',
           b.id,
-          invoiceNumber
+          invoiceNumber,
+          b.stripeSessionId || ''
         ]
           .join(' ')
           .toLowerCase();
 
         if (!haystack.includes(searchLower)) return false;
+      }
+
+      // Stripe session id filter (exact/partial)
+      if (sessionFilterLower) {
+        const sess = (b.stripeSessionId || '').toLowerCase();
+        if (!sess || !sess.includes(sessionFilterLower)) return false;
       }
 
       // Invoice number filter
@@ -1114,7 +1125,8 @@ function BookingsAdminPanel() {
     filterEmailStatus,
     filterDateFrom,
     filterDateTo,
-    filterInvoice
+    filterInvoice,
+    filterSessionId
   ]);
 
   return (
@@ -1204,7 +1216,7 @@ function BookingsAdminPanel() {
           </div>
         </div>
 
-        {/* Date range + Invoice filter */}
+        {/* Date range + Invoice + Session filter */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -1245,6 +1257,20 @@ function BookingsAdminPanel() {
             />
           </div>
 
+          {/* NEW: Stripe session id filter */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Stripe session id
+            </label>
+            <input
+              className="w-full p-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-offset-0"
+              style={{ '--tw-ring-color': ACCENT_COLOR } as React.CSSProperties}
+              placeholder="e.g. cs_test_123..."
+              value={filterSessionId}
+              onChange={e => setFilterSessionId(e.target.value)}
+            />
+          </div>
+
           <div className="sm:col-span-1 flex items-end justify-start sm:justify-end gap-2">
             <button
               type="button"
@@ -1256,6 +1282,7 @@ function BookingsAdminPanel() {
                 setFilterDateFrom('');
                 setFilterDateTo('');
                 setFilterInvoice('');
+                setFilterSessionId(''); // clear new filter too
               }}
             >
               Clear filters
@@ -1358,7 +1385,7 @@ function BookingsAdminPanel() {
 
                   {b.id && (
                     <div className="mt-1 text-xs text-gray-400 break-all">
-                      Session: {b.id}
+                      Session: {b.stripeSessionId}
                     </div>
                   )}
 

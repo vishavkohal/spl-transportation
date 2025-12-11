@@ -1,7 +1,7 @@
 // lib/email.ts
 import Stripe from 'stripe';
 import { Resend } from 'resend';
-import { htmlToPdfBuffer } from './pdf';
+import pRetry from 'p-retry';
 
 // Re-export type used elsewhere if needed
 export type BookingEmailData = {
@@ -35,14 +35,77 @@ export type BookingEmailData = {
 const resendApiKey = process.env.RESEND_API_KEY;
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
+// Retry configuration (env overrides possible)
+// RETRY_ATTEMPTS = total attempts (including the first try)
+const RETRY_ATTEMPTS = Number(process.env.RESEND_RETRY_ATTEMPTS ?? 3);
+const RETRY_BASE_DELAY_MS = Number(process.env.RESEND_RETRY_BASE_DELAY_MS ?? 500);
+
 // company & email config (fallbacks)
 const FROM_EMAIL = process.env.BOOKING_FROM_EMAIL || 'no-reply@spltransportation.com';
-const ADMIN_EMAIL = process.env.BOOKING_ADMIN_EMAIL || 'admin@spltransportation.com';
+const ADMIN_EMAIL = process.env.BOOKING_ADMIN_EMAIL || 'spltransportation.australia@gmail.com';
 const COMPANY_NAME = process.env.COMPANY_NAME || 'SPL Transportation';
 const COMPANY_ABN = process.env.COMPANY_ABN || '64 957 177 372';
-const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'info@spltransportation.com.au';
-const COMPANY_PHONE = process.env.COMPANY_PHONE || '0478 XXX XXX';
+const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'spltransportation.australia@gmail.com';
+const COMPANY_PHONE = process.env.COMPANY_PHONE || '+61470032460';
 const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || 'Cairns, QLD, Australia';
+
+/**
+ * sendWithRetries
+ * - Uses p-retry to perform retries with exponential backoff + jitter.
+ * - Aborts (no retry) for client errors (HTTP 4xx).
+ * - Expects payload.html to be present (HTML-only emails).
+ */
+async function sendWithRetries(payload: {
+  from: string;
+  to: string | string[];
+  subject: string;
+  html: string;
+}) {
+  if (!resend) {
+    throw new Error('Resend client not configured (RESEND_API_KEY missing).');
+  }
+
+  const operation = async () => {
+    try {
+      return await resend.emails.send(payload as any);
+    } catch (err: any) {
+      // Attempt to detect HTTP status on common error shapes from SDK / fetch
+      const status = err?.status || err?.statusCode || err?.response?.status;
+
+      // If it's a 4xx client error, abort retries (bad request / validation)
+      if (typeof status === 'number' && status >= 400 && status < 500) {
+        // Use p-retry's AbortError so retrying stops immediately
+        // @ts-ignore - pRetry.AbortError exists at runtime
+        throw new pRetry.AbortError(err);
+      }
+
+      // Otherwise rethrow to allow p-retry to retry
+      throw err;
+    }
+  };
+
+  try {
+    const result = await pRetry(operation, {
+      // p-retry 'retries' is number of retries AFTER first attempt
+      retries: Math.max(0, RETRY_ATTEMPTS - 1),
+      factor: 2,
+      minTimeout: RETRY_BASE_DELAY_MS,
+      randomize: true,
+      onFailedAttempt: (error) => {
+        // error.attemptNumber, error.retriesLeft available
+        console.warn(
+          `resend.emails.send attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`,
+          error
+        );
+      },
+    });
+
+    return result;
+  } catch (err) {
+    console.error(`resend.emails.send failed after ${RETRY_ATTEMPTS} attempts:`, err);
+    throw err;
+  }
+}
 
 /**
  * Build print-ready receipt HTML
@@ -125,10 +188,7 @@ export function buildBookingReceiptHtml(
   <span style="color:#A61924;">SPL</span>
   <span style="color:#18234B;">Transportation</span>
 </span>
-
 </div>
-
-          
           </div>
           <div style="text-align:right; font-size:13px;">
             <div><strong>ABN:</strong> ${COMPANY_ABN}</div>
@@ -242,7 +302,7 @@ export function buildBookingSummaryHtml(
 }
 
 /**
- * Send customer email (inline HTML + base64 PDF attachment if PDF generation succeeds)
+ * Send customer email (HTML-only) using sendWithRetries
  */
 export async function sendCustomerEmail(
   booking: BookingEmailData,
@@ -273,28 +333,21 @@ export async function sendCustomerEmail(
     return;
   }
 
-  // Attempt PDF generation
-  let attachments: Array<{ content: string; filename: string }> | undefined = undefined;
   try {
-    const pdfBuffer = await htmlToPdfBuffer(html);
-    const base64 = pdfBuffer.toString('base64');
-    attachments = [{ content: base64, filename: 'invoice.pdf' }];
+    await sendWithRetries({
+      from: FROM_EMAIL,
+      to: booking.email,
+      subject: `Your ${COMPANY_NAME} Booking Confirmation`,
+      html,
+    });
   } catch (err) {
-    console.warn('PDF generation failed, sending inline email only:', err);
-    attachments = undefined;
+    console.error('Failed to send customer email after retries:', err);
+    throw err;
   }
-
-  await resend.emails.send({
-    from: FROM_EMAIL,
-    to: booking.email,
-    subject: `Your ${COMPANY_NAME} Booking Confirmation`,
-    html,
-    attachments, // Resend accepts base64 content
-  });
 }
 
 /**
- * Send admin email (same attachment)
+ * Send admin email (HTML-only) using sendWithRetries
  */
 export async function sendAdminEmail(
   booking: BookingEmailData,
@@ -309,27 +362,26 @@ export async function sendAdminEmail(
   let opts: { invoiceNumber?: string; invoiceDate?: string; bookingRef?: string } | undefined = undefined;
   if (booking.id && booking.createdAt) {
     try {
-    const created = new Date(booking.createdAt);
+      const created = new Date(booking.createdAt);
 
-// Get YYYYMMDD
-const y = created.getFullYear();
-const m = String(created.getMonth() + 1).padStart(2, "0");
-const d = String(created.getDate()).padStart(2, "0");
-const datePart = `${y}${m}${d}`;
+      // Get YYYYMMDD
+      const y = created.getFullYear();
+      const m = String(created.getMonth() + 1).padStart(2, "0");
+      const d = String(created.getDate()).padStart(2, "0");
+      const datePart = `${y}${m}${d}`;
 
-// Get HHMMSSmmm
-const hh = String(created.getHours()).padStart(2, "0");
-const mm = String(created.getMinutes()).padStart(2, "0");
-const ss = String(created.getSeconds()).padStart(2, "0");
-const ms = String(created.getMilliseconds()).padStart(3, "0");
-const timePart = `${hh}${mm}${ss}${ms}`;
+      // Get HHMMSSmmm
+      const hh = String(created.getHours()).padStart(2, "0");
+      const mm = String(created.getMinutes()).padStart(2, "0");
+      const ss = String(created.getSeconds()).padStart(2, "0");
+      const ms = String(created.getMilliseconds()).padStart(3, "0");
+      const timePart = `${hh}${mm}${ss}${ms}`;
 
-opts = {
-  invoiceNumber: `INV-${datePart}-${timePart}`,
-  invoiceDate: created.toLocaleDateString(),
-  bookingRef: booking.id,
-};
-
+      opts = {
+        invoiceNumber: `INV-${datePart}-${timePart}`,
+        invoiceDate: created.toLocaleDateString(),
+        bookingRef: booking.id,
+      };
     } catch (e) {
       // ignore
     }
@@ -344,21 +396,15 @@ opts = {
     return;
   }
 
-  let attachments: Array<{ content: string; filename: string }> | undefined = undefined;
   try {
-    const pdfBuffer = await htmlToPdfBuffer(html);
-    const base64 = pdfBuffer.toString('base64');
-    attachments = [{ content: base64, filename: 'invoice.pdf' }];
+    await sendWithRetries({
+      from: FROM_EMAIL,
+      to: ADMIN_EMAIL,
+      subject,
+      html,
+    });
   } catch (err) {
-    console.warn('PDF generation failed for admin email — sending inline only:', err);
-    attachments = undefined;
+    console.error('Failed to send admin email after retries:', err);
+    throw err;
   }
-
-  await resend.emails.send({
-    from: FROM_EMAIL,
-    to: ADMIN_EMAIL,
-    subject,
-    html,
-    attachments,
-  });
 }
