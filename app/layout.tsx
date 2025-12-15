@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 const BASE_URL = "https://spltransportation.com.au";
+const GA_ID = "G-0F1THLNR5M";
 
 export const metadata: Metadata = {
   title: {
@@ -12,12 +14,11 @@ export const metadata: Metadata = {
     "Reliable private airport and regional transfers across Cairns, Port Douglas, Palm Cove, Kuranda and Far North Queensland. Book online with SPL Transportation.",
   metadataBase: new URL(BASE_URL),
 
-  // Google Verification (Paste your token)
+  // ✅ Google Search Console verification (BEST PRACTICE)
   verification: {
-    google: "PASTE_YOUR_GOOGLE_SEARCH_CONSOLE_VERIFICATION_CODE",
+    google: "QCFxWVp8c9Oj8cesOYAukkgIHzRc7W71jrq74Hu_6EI",
   },
 
-  // OpenGraph defaults
   openGraph: {
     type: "website",
     url: BASE_URL,
@@ -43,7 +44,6 @@ export const metadata: Metadata = {
     images: ["/logo.png"],
   },
 
-  // Hreflang (site-wide)
   alternates: {
     canonical: BASE_URL,
     languages: {
@@ -59,18 +59,38 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
       <head>
-        {/* Preload logo for faster branding */}
+        {/* ✅ Preload brand logo */}
         <link rel="preload" as="image" href="/logo.png" />
 
-        {/* LocalBusiness JSON-LD */}
-        <script
+        {/* ✅ Google Analytics (safe for TS + App Router) */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+          strategy="afterInteractive"
+        />
+
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){window.dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GA_ID}', {
+              anonymize_ip: true,
+              page_path: window.location.pathname,
+            });
+          `}
+        </Script>
+
+        {/* ✅ LocalBusiness JSON-LD */}
+        <Script
+          id="local-business-schema"
           type="application/ld+json"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
