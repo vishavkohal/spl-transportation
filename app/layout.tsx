@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 
-const BASE_URL = "https://spltransportation.com.au";
+const BASE_URL = "https://www.spltransportation.com.au";
 const GA_ID = "G-0F1THLNR5M";
 
 export const metadata: Metadata = {
