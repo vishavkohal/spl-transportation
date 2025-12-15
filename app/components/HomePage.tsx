@@ -20,7 +20,7 @@ import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import type { BookingFormData, Route } from '../types';
 import { Services } from './Services';
 import CustomerReviews from './CustomerReviews';
-import HeroSection from './FeatureSection';
+import HeroBackground from "./HeroBackground";
 import { PHONE_COUNTRIES_LIST } from '../lib/phonecodes';
 import { useDebouncedCallback } from 'use-debounce';
 // Custom colors
@@ -40,7 +40,7 @@ const VEHICLE_CONSTRAINTS: { maxPax: number; maxBags: number }[] = [
 ];
 
 // slideshow images
-const heroImages = ['/home.jpg', '/copy.jpg', '/copy3.png'];
+const heroImages = ['/home.webp', '/copy.webp', '/copy3.webp'];
 const PHONE_COUNTRIES = PHONE_COUNTRIES_LIST;
 
 // NEW: Hourly Hire rates (hardcoded)
@@ -564,21 +564,26 @@ useEffect(() => {
     <div className="min-h-screen bg-white-50 pt-2 md:pt-14">
       {/* Hero Section */}
       <div className="relative h-[560px] lg:h-[520px] xl:h-[580px] overflow-hidden">
-        <div className="absolute inset-0">
-          {heroImages.map((src, index) => (
-            <div
-              key={src}
-              className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
-              style={{ opacity: index === currentImageIndex ? 3 : 0 }}
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url('${src}')` }}
-              ></div>
-            </div>
-          ))}
-        </div>
-
+        <HeroBackground />
+{/* Optional: fade-in slideshow AFTER hydration */}
+<div className="absolute inset-0 pointer-events-none">
+  {heroImages.slice(1).map((src, index) => (
+    <div
+      key={src}
+      className={`absolute inset-0 transition-opacity duration-1000 ${
+        index + 1 === currentImageIndex ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <Image
+        src={src}
+        alt=""
+        fill
+        sizes="100vw"
+        className="object-cover"
+      />
+    </div>
+  ))}
+</div>
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/70 to-black/20 z-10"></div>
 <motion.div
   className="relative z-20 h-full container mx-auto px-4 flex items-center"
