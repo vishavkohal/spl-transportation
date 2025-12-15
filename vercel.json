@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "https://spltransportation.com.au/(.*)",
+      "destination": "https://www.spltransportation.com.au/$1",
+      "permanent": true
+    }
+  ]
+}
