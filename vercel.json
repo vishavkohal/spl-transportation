@@ -1,8 +1,14 @@
 {
   "redirects": [
     {
-      "source": "https://spltransportation.com.au/(.*)",
-      "destination": "https://www.spltransportation.com.au/$1",
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "spltransportation.com.au"
+        }
+      ],
+      "destination": "https://www.spltransportation.com.au/:path*",
       "permanent": true
     }
   ]
