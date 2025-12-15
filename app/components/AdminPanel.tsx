@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo,useState } from 'react';
 
 // 1. UPDATED: Type definition to match the backend DTO
 export type PricingItem = {
@@ -49,6 +49,27 @@ type Booking = {
   hourlyVehicleType?: string | null;
 };
 
+type BookingLead = {
+  id: string;
+  fullName?: string | null;
+  email?: string | null;
+  contactNumber?: string | null;
+
+  bookingType: 'standard' | 'hourly';
+
+  pickupLocation?: string | null;
+  dropoffLocation?: string | null;
+  hourlyPickupLocation?: string | null;
+  hourlyHours?: number | null;
+
+  quotedPriceCents?: number | null;
+  currency?: string | null;
+
+  status: 'draft' | 'converted';
+  source?: string | null;
+
+  createdAt: string;
+};
 // Define the custom colors
 const PRIMARY_COLOR = '#18234B'; // Dark Navy
 const ACCENT_COLOR = '#A61924'; // Deep Red
@@ -95,7 +116,7 @@ const parseNumericInput = (displayValue: string | null): number | null => {
   return isNaN(parsed) || value === '' ? null : parsed;
 };
 
-type AdminTab = 'routes' | 'bookings';
+type AdminTab = 'routes' | 'bookings' | 'leads';
 
 function AdminPanel() {
   const [isAuthed, setIsAuthed] = useState(false);
@@ -210,60 +231,39 @@ function AdminPanel() {
     );
   }
 
-  return (
+    return (
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
       <header className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
           <div>
-            <h1
-              className="text-xl sm:text-2xl font-bold"
-              style={{ color: PRIMARY_COLOR }}
-            >
+            <h1 className="text-2xl font-bold" style={{ color: PRIMARY_COLOR }}>
               Admin Panel
             </h1>
-            <p className="text-xs text-gray-500">Manage routes and bookings</p>
+            <p className="text-xs text-gray-500">Routes · Bookings · Leads</p>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="inline-flex rounded-full border bg-gray-50 p-1 text-sm">
-              <button
-                type="button"
-                onClick={() => setActiveTab('routes')}
-                className={`px-3 py-1.5 rounded-full transition-all ${
-                  activeTab === 'routes'
-                    ? 'bg-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                style={
-                  activeTab === 'routes'
-                    ? ({ color: PRIMARY_COLOR } as React.CSSProperties)
-                    : undefined
-                }
-              >
-                Routes
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('bookings')}
-                className={`px-3 py-1.5 rounded-full transition-all ${
-                  activeTab === 'bookings'
-                    ? 'bg-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                style={
-                  activeTab === 'bookings'
-                    ? ({ color: PRIMARY_COLOR } as React.CSSProperties)
-                    : undefined
-                }
-              >
-                Bookings
-              </button>
+            <div className="inline-flex rounded-lg border bg-gray-50 p-1 text-sm">
+              {(['routes', 'bookings', 'leads'] as AdminTab[]).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-1.5 rounded-md ${
+                    activeTab === tab
+                      ? 'bg-white shadow font-semibold'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                  style={activeTab === tab ? { color: PRIMARY_COLOR } : undefined}
+                >
+                  {tab.toUpperCase()}
+                </button>
+              ))}
             </div>
 
             <button
               onClick={handleLogout}
-              className="px-3 py-1.5 text-sm text-white rounded shadow hover:brightness-110"
+              className="px-3 py-1.5 text-sm text-white rounded"
               style={{ backgroundColor: ACCENT_COLOR }}
             >
               Logout
@@ -272,9 +272,10 @@ function AdminPanel() {
         </div>
       </header>
 
-      {/* Content */}
-      <main className="max-w-4xl mx-auto p-4 sm:p-6">
-        {activeTab === 'routes' ? <RoutesAdminPanel /> : <BookingsAdminPanel />}
+      <main className="max-w-6xl mx-auto p-4">
+        {activeTab === 'routes' && <RoutesAdminPanel />}
+        {activeTab === 'bookings' && <BookingsAdminPanel />}
+        {activeTab === 'leads' && <LeadsAdminPanel />}
       </main>
     </div>
   );
@@ -1427,6 +1428,110 @@ function BookingsAdminPanel() {
             </li>
           );
         })}
+      </ul>
+    </div>
+  );
+}
+
+/* =======================
+   Leads Panel (FULL)
+======================= */
+function LeadsAdminPanel() {
+  const [leads, setLeads] = useState<BookingLead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    fetch('/api/admin/leads')
+      .then(r => r.json())
+      .then(setLeads)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return leads;
+    const q = search.toLowerCase();
+    return leads.filter(l =>
+      [
+        l.fullName,
+        l.email,
+        l.contactNumber,
+        l.pickupLocation,
+        l.dropoffLocation,
+        l.source
+      ]
+        .join(' ')
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [leads, search]);
+
+  return (
+    <div className="bg-gray-50 rounded-lg">
+      <div className="flex justify-between mb-4">
+        <h2 className="text-2xl font-bold" style={{ color: PRIMARY_COLOR }}>
+          Leads
+        </h2>
+
+        <input
+          className="border p-2 rounded text-sm"
+          placeholder="Search leads…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
+      {loading && <p>Loading leads…</p>}
+
+      {!loading && filtered.length === 0 && (
+        <p className="bg-white p-4 border rounded text-sm">No leads found.</p>
+      )}
+
+      <ul className="space-y-3">
+        {filtered.map(l => (
+          <li key={l.id} className="bg-white border rounded p-4">
+            <div className="flex justify-between">
+              <div>
+                <div className="font-semibold text-lg">
+                  {l.fullName || '—'}
+                </div>
+                <div className="text-xs text-gray-600">
+                  {l.email} {l.contactNumber && `• ${l.contactNumber}`}
+                </div>
+                <div className="text-sm mt-1">
+                  {l.bookingType === 'hourly'
+                    ? `Hourly (${l.hourlyHours ?? '—'} hrs)`
+                    : `${l.pickupLocation} → ${l.dropoffLocation}`}
+                </div>
+                <div className="text-xs text-gray-400">
+                  Source: {l.source || 'unknown'}
+                </div>
+              </div>
+
+              <div className="text-right">
+                <div className="font-bold">
+                  {l.quotedPriceCents
+                    ? `${(l.quotedPriceCents / 100).toFixed(2)} ${
+                        l.currency || 'AUD'
+                      }`
+                    : '—'}
+                </div>
+                <span
+                  className={`text-xs px-2 py-1 rounded border ${
+                    l.status === 'converted'
+                      ? 'bg-green-50 border-green-200 text-green-700'
+                      : 'bg-yellow-50 border-yellow-200 text-yellow-700'
+                  }`}
+                >
+                  {l.status.toUpperCase()}
+                </span>
+                <div className="text-xs text-gray-400 mt-1">
+                  {new Date(l.createdAt).toLocaleString()}
+                </div>
+              </div>
+            </div>
+          </li>
+        ))}
       </ul>
     </div>
   );

@@ -7,7 +7,7 @@ import {
   saveBooking,
   sendEmailsOnce,
 } from '../../../lib/booking';
-
+import { markLeadConvertedByEmail } from '../../../lib/bookingLead';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -125,7 +125,8 @@ export async function POST(req: NextRequest) {
           () => saveBooking(session.id, booking),
           { operationName: 'saveBooking' }
         );
-
+         
+        
         // Emails only once (sendEmailsOnce should check DB flag)
         // Wrap email/send flow in retryOperation as well so transient email failures
         // (network / Resend transient errors) will be retried here.
@@ -133,7 +134,8 @@ export async function POST(req: NextRequest) {
           () => sendEmailsOnce(session.id, booking, session),
           { operationName: 'sendEmailsOnce' }
         );
-
+        
+        await markLeadConvertedByEmail(booking.email);
         // console.log('✅ Webhook processed for session', session.id, 'paid=', paid);
         break;
       }

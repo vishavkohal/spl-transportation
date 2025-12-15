@@ -28,7 +28,8 @@
     "resend": "^6.5.2",
     "square": "^43.2.1",
     "squareup": "^1.0.0",
-    "stripe": "^20.0.0"
+    "stripe": "^20.0.0",
+    "use-debounce": "^10.0.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

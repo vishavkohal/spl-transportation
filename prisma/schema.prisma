@@ -61,3 +61,42 @@ model Booking {
 
   createdAt            DateTime @default(now())
 }
+
+model BookingLead {
+  id                   String   @id @default(cuid())
+
+  bookingType           String   // "standard" | "hourly"
+
+  // Standard transfer
+  pickupLocation        String?
+  pickupAddress         String?
+  dropoffLocation       String?
+  dropoffAddress        String?
+
+  pickupDate            String?
+  pickupTime            String?
+
+  passengers            Int?
+  luggage               Int?
+  flightNumber          String?
+  childSeat             Boolean?
+
+  // Hourly hire
+  hourlyPickupLocation  String?
+  hourlyHours           Int?
+  hourlyVehicleType     String?
+
+  // Contact (MANDATORY for saving)
+  fullName              String?
+  email                 String?
+  contactNumber         String?
+
+  quotedPriceCents      Int?
+  currency              String   @default("AUD")
+
+  status                String   @default("draft") // draft | converted
+  source                String?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}

@@ -22,7 +22,7 @@ import { Services } from './Services';
 import CustomerReviews from './CustomerReviews';
 import HeroSection from './FeatureSection';
 import { PHONE_COUNTRIES_LIST } from '../lib/phonecodes';
-
+import { useDebouncedCallback } from 'use-debounce';
 // Custom colors
 const PRIMARY_COLOR = '#18234B';
 const ACCENT_COLOR = '#A61924';
@@ -513,6 +513,52 @@ const isHourlyStep1Valid = () => {
       setBookingStep(2);
     }
   };
+
+  const [leadId, setLeadId] = useState<string | null>(null);
+  // ----------------------------------
+// STEP 2 LEAD AUTOSAVE (ONLY WITH CONTACT INFO)
+// ----------------------------------
+const saveLead = useDebouncedCallback(async () => {
+  // ❌ Never save in Step 1
+  if (bookingStep !== 2) return;
+
+  // ❌ No contact info → not a lead
+  if (!formData.email && !formData.contactNumber) return;
+
+  try {
+    const res = await fetch('/api/leads/upsert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: leadId,
+        bookingType: bookingMode,
+        quotedPrice:
+          bookingMode === 'standard'
+            ? calculatedPrice
+            : hourlyPrice,
+        source: 'homepage',
+        ...formData
+      })
+    });
+
+    const data = await res.json();
+
+    if (data?.leadId && !leadId) {
+      setLeadId(data.leadId);
+    }
+  } catch (err) {
+    // Silent fail — never block UX
+    console.error('Lead autosave failed', err);
+  }
+}, 2500);
+useEffect(() => {
+  saveLead();
+}, [
+  bookingStep,
+  formData.fullName,
+  formData.email,
+  formData.contactNumber
+]);
 
   return (
     <div className="min-h-screen bg-white-50 pt-2 md:pt-14">
