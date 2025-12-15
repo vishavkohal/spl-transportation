@@ -92,7 +92,6 @@ export default function RootLayout({
             function gtag(){window.dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', '${GA_ID}', {
-              anonymize_ip: true,
               page_path: window.location.pathname,
             });
           `}
