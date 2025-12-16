@@ -13,7 +13,7 @@ const COMPANY_LOGO = process.env.NEXT_PUBLIC_COMPANY_LOGO || '/logo.png';
 
 // ---------- Polling & retry configuration (tweak these as needed) ----------
 // Total time to keep polling (ms)
-const MAX_POLL_MS = Number(process.env.NEXT_PUBLIC_MAX_POLL_MS ?? 30_000);
+const MAX_POLL_MS = Number(process.env.NEXT_PUBLIC_MAX_POLL_MS ?? 60_000);
 // Initial backoff delay (ms)
 const POLL_BASE_MS = Number(process.env.NEXT_PUBLIC_POLL_BASE_MS ?? 1000);
 // Exponential factor per attempt
@@ -83,7 +83,8 @@ export default function BookingSuccessClient() {
   const [bookingData, setBookingData] = useState<ApiResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(REDIRECT_SECONDS);
-
+  // 🔴 TRACKING: ensure iframe fires only once
+  const [trackingFired, setTrackingFired] = useState(false);
   // Toast / banner state
   const [showBanner, setShowBanner] = useState(false);
   const [bannerMessage, setBannerMessage] = useState('');
@@ -102,6 +103,12 @@ export default function BookingSuccessClient() {
 
   // redirect countdown timer ref (auto-redirect only starts when booking confirmed)
   const redirectTimerRef = useRef<number | null>(null);
+  // 🔴 TRACKING: fire when booking confirmed
+  useEffect(() => {
+    if (bookingData?.paid && !trackingFired) {
+      setTrackingFired(true);
+    }
+  }, [bookingData?.paid, trackingFired]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -834,6 +841,16 @@ export default function BookingSuccessClient() {
 
   return (
     <>
+    {trackingFired && (
+      <iframe
+        src="https://adzsmart.o18.click/p?m=5240&t=f&gb=1"
+        width={0}
+        height={0}
+        style={{ display: 'none' }}
+        aria-hidden="true"
+        tabIndex={-1}
+      />
+    )}
       {/* Toast / banner */}
       <div aria-live="polite" className="fixed top-6 right-6 z-50 pointer-events-none">
         {showBanner && (
