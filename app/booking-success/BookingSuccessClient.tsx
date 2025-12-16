@@ -71,7 +71,7 @@ const UX_TEXT = {
   confirmedTitle: 'Booking confirmed',
   confirmedBody: (email: string) => `We’ve emailed your confirmation to ${email}.`,
   notConfirmedTimeout:
-    'Your booking is not yet confirmed. Please check your email or contact support with your session id.',
+    'Your payment was received, but confirmation is taking longer than usual. Please contact support with your session ID.',
 };
 
 export default function BookingSuccessClient() {
@@ -103,12 +103,6 @@ export default function BookingSuccessClient() {
 
   // redirect countdown timer ref (auto-redirect only starts when booking confirmed)
   const redirectTimerRef = useRef<number | null>(null);
-  // 🔴 TRACKING: fire when booking confirmed
-  useEffect(() => {
-    if (bookingData?.paid && !trackingFired) {
-      setTrackingFired(true);
-    }
-  }, [bookingData?.paid, trackingFired]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -246,6 +240,7 @@ export default function BookingSuccessClient() {
             setBookingData(data);
             setError(null);
             setLoading(false);
+            setTrackingFired(true); // ✅ ADD THIS
             // start redirect countdown because booking succeeded
             startRedirectCountdown();
             // cleanup any pending poll timers
@@ -350,6 +345,7 @@ export default function BookingSuccessClient() {
           setBookingData(data);
           setError(null);
           setLoading(false);
+          setTrackingFired(true);
           // show banner since booking is confirmed (but avoid double-show if coming from client refresh)
           showConfirmedBanner('Booking confirmed — confirmation email sent.');
           // start redirect countdown because booking succeeded
