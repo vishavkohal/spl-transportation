@@ -31,7 +31,7 @@ export default function Home() {
   return (
     <>
       {/* 🔴 Offline Banner */}
-      {!navigator.onLine && (
+     {!navigator.onLine && (
         <div className="bg-white-600 text-black text-center py-2 text-sm font-medium">
           No internet connection. Some features may be unavailable.
         </div>

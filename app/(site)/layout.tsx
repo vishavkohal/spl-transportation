@@ -8,7 +8,7 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
     <>
       <Navigation/>
 
-      <main className="pt-20 min-h-screen">
+      <main className="pt-20 min-h-screen bg-white dark:bg-white">
         {children}
       </main>
 
