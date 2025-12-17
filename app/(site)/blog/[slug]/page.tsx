@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { blogPosts } from "../../../lib/blogPosts";
-import BlogNavigation from "../../../components/BlogNavigation";
 
 const PRIMARY_COLOR = "#18234B";
 const ACCENT_COLOR = "#A61924";
@@ -60,8 +59,6 @@ export default async function BlogPostPage({
 
   return (
     <>
-      <BlogNavigation />
-
       <main className="max-w-3xl mx-auto px-4 md:px-6 pt-28 md:pt-32 pb-16">
         <nav className="mb-4 text-xs text-gray-500">
           <Link href="/" className="hover:underline">
