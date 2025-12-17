@@ -2,7 +2,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { blogPosts } from "../../lib/blogPosts";
-import BlogNavigation from "../../components/BlogNavigation";
 
 const PRIMARY_COLOR = "#18234B";
 const ACCENT_COLOR = "#A61924";
@@ -18,8 +17,6 @@ export default function BlogIndexPage() {
 
   return (
     <>
-      <BlogNavigation />
-
       <main className="max-w-5xl mx-auto px-4 md:px-6 pt-15 md:pt-15 pb-16">
         <header className="mb-10">
           <p

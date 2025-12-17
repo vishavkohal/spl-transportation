@@ -2,7 +2,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { blogPosts } from "../../lib/blogPosts";
-import BlogNavigation from "../../components/BlogNavigation";
 import ContactPage from "../../components/ContactPage";
 const PRIMARY_COLOR = "#18234B";
 const ACCENT_COLOR = "#A61924";
@@ -12,7 +11,6 @@ export default function ContactIndexPage() {
 
   return (
     <>
-      <BlogNavigation />
       <ContactPage  />
 </>
       );
