@@ -8,7 +8,7 @@ const ACCENT_COLOR = '#A61924'; // Deep Red
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen max-w-5xl mx-auto px-6 pb-12 pt-24 md:pt-32 transition-colors">
+    <div className="min-h-screen max-w-5xl mx-auto px-6 pb-12 pt-14 md:pt-14 transition-colors">
       
       {/* Page Header */}
       <div className="flex flex-col mb-10 border-b border-gray-200 pb-5">

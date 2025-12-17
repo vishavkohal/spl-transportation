@@ -161,11 +161,10 @@ export default function HomePage(props: {
   ) => void;
   bookingStep: 1 | 2;
   setBookingStep: (n: 1 | 2) => void;
-  setCurrentPage: (p: string) => void;
   AVAILABLE_LOCATIONS: string[];
   dropoffOptions: string[];
   selectedRoute: Route | null;
-  calculatedPrice: number; // standard transfer price
+  calculatedPrice: number;
   routesLoading: boolean;
 }) {
   const {
@@ -561,7 +560,7 @@ useEffect(() => {
 ]);
 
   return (
-    <div className="min-h-screen bg-white-50 pt-2 md:pt-14">
+    <div className="min-h-screen bg-white-50">
       {/* Hero Section */}
       <div className="relative h-[560px] lg:h-[520px] xl:h-[580px] overflow-hidden">
         <HeroBackground />
@@ -594,7 +593,7 @@ useEffect(() => {
   <div className="py-10 lg:py-0 max-w-5xl lg:max-w-6xl mx-auto">
     {/* Tag */}
 
-      <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white mt-3 mb-4 leading-tight">
+      <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-4 leading-tight">
         Seamless Transfers
         <br />
         Across Queensland

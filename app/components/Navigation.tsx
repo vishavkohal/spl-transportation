@@ -1,112 +1,106 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Menu, X, Phone } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { PageKey } from '../page'; // 👈 union type
+import { usePathname } from 'next/navigation';
 
-// Define the custom colors for readability
-const PRIMARY_COLOR = '#18234B'; // Dark Navy
-const ACCENT_COLOR = '#A61924'; // Deep Red
+// Brand colors
+const PRIMARY_COLOR = '#18234B';
+const ACCENT_COLOR = '#A61924';
 
-// --- CONFIGURATION ---
+// Config
 const COMPANY_PHONE = '+61470032460';
 
-// Pages we support in nav (state-based pages)
-const PAGES: PageKey[] = ['home', 'routes','contact', 'about', 'terms'];
+// Navigation links (URL-based)
+const NAV_LINKS = [
+  { label: 'Home', href: '/' },
+  { label: 'Transfers', href: '/transfers' },
+  { label: 'Contact', href: '/contact' },
+  { label: 'About', href: '/about' },
+  { label: 'Terms', href: '/terms' }
+];
 
-type NavigationProps = {
-  currentPage: PageKey;
-  setCurrentPage: (p: PageKey) => void;
-  menuOpen: boolean;
-  setMenuOpen: (v: boolean) => void;
-};
+export default function Navigation() {
+  const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-export default function Navigation({
-  currentPage,
-  setCurrentPage,
-  menuOpen,
-  setMenuOpen
-}: NavigationProps) {
-  const handleNavClick = (page: PageKey) => {
-    setCurrentPage(page);
-    setMenuOpen(false);
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-    }
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/';
+    return pathname.startsWith(href);
   };
 
-  const labelFor = (page: PageKey) =>
-    page.charAt(0).toUpperCase() + page.slice(1); // "home" -> "Home"
-
   return (
-    <nav className="fixed w-full top-0 z-50 transition-all duration-300 bg-white border-b border-gray-200">
+    <nav className="fixed w-full top-0 z-50 bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Left: Logo + Text */}
-          <div
-            className="flex items-center gap-1 cursor-pointer group"
-            onClick={() => handleNavClick('home')}
-          >
-            <div className="flex items-center p-1 dark:bg-transparent dark:shadow-none lg:dark:bg-transparent lg:dark:shadow-none pt-0.5 pb-0.5">
-              <Image
-                src="/logo.png"
-                width={150}
-                height={30}
-                alt="SPL Transportation Logo"
-                className="object-contain"
-                priority
-              />
-            </div>
-          </div>
 
-          {/* Center: Links (Desktop) */}
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-1">
+            <Image
+              src="/logo.png"
+              width={150}
+              height={30}
+              alt="SPL Transportation Logo"
+              className="object-contain"
+              priority
+            />
+          </Link>
+
+          {/* Desktop Nav */}
           <div className="hidden lg:flex space-x-8 items-center">
-            {PAGES.map(page => (
-              <button
-                key={page}
-                onClick={() => handleNavClick(page)}
+            {NAV_LINKS.map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
                 className="text-sm font-semibold transition-colors"
                 style={{
-                  color: currentPage === page ? ACCENT_COLOR : PRIMARY_COLOR
+                  color: isActive(link.href)
+                    ? ACCENT_COLOR
+                    : PRIMARY_COLOR
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.color = ACCENT_COLOR;
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.color =
-                    currentPage === page ? ACCENT_COLOR : PRIMARY_COLOR;
+                  e.currentTarget.style.color = isActive(link.href)
+                    ? ACCENT_COLOR
+                    : PRIMARY_COLOR;
                 }}
               >
-                {labelFor(page)}
-              </button>
+                {link.label}
+              </Link>
             ))}
 
-            {/* Blog link – real Next.js route for SEO */}
+            {/* Blog */}
             <Link
               href="/blog"
               className="text-sm font-semibold transition-colors"
-              style={{ color: PRIMARY_COLOR }}
+              style={{
+                color: pathname.startsWith('/blog')
+                  ? ACCENT_COLOR
+                  : PRIMARY_COLOR
+              }}
               onMouseEnter={e => {
-                (e.currentTarget as HTMLAnchorElement).style.color = ACCENT_COLOR;
+                e.currentTarget.style.color = ACCENT_COLOR;
               }}
               onMouseLeave={e => {
-                (e.currentTarget as HTMLAnchorElement).style.color = PRIMARY_COLOR;
+                e.currentTarget.style.color = pathname.startsWith('/blog')
+                  ? ACCENT_COLOR
+                  : PRIMARY_COLOR;
               }}
             >
               Blog
             </Link>
-              {/* Blog link – real Next.js route for SEO */}
           </div>
 
-          {/* Right: CTA + Mobile Toggle */}
+          {/* Right CTA */}
           <div className="flex items-center gap-4">
-            {/* Desktop CTA */}
             <div className="hidden md:flex items-center gap-3">
               <a
                 href={`tel:${COMPANY_PHONE}`}
-                className="transition mr-2"
+                className="transition"
                 style={{ color: PRIMARY_COLOR }}
                 onMouseEnter={e => {
                   e.currentTarget.style.color = ACCENT_COLOR;
@@ -117,8 +111,9 @@ export default function Navigation({
               >
                 <Phone className="w-5 h-5" />
               </a>
-              <button
-                onClick={() => handleNavClick('routes')}
+
+              <Link
+                href="/transfers"
                 className="flex items-center gap-2 px-5 py-2.5 rounded-full 
                            text-white font-bold text-sm shadow-lg transition-all 
                            hover:-translate-y-0.5 active:translate-y-0"
@@ -127,16 +122,16 @@ export default function Navigation({
                   boxShadow: `0 4px 10px ${PRIMARY_COLOR}40`
                 }}
               >
-                <span>Book Now</span>
-              </button>
+                Book Now
+              </Link>
             </div>
 
-            {/* Mobile Hamburger */}
+            {/* Mobile Toggle */}
             <div className="lg:hidden">
               <button
-                onClick={() => setMenuOpen(!menuOpen)}
+                onClick={() => setMenuOpen(v => !v)}
                 aria-label="Toggle menu"
-                className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-lg text-gray-600 hover:bg-gray-100"
               >
                 {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -147,53 +142,50 @@ export default function Navigation({
 
       {/* Mobile Menu */}
       <div
-        className={`lg:hidden bg-white border-b border-gray-200 overflow-hidden transition-all duration-300 ease-in-out ${
+        className={`lg:hidden bg-white border-b border-gray-200 overflow-hidden transition-all duration-300 ${
           menuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         <div className="px-4 py-4 space-y-2">
-          {PAGES.map(page => (
-            <button
-              key={page}
-              onClick={() => handleNavClick(page)}
-              className="block w-full text-left py-3 px-4 rounded-lg font-medium transition"
-              style={{ color: PRIMARY_COLOR }}
-              onMouseEnter={e => {
-                e.currentTarget.style.color = ACCENT_COLOR;
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.color = PRIMARY_COLOR;
+          {NAV_LINKS.map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMenuOpen(false)}
+              className="block py-3 px-4 rounded-lg font-medium transition"
+              style={{
+                color: isActive(link.href)
+                  ? ACCENT_COLOR
+                  : PRIMARY_COLOR
               }}
             >
-              {labelFor(page)}
-            </button>
+              {link.label}
+            </Link>
           ))}
 
-          {/* Mobile Blog link */}
           <Link
             href="/blog"
-            className="block w-full text-left py-3 px-4 rounded-lg font-medium transition"
-            style={{ color: PRIMARY_COLOR }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLAnchorElement).style.color = ACCENT_COLOR;
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLAnchorElement).style.color = PRIMARY_COLOR;
+            onClick={() => setMenuOpen(false)}
+            className="block py-3 px-4 rounded-lg font-medium transition"
+            style={{
+              color: pathname.startsWith('/blog')
+                ? ACCENT_COLOR
+                : PRIMARY_COLOR
             }}
           >
             Blog
           </Link>
 
-          {/* Mobile CTA */}
           <div className="pt-4 mt-2 border-t border-gray-100">
-            <button
-              onClick={() => handleNavClick('routes')}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl 
-                         text-white font-bold shadow-md active:scale-95 transition"
+            <Link
+              href="/transfers"
+              onClick={() => setMenuOpen(false)}
+              className="w-full flex justify-center px-4 py-3 rounded-xl 
+                         text-white font-bold shadow-md active:scale-95"
               style={{ backgroundColor: ACCENT_COLOR }}
             >
-              BOOK Now
-            </button>
+              BOOK NOW
+            </Link>
           </div>
         </div>
       </div>

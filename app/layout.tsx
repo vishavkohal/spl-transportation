@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
+import 'leaflet/dist/leaflet.css';
+import { BookingProvider } from "./providers/BookingProvider";
+import Navigation from "../app/components/Navigation";
+import Footer from "../app/components/Footer";
 
 const BASE_URL = "https://www.spltransportation.com.au";
 const GA_ID = "G-0F1THLNR5M";
@@ -14,7 +18,6 @@ export const metadata: Metadata = {
     "Reliable private airport and regional transfers across Cairns, Port Douglas, Palm Cove, Kuranda and Far North Queensland. Book online with SPL Transportation.",
   metadataBase: new URL(BASE_URL),
 
-  // ✅ Google Search Console verification (BEST PRACTICE)
   verification: {
     google: "QCFxWVp8c9Oj8cesOYAukkgIHzRc7W71jrq74Hu_6EI",
   },
@@ -52,21 +55,21 @@ export const metadata: Metadata = {
     },
   },
 
- icons: {
-  icon: [
-    {
-      url: "/favicon.ico",
-      sizes: "48x48",
-      type: "image/x-icon",
-    },
-    {
-      url: "/favicon-32x32.png",
-      sizes: "32x32",
-      type: "image/png",
-    },
-  ],
-  apple: "/apple-touch-icon.png",
-},
+  icons: {
+    icon: [
+      {
+        url: "/favicon.ico",
+        sizes: "48x48",
+        type: "image/x-icon",
+      },
+      {
+        url: "/favicon-32x32.png",
+        sizes: "32x32",
+        type: "image/png",
+      },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -80,12 +83,11 @@ export default function RootLayout({
         {/* ✅ Preload brand logo */}
         <link rel="preload" as="image" href="/logo.png" />
 
-        {/* ✅ Google Analytics (safe for TS + App Router) */}
+        {/* ✅ Google Analytics */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
           strategy="afterInteractive"
         />
-
         <Script id="google-analytics" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
@@ -130,7 +132,13 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body>{children}</body>
+
+      <body className="bg-gray-50 text-gray-900">
+        {/* ✅ Global App State */}
+        <BookingProvider>
+          {children}
+        </BookingProvider>
+      </body>
     </html>
   );
 }

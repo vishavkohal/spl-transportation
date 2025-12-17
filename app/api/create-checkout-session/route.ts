@@ -1,6 +1,6 @@
-// app/api/create-checkout-session/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { getRoutes } from '@/app/lib/routesStore';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   apiVersion: '2025-11-17.clover',
@@ -9,14 +9,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { amount, booking } = body as {
-      amount: number;
-      booking: any;
-    };
+    const { booking } = body;
 
-    if (!amount || !booking) {
+    if (!booking) {
       return NextResponse.json(
-        { error: 'Amount and booking are required' },
+        { error: 'Booking data is required' },
         { status: 400 }
       );
     }
@@ -42,6 +39,39 @@ export async function POST(req: NextRequest) {
       contactNumber,
     } = booking;
 
+    // -----------------------------------
+    // 🔒 SERVER-SIDE PRICE CALCULATION
+    // -----------------------------------
+    const routes = await getRoutes();
+
+    const route =
+      routes.find(
+        r =>
+          r.from === pickupLocation && r.to === dropoffLocation
+      ) ??
+      routes.find(
+        r =>
+          r.from === dropoffLocation && r.to === pickupLocation
+      );
+
+    if (!route || !route.pricing?.length) {
+      return NextResponse.json(
+        { error: 'Invalid route selected' },
+        { status: 400 }
+      );
+    }
+
+    let basePrice = 0;
+    if (passengers <= 4) basePrice = route.pricing[0].price;
+    else if (passengers <= 6) basePrice = route.pricing[1]?.price ?? route.pricing[0].price;
+    else basePrice = route.pricing[2]?.price ?? route.pricing[route.pricing.length - 1].price;
+
+    const finalAmount =
+      basePrice + (childSeat ? 20 : 0);
+
+    // -----------------------------------
+    // Stripe description
+    // -----------------------------------
     const descriptionLines = [
       `Route: ${pickupLocation} → ${dropoffLocation}`,
       `Date & time: ${pickupDate} at ${pickupTime}`,
@@ -53,13 +83,13 @@ export async function POST(req: NextRequest) {
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      payment_method_types: ['card'], // wallets (Apple Pay / Google Pay) are auto-handled
+      payment_method_types: ['card'],
       line_items: [
         {
           quantity: 1,
           price_data: {
             currency: 'aud',
-            unit_amount: Math.round(amount * 100), // dollars -> cents
+            unit_amount: Math.round(finalAmount * 100),
             product_data: {
               name: 'SPL Transportation Booking',
               description: descriptionLines.join('\n'),
@@ -70,7 +100,9 @@ export async function POST(req: NextRequest) {
       success_url: `${baseUrl}/booking-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/booking-cancelled`,
       metadata: {
-        booking: JSON.stringify(booking),
+        route: `${pickupLocation} → ${dropoffLocation}`,
+        passengers: String(passengers),
+        childSeat: childSeat ? 'yes' : 'no',
       },
     });
 
