@@ -21,9 +21,7 @@ export async function GET() {
     { loc: `${BASE_URL}/blog`, priority: "0.85", freq: "weekly" }
   ];
 
-  const staticUrls = staticPages
-    .map(
-      p => `
+  const staticUrls = staticPages.map(p => `
   <url>
     <loc>${p.loc}</loc>
     <lastmod>${NOW}</lastmod>
@@ -31,19 +29,17 @@ export async function GET() {
     <priority>${p.priority}</priority>
     <xhtml:link rel="alternate" hreflang="en-au" href="${p.loc}" />
     <xhtml:link rel="alternate" hreflang="x-default" href="${p.loc}" />
-  </url>`
-    )
-    .join("");
+  </url>
+`).join("");
 
   /* -------------------------------------------------
      Transfer routes
   -------------------------------------------------- */
-  const routeUrls = routes
-    .map(route => {
-      const slug = routeToSlug(route);
-      const loc = `${BASE_URL}/transfers/${slug}`;
+  const routeUrls = routes.map(route => {
+    const slug = routeToSlug(route);
+    const loc = `${BASE_URL}/transfers/${slug}`;
 
-      return `
+    return `
   <url>
     <loc>${loc}</loc>
     <lastmod>${NOW}</lastmod>
@@ -52,19 +48,16 @@ export async function GET() {
     <xhtml:link rel="alternate" hreflang="en-au" href="${loc}" />
     <xhtml:link rel="alternate" hreflang="x-default" href="${loc}" />
   </url>`;
-    })
-    .join("");
+  }).join("");
 
   /* -------------------------------------------------
      Blog posts
   -------------------------------------------------- */
-  const blogUrls = (blogPosts ?? [])
-    .map(post => {
-      const loc = `${BASE_URL}/blog/${post.slug}`;
-      const lastMod =
-        post.updatedAt ?? post.publishedAt ?? NOW;
+  const blogUrls = (blogPosts ?? []).map(post => {
+    const loc = `${BASE_URL}/blog/${post.slug}`;
+    const lastMod = post.updatedAt ?? post.publishedAt ?? NOW;
 
-      return `
+    return `
   <url>
     <loc>${loc}</loc>
     <lastmod>${lastMod}</lastmod>
@@ -73,21 +66,20 @@ export async function GET() {
     <xhtml:link rel="alternate" hreflang="en-au" href="${loc}" />
     <xhtml:link rel="alternate" hreflang="x-default" href="${loc}" />
   </url>`;
-    })
-    .join("");
+  }).join("");
 
   /* -------------------------------------------------
-     Final sitemap (NAMESPACE FIXED)
+     FINAL SITEMAP (CORRECT NAMESPACE)
   -------------------------------------------------- */
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<sitemap:urlset
-  xmlns:sitemap="https://www.sitemaps.org/schemas/sitemap/0.9"
+<urlset
+  xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="https://www.w3.org/1999/xhtml"
 >
 ${staticUrls}
 ${routeUrls}
 ${blogUrls}
-</sitemap:urlset>`;
+</urlset>`;
 
   return new NextResponse(sitemap, {
     status: 200,
