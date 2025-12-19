@@ -48,6 +48,29 @@ function calculateHourlyAmount(booking: any): number {
   return billableHours * rate.hourly;
 }
 
+function priceForPassengers(
+  pricing: { passengers: string; price: number }[],
+  pax: number
+): number {
+  if (!Array.isArray(pricing) || pricing.length === 0) {
+    throw new Error('No pricing tiers configured');
+  }
+
+  const tier = pricing.find(p => {
+    const [min, max] = p.passengers
+      .split('-')
+      .map(n => Number(n.trim()));
+
+    return pax >= min && pax <= max;
+  });
+
+  if (!tier) {
+    throw new Error(`No price available for ${pax} passengers`);
+  }
+
+  return tier.price;
+}
+
 /* -------------------------------------------------
    POST
 -------------------------------------------------- */
@@ -73,7 +96,7 @@ export async function POST(req: NextRequest) {
     }
 
     const {
-      bookingType, // 'route' | 'hourly'
+      bookingType, // 'standard' | 'hourly'
       pickupLocation,
       dropoffLocation,
       pickupDate,
@@ -101,7 +124,7 @@ export async function POST(req: NextRequest) {
 
     if (bookingType === 'hourly') {
       finalAmount = calculateHourlyAmount(booking);
-    } else if (bookingType === 'route') {
+    } else if (bookingType === 'standard') {
       const routes = await getRoutes();
 
       const route =
@@ -119,16 +142,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      if (passengers <= 4) {
-        finalAmount = route.pricing[0].price;
-      } else if (passengers <= 6) {
-        finalAmount =
-          route.pricing[1]?.price ?? route.pricing[0].price;
-      } else {
-        finalAmount =
-          route.pricing[2]?.price ??
-          route.pricing[route.pricing.length - 1].price;
-      }
+      finalAmount = priceForPassengers(route.pricing, passengers);
     } else {
       return NextResponse.json(
         { error: 'Invalid bookingType' },
@@ -182,7 +196,7 @@ export async function POST(req: NextRequest) {
               name:
                 bookingType === 'hourly'
                   ? 'SPL Hourly Charter'
-                  : 'SPL Route Transfer',
+                  : 'SPL Standard Transfer',
               description: descriptionLines.join('\n'),
             },
           },
