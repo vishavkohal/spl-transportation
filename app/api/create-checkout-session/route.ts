@@ -73,6 +73,12 @@ function priceForPassengers(
   return tier.price;
 }
 
+function getPassengerRanges(
+  pricing: { passengers: string }[]
+): string {
+  return pricing.map(p => p.passengers).join(', ');
+}
+
 /* -------------------------------------------------
    PAYMENT FEE HELPERS
 -------------------------------------------------- */
@@ -143,12 +149,11 @@ export async function POST(req: NextRequest) {
 
       const route =
         routes.find(
-          r => r.from === pickupLocation && r.to === dropoffLocation
+          r => r.from.trim() === pickupLocation.trim() && r.to.trim() === dropoffLocation.trim()
         ) ??
         routes.find(
-          r => r.from === dropoffLocation && r.to === pickupLocation
+          r => r.from.trim() === dropoffLocation.trim() && r.to.trim() === pickupLocation.trim()
         );
-
       if (!route || !route.pricing?.length) {
         return NextResponse.json(
           { error: 'Invalid route selected' },
@@ -156,7 +161,18 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      baseAmount = priceForPassengers(route.pricing, passengers);
+    try {
+  baseAmount = priceForPassengers(route.pricing, passengers);
+} catch {
+  return NextResponse.json(
+    {
+      error: `This route is available only for ${getPassengerRanges(
+        route.pricing
+      )} passengers.`,
+    },
+    { status: 400 }
+  );
+}
     } else {
       return NextResponse.json(
         { error: 'Invalid bookingType' },
