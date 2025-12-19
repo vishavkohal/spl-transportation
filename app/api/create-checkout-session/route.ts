@@ -9,6 +9,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 });
 
 /* -------------------------------------------------
+   CONFIG
+-------------------------------------------------- */
+
+const PAYMENT_FEE_RATE = 0.025; // 2.5% processing fee (GST inclusive)
+
+/* -------------------------------------------------
    HOURLY PRICING (SERVER AUTHORITY)
 -------------------------------------------------- */
 
@@ -21,13 +27,10 @@ const HOURLY_RATES: Record<
   Van: { hourly: 150, fullDay: 1050 },
 };
 
-function calculateHourlyAmount(booking: any): number {
+function calculateHourlyBaseAmount(booking: any): number {
   const { hourlyVehicleType, hourlyHours } = booking;
 
-  if (
-    !hourlyVehicleType ||
-    !HOURLY_RATES[hourlyVehicleType]
-  ) {
+  if (!hourlyVehicleType || !HOURLY_RATES[hourlyVehicleType]) {
     throw new Error('Invalid hourly vehicle type');
   }
 
@@ -38,12 +41,12 @@ function calculateHourlyAmount(booking: any): number {
 
   const rate = HOURLY_RATES[hourlyVehicleType];
 
-  // Full day charter (8+ hours)
+  // Full-day charter (8+ hours)
   if (hours >= 8) {
     return rate.fullDay;
   }
 
-  // 2-hour minimum billing
+  // 2-hour minimum
   const billableHours = Math.max(2, hours);
   return billableHours * rate.hourly;
 }
@@ -60,7 +63,6 @@ function priceForPassengers(
     const [min, max] = p.passengers
       .split('-')
       .map(n => Number(n.trim()));
-
     return pax >= min && pax <= max;
   });
 
@@ -69,6 +71,18 @@ function priceForPassengers(
   }
 
   return tier.price;
+}
+
+/* -------------------------------------------------
+   PAYMENT FEE HELPERS
+-------------------------------------------------- */
+
+function calculateProcessingFee(amount: number): number {
+  return Math.round(amount * PAYMENT_FEE_RATE);
+}
+
+function calculateFinalAmount(amount: number): number {
+  return amount + calculateProcessingFee(amount);
 }
 
 /* -------------------------------------------------
@@ -117,13 +131,13 @@ export async function POST(req: NextRequest) {
     }
 
     /* -------------------------------------------------
-       🔒 SERVER-SIDE PRICE CALCULATION
+       🔒 SERVER-SIDE BASE PRICE CALCULATION
     -------------------------------------------------- */
 
-    let finalAmount = 0;
+    let baseAmount = 0;
 
     if (bookingType === 'hourly') {
-      finalAmount = calculateHourlyAmount(booking);
+      baseAmount = calculateHourlyBaseAmount(booking);
     } else if (bookingType === 'standard') {
       const routes = await getRoutes();
 
@@ -142,7 +156,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      finalAmount = priceForPassengers(route.pricing, passengers);
+      baseAmount = priceForPassengers(route.pricing, passengers);
     } else {
       return NextResponse.json(
         { error: 'Invalid bookingType' },
@@ -151,29 +165,41 @@ export async function POST(req: NextRequest) {
     }
 
     // Add-ons
-    finalAmount += childSeat ? 20 : 0;
+    if (childSeat) {
+      baseAmount += 20;
+    }
 
     /* -------------------------------------------------
-       STRIPE DESCRIPTION
+       💳 PROCESSING FEE + FINAL AMOUNT
+    -------------------------------------------------- */
+
+    const processingFee = calculateProcessingFee(baseAmount);
+    const finalAmount = calculateFinalAmount(baseAmount);
+
+    /* -------------------------------------------------
+       STRIPE DESCRIPTION (GST INCLUSIVE)
     -------------------------------------------------- */
 
     const descriptionLines =
       bookingType === 'hourly'
         ? [
-            `Hourly Private Charter`,
+            'Hourly Private Charter (GST inclusive)',
             `Pickup: ${booking.hourlyPickupLocation}`,
             `Vehicle: ${booking.hourlyVehicleType}`,
             `Hours: ${booking.hourlyHours}`,
+            `Processing fee: 2.5% (GST inclusive)`,
             `Name: ${fullName}`,
             `Email: ${email}`,
             `Mobile: ${contactNumber}`,
           ]
         : [
+            'Standard Transfer (GST inclusive)',
             `Route: ${pickupLocation} → ${dropoffLocation}`,
             `Date & time: ${pickupDate} at ${pickupTime}`,
             `Passengers: ${passengers}, Bags: ${luggage}${
               childSeat ? ', Child seat: Yes' : ''
             }`,
+            `Processing fee: 2.5% (GST inclusive)`,
             `Name: ${fullName}`,
             `Email: ${email}`,
             `Mobile: ${contactNumber}`,
@@ -205,8 +231,11 @@ export async function POST(req: NextRequest) {
       success_url: `${baseUrl}/booking-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/booking-cancelled`,
       metadata: {
-        booking: JSON.stringify(booking),
         bookingType,
+        baseAmount: baseAmount.toString(),
+        processingFee: processingFee.toString(),
+        finalAmount: finalAmount.toString(),
+        booking: JSON.stringify(booking),
       },
     });
 

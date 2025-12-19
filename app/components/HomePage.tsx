@@ -68,6 +68,19 @@ function getMinDateForInput() {
   return new Date(now.getTime()).toISOString().slice(0, 10);
 }
 
+// -----------------------------
+// Payment fee helpers (GST inclusive)
+// -----------------------------
+const PAYMENT_FEE_RATE = 0.025; // 2.5%
+
+function calculateProcessingFee(amount: number) {
+  return Math.round(amount * PAYMENT_FEE_RATE);
+}
+
+function calculateFinalAmount(amount: number) {
+  return amount + calculateProcessingFee(amount);
+}
+
 function formatTime(date: Date) {
   const hh = String(date.getHours()).padStart(2, '0');
   const mm = String(date.getMinutes()).padStart(2, '0');
@@ -1771,6 +1784,9 @@ function Step2StandardContent(props: {
     handleInputChange
   } = props;
 
+  const processingFee = calculateProcessingFee(calculatedPrice);
+  const finalAmount = calculateFinalAmount(calculatedPrice);
+
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
@@ -1790,7 +1806,7 @@ function Step2StandardContent(props: {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: calculatedPrice,
+          amount: finalAmount,
           booking: {
             ...formData,
             bookingType: 'standard'
@@ -1987,10 +2003,37 @@ function Step2StandardContent(props: {
 
         {/* Payment Section */}
         <div className="mt-6 space-y-3">
-          <h4 className="text-sm font-semibold text-gray-800">
-            Pay securely
-          </h4>
+  <h4 className="text-sm font-semibold text-gray-800">
+    Payment Summary
+  </h4>
 
+  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm space-y-2">
+    <div className="flex justify-between">
+      <span className="text-gray-900">Trip fare</span>
+      <span className="font-medium text-gray-900">${calculatedPrice}</span>
+    </div>
+
+    <div className="flex justify-between">
+      <span className="text-gray-900">
+        Payment processing fee (2.5%)
+      </span>
+      <span className="font-medium text-gray-900">${processingFee}</span>
+    </div>
+
+    <div className="border-t border-gray-200 pt-2 flex justify-between">
+      <span className="font-semibold text-gray-900">
+        Total amount payable
+      </span>
+      <span className="font-bold text-lg text-gray-900">
+        ${finalAmount}
+      </span>
+    </div>
+  </div>
+
+  <p className="text-xs text-gray-500 leading-relaxed">
+    All prices are inclusive of GST. Secure payment processing is provided via Stripe.
+    No additional charges apply.
+  </p>
           {paymentError && (
             <p className="text-xs text-red-500 mt-1">{paymentError}</p>
           )}
@@ -2005,14 +2048,16 @@ function Step2StandardContent(props: {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <button
-              onClick={handlePayAndRedirect}
-              type="button"
-              disabled={!isStep2FormValid() || loadingPayment}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
-            >
-              {loadingPayment ? 'Redirecting...' : 'Pay & Confirm Booking'}
-              <CheckCircle className="w-4 h-4" />
-            </button>
+  onClick={handlePayAndRedirect}
+  type="button"
+  disabled={!isStep2FormValid() || loadingPayment}
+  className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
+>
+  {loadingPayment
+    ? 'Redirecting...'
+    : `Pay & Confirm Booking`}
+  <CheckCircle className="w-4 h-4" />
+</button>
           </div>
         </div>
       </div>
@@ -2049,6 +2094,9 @@ function Step2HourlyContent(props: {
     handleInputChange
   } = props;
 
+  const processingFee = calculateProcessingFee(hourlyPrice);
+  const finalAmount = calculateFinalAmount(hourlyPrice);
+
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
@@ -2073,7 +2121,7 @@ function Step2HourlyContent(props: {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: hourlyPrice,
+          amount: finalAmount,
           booking: {
             ...formData,
             bookingType: 'hourly'
@@ -2253,10 +2301,39 @@ function Step2HourlyContent(props: {
 
         {/* Payment Section */}
         <div className="mt-6 space-y-3">
-          <h4 className="text-sm font-semibold text-gray-800">
-            Pay securely
-          </h4>
+         <div className="mt-6 space-y-3">
+  <h4 className="text-sm font-semibold text-gray-800">
+    Payment Summary
+  </h4>
 
+  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm space-y-2">
+    <div className="flex justify-between">
+      <span className="text-gray-900">Hourly hire quote</span>
+      <span className="font-medium text-gray-900">${hourlyPrice}</span>
+    </div>
+
+    <div className="flex justify-between">
+      <span className="text-gray-900">
+        Payment processing fee (2.5%)
+      </span>
+      <span className="font-medium text-gray-900">${processingFee}</span>
+    </div>
+
+    <div className="border-t border-gray-200 pt-2 flex justify-between">
+      <span className="font-semibold text-gray-900">
+        Total amount payable
+      </span>
+      <span className="font-bold text-lg text-gray-900">
+        ${finalAmount}
+      </span>
+    </div>
+  </div>
+
+  <p className="text-xs text-gray-500 leading-relaxed">
+    All prices are inclusive of GST. Secure payment processing is handled by Stripe.
+    No additional fees will be charged.
+  </p>
+</div>
           {paymentError && (
             <p className="text-xs text-red-500 mt-1">{paymentError}</p>
           )}
@@ -2270,15 +2347,18 @@ function Step2HourlyContent(props: {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <button
-              onClick={handlePayAndRedirect}
-              type="button"
-              disabled={!isStep2FormValid() || loadingPayment || !hourlyPrice}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
-            >
-              {loadingPayment ? 'Redirecting...' : 'Pay & Confirm Booking'}
-              <CheckCircle className="w-4 h-4" />
-            </button>
+           <button
+  onClick={handlePayAndRedirect}
+  type="button"
+  disabled={!isStep2FormValid() || loadingPayment || !hourlyPrice}
+  className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
+>
+  {loadingPayment
+    ? 'Redirecting...'
+    : `Pay & Confirm Booking`}
+  <CheckCircle className="w-4 h-4" />
+</button>
+
           </div>
         </div>
       </div>
