@@ -9,9 +9,6 @@ const NOW = new Date().toISOString();
 export async function GET() {
   const routes = (await getRoutes()) ?? [];
 
-  /* -------------------------------------------------
-     Static pages
-  -------------------------------------------------- */
   const staticPages = [
     { loc: `${BASE_URL}/`, priority: "1.0", freq: "daily" },
     { loc: `${BASE_URL}/transfers`, priority: "0.95", freq: "weekly" },
@@ -27,14 +24,9 @@ export async function GET() {
     <lastmod>${NOW}</lastmod>
     <changefreq>${p.freq}</changefreq>
     <priority>${p.priority}</priority>
-    <xhtml:link rel="alternate" hreflang="en-au" href="${p.loc}" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="${p.loc}" />
   </url>
 `).join("");
 
-  /* -------------------------------------------------
-     Transfer routes
-  -------------------------------------------------- */
   const routeUrls = routes.map(route => {
     const slug = routeToSlug(route);
     const loc = `${BASE_URL}/transfers/${slug}`;
@@ -45,14 +37,9 @@ export async function GET() {
     <lastmod>${NOW}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
-    <xhtml:link rel="alternate" hreflang="en-au" href="${loc}" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="${loc}" />
   </url>`;
   }).join("");
 
-  /* -------------------------------------------------
-     Blog posts
-  -------------------------------------------------- */
   const blogUrls = (blogPosts ?? []).map(post => {
     const loc = `${BASE_URL}/blog/${post.slug}`;
     const lastMod = post.updatedAt ?? post.publishedAt ?? NOW;
@@ -63,19 +50,11 @@ export async function GET() {
     <lastmod>${lastMod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
-    <xhtml:link rel="alternate" hreflang="en-au" href="${loc}" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="${loc}" />
   </url>`;
   }).join("");
 
-  /* -------------------------------------------------
-     FINAL SITEMAP (CORRECT NAMESPACE)
-  -------------------------------------------------- */
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset
-  xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
-  xmlns:xhtml="https://www.w3.org/1999/xhtml"
->
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticUrls}
 ${routeUrls}
 ${blogUrls}
