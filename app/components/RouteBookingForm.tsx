@@ -1,11 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import {
-  ArrowLeft,
-  AlertCircle,
-  Repeat
-} from 'lucide-react';
+import { ArrowLeft, AlertCircle, Repeat } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
 import type { Route } from '@/app/types';
 
@@ -48,6 +44,18 @@ function maxBagsForPax(pax: number) {
   return 4;
 }
 
+/* ---------------- Payment Fee ---------------- */
+
+const PAYMENT_FEE_RATE = 0.025; // 2.5%
+
+function calculateProcessingFee(amount: number) {
+  return Math.round(amount * PAYMENT_FEE_RATE);
+}
+
+function calculateFinalAmount(amount: number) {
+  return amount + calculateProcessingFee(amount);
+}
+
 /* ---------------- Component ---------------- */
 
 export default function RouteBookingForm({ route }: { route: Route }) {
@@ -75,12 +83,18 @@ export default function RouteBookingForm({ route }: { route: Route }) {
   const update = (k: string, v: any) =>
     setForm(p => ({ ...p, [k]: v }));
 
+  /* ---------------- Pricing ---------------- */
+
   const basePrice = useMemo(
     () => priceForPassengers(route.pricing, form.passengers),
     [route.pricing, form.passengers]
   );
 
-  const totalPrice = basePrice + (form.childSeat ? 20 : 0);
+  const baseTotal = basePrice + (form.childSeat ? 20 : 0);
+  const processingFee = calculateProcessingFee(baseTotal);
+  const finalTotal = calculateFinalAmount(baseTotal);
+
+  /* ---------------- State ---------------- */
 
   const [step, setStep] = useState<1 | 2>(1);
   const [leadId, setLeadId] = useState<string | null>(null);
@@ -116,7 +130,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
           id: leadId,
           bookingType: 'standard',
           source: 'route-page',
-          quotedPrice: totalPrice,
+          quotedPrice: baseTotal,
           pickupLocation,
           dropoffLocation,
           ...form,
@@ -147,11 +161,11 @@ export default function RouteBookingForm({ route }: { route: Route }) {
 
     try {
       setLoading(true);
+
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: totalPrice,
           booking: {
             bookingType: 'standard',
             pickupLocation,
@@ -201,7 +215,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
       {step === 1 && (
         <div className="space-y-5">
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mr-2">
 
             <div className="space-y-1">
               <label className={label}>Pickup date</label>
@@ -261,8 +275,11 @@ export default function RouteBookingForm({ route }: { route: Route }) {
 
           <div className="flex justify-between items-center border-t pt-3">
             <div>
-              <div className="text-gray-500 text-sm">Total fare</div>
-              <div className="text-2xl font-bold">${totalPrice}</div>
+              <div className="text-gray-500 text-sm">Estimated fare</div>
+              <div className="text-2xl font-bold">${baseTotal}</div>
+              <div className="text-xs text-gray-500">
+                GST included · Processing fee applied at checkout
+              </div>
             </div>
             <button
               disabled={!isStep1Valid}
@@ -281,14 +298,25 @@ export default function RouteBookingForm({ route }: { route: Route }) {
 
           {/* Summary */}
           <div className="rounded-xl border bg-gray-50 p-4 space-y-2 text-sm">
-            <div className="font-semibold">Booking summary</div>
+            <div className="font-semibold">Payment summary</div>
             <div>{pickupLocation} → {dropoffLocation}</div>
-            <div>{form.pickupDate} · {form.pickupTime}</div>
-            <div>{form.passengers} passengers</div>
-            <div>{form.luggage} bags</div>
-            {form.childSeat && <div>Child seat: $20</div>}
-            <div className="border-t pt-2 font-semibold text-lg">
-              Total: ${totalPrice}
+
+            <div className="border-t pt-3 space-y-1">
+              <div className="flex justify-between">
+                <span>Trip fare</span>
+                <span>${baseTotal}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Payment processing fee (2.5%)</span>
+                <span>${processingFee}</span>
+              </div>
+              <div className="flex justify-between font-semibold text-lg pt-2">
+                <span>Total payable</span>
+                <span>${finalTotal}</span>
+              </div>
+              <p className="text-xs text-gray-500 pt-1">
+                All prices are inclusive of GST. Secure payments processed via Stripe.
+              </p>
             </div>
           </div>
 
@@ -312,25 +340,24 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 className={inputBase}
               />
             </div>
-<div className="space-y-1">
-  <label className={label}>Phone number</label>
-  <div className="flex gap-2">
-    <input
-      value={form.countryCode}
-      onChange={e => update('countryCode', e.target.value)}
-      /* Replace w-24 with w-20 and REMOVE the default w-full from inputBase */
-      className={inputBase.replace('w-full', 'w-20 text-center')}
-    />
-    <input
-      value={form.phone}
-      onChange={e =>
-        update('phone', e.target.value.replace(/\D/g, ''))
-      }
-      /* Use flex-1 so this input takes up all remaining space */
-      className={`${inputBase} flex-1`}
-    />
-  </div>
-</div>
+
+            <div className="space-y-1">
+              <label className={label}>Phone number</label>
+              <div className="flex gap-2">
+                <input
+                  value={form.countryCode}
+                  onChange={e => update('countryCode', e.target.value)}
+                  className={inputBase.replace('w-full', 'w-20 text-center')}
+                />
+                <input
+                  value={form.phone}
+                  onChange={e =>
+                    update('phone', e.target.value.replace(/\D/g, ''))
+                  }
+                  className={`${inputBase} flex-1`}
+                />
+              </div>
+            </div>
 
             {error && (
               <div className="flex gap-2 text-sm text-red-600">
@@ -344,7 +371,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 onClick={() => setStep(1)}
                 className="px-4 py-2 rounded-lg bg-gray-100"
               >
-                <ArrowLeft className="w-8 h-8" />
+                <ArrowLeft className="w-5 h-5" />
               </button>
 
               <button
@@ -352,7 +379,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 disabled={loading}
                 className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold"
               >
-                {loading ? 'Redirecting…' : 'Pay & confirm'}
+                {loading ? 'Redirecting…' : `Pay $${finalTotal} & confirm`}
               </button>
             </div>
 
