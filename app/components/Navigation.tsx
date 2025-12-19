@@ -13,7 +13,7 @@ const ACCENT_COLOR = '#A61924';
 // Config
 const COMPANY_PHONE = '+61470032460';
 
-// Navigation links (URL-based)
+// Navigation links
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'Transfers', href: '/transfers' },
@@ -56,24 +56,19 @@ export default function Navigation() {
                 href={link.href}
                 className="text-sm font-semibold transition-colors"
                 style={{
-                  color: isActive(link.href)
+                  color: isActive(link.href) ? ACCENT_COLOR : PRIMARY_COLOR
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = ACCENT_COLOR)}
+                onMouseLeave={e =>
+                  (e.currentTarget.style.color = isActive(link.href)
                     ? ACCENT_COLOR
-                    : PRIMARY_COLOR
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.color = ACCENT_COLOR;
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.color = isActive(link.href)
-                    ? ACCENT_COLOR
-                    : PRIMARY_COLOR;
-                }}
+                    : PRIMARY_COLOR)
+                }
               >
                 {link.label}
               </Link>
             ))}
 
-            {/* Blog */}
             <Link
               href="/blog"
               className="text-sm font-semibold transition-colors"
@@ -82,32 +77,28 @@ export default function Navigation() {
                   ? ACCENT_COLOR
                   : PRIMARY_COLOR
               }}
-              onMouseEnter={e => {
-                e.currentTarget.style.color = ACCENT_COLOR;
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.color = pathname.startsWith('/blog')
+              onMouseEnter={e => (e.currentTarget.style.color = ACCENT_COLOR)}
+              onMouseLeave={e =>
+                (e.currentTarget.style.color = pathname.startsWith('/blog')
                   ? ACCENT_COLOR
-                  : PRIMARY_COLOR;
-              }}
+                  : PRIMARY_COLOR)
+              }
             >
               Blog
             </Link>
           </div>
 
-          {/* Right CTA */}
-          <div className="flex items-center gap-4">
+          {/* Right Section */}
+          <div className="flex items-center gap-3">
+
+            {/* Desktop CTA */}
             <div className="hidden md:flex items-center gap-3">
               <a
                 href={`tel:${COMPANY_PHONE}`}
                 className="transition"
                 style={{ color: PRIMARY_COLOR }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.color = ACCENT_COLOR;
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.color = PRIMARY_COLOR;
-                }}
+                onMouseEnter={e => (e.currentTarget.style.color = ACCENT_COLOR)}
+                onMouseLeave={e => (e.currentTarget.style.color = PRIMARY_COLOR)}
               >
                 <Phone className="w-5 h-5" />
               </a>
@@ -126,6 +117,16 @@ export default function Navigation() {
               </Link>
             </div>
 
+            {/* Mobile Book Now (BEFORE hamburger) */}
+            <Link
+              href="/transfers"
+              className="lg:hidden px-4 py-2 rounded-full text-sm font-bold 
+                         text-white shadow-md active:scale-95"
+              style={{ backgroundColor: PRIMARY_COLOR }}
+            >
+              Book Now
+            </Link>
+
             {/* Mobile Toggle */}
             <div className="lg:hidden">
               <button
@@ -133,7 +134,11 @@ export default function Navigation() {
                 aria-label="Toggle menu"
                 className="p-2 rounded-lg text-gray-600 hover:bg-gray-100"
               >
-                {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {menuOpen ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
               </button>
             </div>
           </div>
@@ -175,18 +180,6 @@ export default function Navigation() {
           >
             Blog
           </Link>
-
-          <div className="pt-4 mt-2 border-t border-gray-100">
-            <Link
-              href="/transfers"
-              onClick={() => setMenuOpen(false)}
-              className="w-full flex justify-center px-4 py-3 rounded-xl 
-                         text-white font-bold shadow-md active:scale-95"
-              style={{ backgroundColor: ACCENT_COLOR }}
-            >
-              BOOK NOW
-            </Link>
-          </div>
         </div>
       </div>
     </nav>
