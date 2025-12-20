@@ -380,263 +380,235 @@ export default function BookingSuccessClient() {
   }, [sessionId]);
 
   // Receipt downloader (unchanged)
-  const handleDownloadReceipt = () => {
-    if (!bookingData) return;
-    const { booking } = bookingData;
+ const handleDownloadReceipt = () => {
+  if (!bookingData) return;
+  const { booking } = bookingData;
 
-    const COMPANY_NAME =
-      process.env.NEXT_PUBLIC_COMPANY_NAME || 'SPL Transportation';
-    const COMPANY_ABN =
-      process.env.NEXT_PUBLIC_COMPANY_ABN || '64 957 177 372';
-    const COMPANY_EMAIL =
-      process.env.NEXT_PUBLIC_COMPANY_EMAIL ||
-      'spltransportation.australia@gmail.com';
-    const COMPANY_PHONE =
-      process.env.NEXT_PUBLIC_COMPANY_PHONE || '+61 470 032 460';
-    const COMPANY_ADDRESS =
-      process.env.NEXT_PUBLIC_COMPANY_ADDRESS || 'Cairns, QLD, Australia';
-    const LOGO = COMPANY_LOGO;
+  const COMPANY_NAME =
+    process.env.NEXT_PUBLIC_COMPANY_NAME || 'SPL Transportation';
+  const COMPANY_ABN =
+    process.env.NEXT_PUBLIC_COMPANY_ABN || '64 957 177 372';
+  const COMPANY_EMAIL =
+    process.env.NEXT_PUBLIC_COMPANY_EMAIL ||
+    'spltransportation.australia@gmail.com';
+  const COMPANY_PHONE =
+    process.env.NEXT_PUBLIC_COMPANY_PHONE || '+61 470 032 460';
+  const COMPANY_ADDRESS =
+    process.env.NEXT_PUBLIC_COMPANY_ADDRESS || 'Cairns, QLD, Australia';
+  const LOGO = COMPANY_LOGO;
 
-    let invoiceNumber = `SPL-INV-${Math.floor(Math.random() * 900000 + 100000)}`;
-    let invoiceDate = new Date().toLocaleDateString();
-    let bookingRef = invoiceNumber;
+  let invoiceNumber = `INV-${Date.now()}`;
+  let invoiceDate = new Date().toLocaleDateString();
+  let bookingRef = booking.id || invoiceNumber;
 
-    if (booking.id && booking.createdAt) {
-      try {
-        const created = new Date(booking.createdAt);
+  const currency = (booking.currency || 'AUD').toUpperCase();
+  const isHourly = booking.bookingType === 'hourly';
 
-        // Build YYYYMMDD
-        const y = created.getFullYear();
-        const m = String(created.getMonth() + 1).padStart(2, '0');
-        const d = String(created.getDate()).padStart(2, '0');
-        const datePart = `${y}${m}${d}`;
+  /* --------------------------------------------------
+     💰 AMOUNT CALCULATIONS (CORRECT & AUDIT SAFE)
+  -------------------------------------------------- */
 
-        // Build HHMMSSmmm
-        const hh = String(created.getHours()).padStart(2, '0');
-        const mm = String(created.getMinutes()).padStart(2, '0');
-        const ss = String(created.getSeconds()).padStart(2, '0');
-        const ms = String(created.getMilliseconds()).padStart(3, '0');
-        const timePart = `${hh}${mm}${ss}${ms}`;
+const totalPaid = Number(booking.totalPrice ?? 0); // 768.75 (includes fee)
 
-        invoiceNumber = `INV-${datePart}-${timePart}`;
-        invoiceDate = created.toLocaleDateString();
-        bookingRef = booking.id;
-      } catch (e) {
-        // fallback
-      }
+// 🔁 Reverse-calculate service amount
+const serviceTotal = Number((totalPaid / 1.025).toFixed(2)); // 750.00
+
+// Processing fee already included
+const processingFee = Number((totalPaid - serviceTotal).toFixed(2)); // 18.75
+
+// GST is ONLY on the service, NOT on processing fee
+const gst = Number((serviceTotal * 10 / 110).toFixed(2)); // 68.18
+const subtotalExGst = Number((serviceTotal - gst).toFixed(2)); // 681.82
+
+// Grand total = amount already paid
+const grandTotal = totalPaid;
+
+
+  const isMobile =
+    typeof navigator !== 'undefined' &&
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+
+  const pickupLocationText =
+  booking.bookingType === 'hourly'
+    ? booking.hourlyPickupLocation || booking.pickupLocation
+    : booking.pickupLocation;
+
+const pickupAddressText = booking.pickupAddress;
+
+const pickupInstructionsHtml = `
+  <div style="margin-top:12px; font-weight:700">Pickup instructions</div>
+  <div class="muted">
+    ${
+      booking.bookingType === 'hourly'
+        ? `Your chauffeur will report to ${pickupLocationText}${
+            pickupAddressText ? ' – ' + pickupAddressText : ''
+          } at the scheduled time.`
+        : `Your driver will meet you at ${pickupLocationText}${
+            pickupAddressText ? ' – ' + pickupAddressText : ''
+          }.`
     }
+    Driver details will be sent 24 hours before pickup.
+  </div>
+`;
 
-    const currency = (booking.currency || 'AUD').toUpperCase();
-    const isHourly = booking.bookingType === 'hourly';
 
-    const total = Number(booking.totalPrice ?? 0);
-    const gst = +(total * (10 / 110)).toFixed(2);
-    const subtotal = +(total - gst).toFixed(2);
-
-    const hourlyPickup =
-      booking.hourlyPickupLocation || booking.pickupLocation || '';
-    const hourlyHours =
-      typeof booking.hourlyHours === 'number'
-        ? booking.hourlyHours
-        : booking.hourlyHours
-        ? Number(booking.hourlyHours)
-        : '';
-    const hourlyVehicle = booking.hourlyVehicleType || '';
-
-    // Simple mobile detection
-    const isMobile =
-      typeof navigator !== 'undefined' &&
-      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-
-    const html = `<!doctype html>
+  const html = `<!doctype html>
 <html>
 <head>
   <meta charset="utf-8" />
   <title>Invoice - ${invoiceNumber}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; color:#111827; padding:24px; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; padding:24px; color:#111827; }
     .wrap { max-width:800px; margin:0 auto; }
-    header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; gap:12px; }
-    .brand { font-weight:800; font-size:20px; display:flex; align-items:center; gap:12px; }
-    .brand img { width:72px; height:72px; object-fit:contain; border-radius:8px; background:transparent; }
-    .company { text-align:right; font-size:13px; color:#374151; }
-    h1 { font-size:20px; margin:0 0 8px 0; }
-    h2 { font-size:14px; margin:14px 0 8px 0; color:#111827; }
+    header { display:flex; justify-content:space-between; gap:16px; }
+    .brand { display:flex; gap:12px; align-items:center; }
+    .brand img { width:72px; height:72px; object-fit:contain; }
+    h1 { font-size:20px; margin-bottom:6px; }
+    h2 { font-size:14px; margin-top:18px; }
     table { width:100%; border-collapse:collapse; margin-top:8px; }
-    td, th { padding:8px; border:1px solid #E5E7EB; font-size:13px; vertical-align:top; }
-    th { background:#F3F4F6; text-align:left; font-weight:700; }
+    td, th { border:1px solid #E5E7EB; padding:8px; font-size:13px; }
+    th { background:#F3F4F6; text-align:left; }
     .right { text-align:right; }
-    .muted { color:#6B7280; font-size:12px; }
-    .totals { margin-top:12px; width:100%; display:flex; justify-content:flex-end; }
-    .totals table { width:320px; border-collapse:collapse; }
-    footer { margin-top:18px; font-size:12px; color:#6B7280; }
-    @media (max-width: 640px) {
-      body { padding: 12px; }
-      header { flex-direction:column; align-items:flex-start; }
-      .company { text-align:left; }
-      .totals table { width:100%; }
-    }
-    @media print {
-      body { padding: 12px; }
-    }
+    .totals { display:flex; justify-content:flex-end; margin-top:12px; }
+    .totals table { width:320px; }
+    footer { margin-top:20px; font-size:12px; color:#6B7280; }
   </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <header>
-      <div class="brand">
-        <img src="${LOGO}" alt="${COMPANY_NAME} logo" onerror="this.style.display='none'"/>
-        <div>
-          <div style="font-weight:800; font-size:20px;">${COMPANY_NAME}</div>
-          <div class="muted">Reliable transfers • Chauffeurs • Hourly hire</div>
-        </div>
-      </div>
-      <div class="company">
-        <div><strong>ABN:</strong> ${COMPANY_ABN}</div>
-        <div><strong>Email:</strong> ${COMPANY_EMAIL}</div>
-        <div><strong>Phone:</strong> ${COMPANY_PHONE}</div>
-        <div><strong>Address:</strong> ${COMPANY_ADDRESS}</div>
-      </div>
-    </header>
+<div class="wrap">
 
-    <section>
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-        <div>
-          <h1>TAX INVOICE</h1>
-          <div class="muted">Invoice Number: <strong>${invoiceNumber}</strong></div>
-          <div class="muted">Invoice Date: <strong>${invoiceDate}</strong></div>
-          <div class="muted">Booking Reference: <strong>${bookingRef}</strong></div>
-        </div>
-
-        <div style="text-align:right;">
-          <div style="font-weight:700">Bill To</div>
-          <div>${booking.fullName}</div>
-          <div class="muted">${booking.email}</div>
-          <div class="muted">${booking.contactNumber}</div>
-        </div>
-      </div>
-    </section>
-
-    <h2>Trip Details</h2>
-    <table>
-      <tbody>
-        ${
-          isHourly
-            ? `
-        <tr><td style="font-weight:600">Service</td><td>Chauffeur &amp; Hourly Hire</td></tr>
-        <tr><td style="font-weight:600">Pickup</td><td>${hourlyPickup}</td></tr>
-        <tr><td style="font-weight:600">Hours</td><td>${hourlyHours || 'N/A'}</td></tr>
-        <tr><td style="font-weight:600">Vehicle</td><td>${hourlyVehicle || 'N/A'}</td></tr>
-        <tr><td style="font-weight:600">Date &amp; Time</td><td>${booking.pickupDate} at ${booking.pickupTime}</td></tr>
-        <tr><td style="font-weight:600">Passengers</td><td>${booking.passengers}</td></tr>
-        <tr><td style="font-weight:600">Luggage</td><td>${booking.luggage}</td></tr>
-        <tr><td style="font-weight:600">Child Seat</td><td>${booking.childSeat ? 'Yes' : 'No'}</td></tr>
-        `
-            : `
-        <tr><td style="font-weight:600">From</td><td>${booking.pickupLocation}${
-                booking.pickupAddress ? ' – ' + booking.pickupAddress : ''
-              }</td></tr>
-        <tr><td style="font-weight:600">To</td><td>${booking.dropoffLocation}${
-                booking.dropoffAddress ? ' – ' + booking.dropoffAddress : ''
-              }</td></tr>
-        <tr><td style="font-weight:600">Date &amp; Time</td><td>${booking.pickupDate} at ${booking.pickupTime}</td></tr>
-        <tr><td style="font-weight:600">Passengers</td><td>${booking.passengers}</td></tr>
-        <tr><td style="font-weight:600">Luggage</td><td>${booking.luggage}</td></tr>
-        <tr><td style="font-weight:600">Flight</td><td>${booking.flightNumber || 'N/A'}</td></tr>
-        <tr><td style="font-weight:600">Child Seat</td><td>${booking.childSeat ? 'Yes' : 'No'}</td></tr>
-        `
-        }
-      </tbody>
-    </table>
-
-    <h2 style="margin-top:14px;">Charges</h2>
-    <table>
-      <thead>
-        <tr><th>Description</th><th class="right">Amount (${currency})</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>${
-            isHourly
-              ? 'Chauffeur &amp; Hourly Hire'
-              : `Private Transfer – ${booking.pickupLocation} to ${booking.dropoffLocation}`
-          }</td>
-          <td class="right">${total.toFixed(2)}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="totals">
-      <table>
-        <tbody>
-          <tr><td>Subtotal</td><td class="right">${subtotal.toFixed(2)}</td></tr>
-          <tr><td>GST (10%)</td><td class="right">${gst.toFixed(2)}</td></tr>
-          <tr><td style="font-weight:700">Total (Incl. GST)</td><td class="right" style="font-weight:700">${total.toFixed(2)}</td></tr>
-        </tbody>
-      </table>
+<header>
+  <div class="brand">
+    <img src="${LOGO}" onerror="this.style.display='none'" />
+    <div>
+      <strong>${COMPANY_NAME}</strong><br/>
+      <span style="font-size:12px;">ABN: ${COMPANY_ABN}</span>
     </div>
-
-    <h2 style="margin-top:14px;">Payment</h2>
-    <table>
-      <tbody>
-        <tr><td style="font-weight:600">Amount</td><td>A$${total.toFixed(2)}</td></tr>
-      </tbody>
-    </table>
-
-    <footer>
-      <div style="margin-top:12px; font-weight:700">Pickup instructions</div>
-      <div class="muted">
-        Your driver will meet you at ${booking.pickupLocation}${
-      booking.pickupAddress ? ' – ' + booking.pickupAddress : ''
-    }. Driver details will be sent 24 hours before pickup.
-      </div>
-
-      <div style="margin-top:10px; font-weight:700">Cancellation policy</div>
-      <div class="muted">
-        • Free cancellation up to 24 hours before pickup.<br/>
-        • 50% charge if cancelled within 24 hours.<br/>
-        • No refund if driver is already on the way.
-      </div>
-
-      <div style="margin-top:12px;" class="muted">
-        Thank you for choosing ${COMPANY_NAME}.
-      </div>
-
-      ${
-        isMobile
-          ? `<div style="margin-top:12px;" class="muted">
-              To save or print this invoice on your phone, use your browser's Share or Print option.
-             </div>`
-          : ''
-      }
-    </footer>
   </div>
+  <div style="text-align:right;font-size:13px;">
+    ${COMPANY_EMAIL}<br/>
+    ${COMPANY_PHONE}<br/>
+    ${COMPANY_ADDRESS}
+  </div>
+</header>
+
+<h1>TAX INVOICE</h1>
+<div style="font-size:13px;">
+  Invoice #: ${invoiceNumber}<br/>
+  Date: ${invoiceDate}<br/>
+  Booking Ref: ${bookingRef}
+</div>
+
+<h2>Bill To</h2>
+<p style="font-size:13px;">
+  ${booking.fullName}<br/>
+  ${booking.email}<br/>
+  ${booking.contactNumber}
+</p>
+
+<h2>Service Details</h2>
+<table>
+  <tbody>
+    ${
+      isHourly
+        ? `
+      <tr><td>Service</td><td>Chauffeur & Hourly Hire</td></tr>
+      <tr><td>Vehicle</td><td>${booking.hourlyVehicleType}</td></tr>
+      <tr><td>Hours</td><td>${booking.hourlyHours}</td></tr>
+      `
+        : `
+      <tr><td>Route</td><td>${booking.pickupLocation} → ${booking.dropoffLocation}</td></tr>
+      `
+    }
+    <tr><td>Date & Time</td><td>${booking.pickupDate} at ${booking.pickupTime}</td></tr>
+    <tr><td>Passengers</td><td>${booking.passengers}</td></tr>
+  </tbody>
+</table>
+
+<h2>GST Breakdown (Included in ${currency} ${serviceTotal.toFixed(2)})</h2>
+<table>
+  <tbody>
+    <tr>
+      <td>Subtotal (Excl. GST)</td>
+      <td class="right">${subtotalExGst.toFixed(2)}</td>
+    </tr>
+    <tr>
+      <td>GST (10%)</td>
+      <td class="right">${gst.toFixed(2)}</td>
+    </tr>
+    <tr style="font-weight:600;">
+      <td>Subtotal (Incl. GST)</td>
+      <td class="right">${serviceTotal.toFixed(2)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Additional Fees</h2>
+<table>
+  <tbody>
+    <tr>
+      <td>Processing Fee (2.5%)</td>
+      <td class="right">${processingFee.toFixed(2)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="totals">
+  <table>
+    <tbody>
+      <tr>
+        <td>Subtotal (Incl. GST)</td>
+        <td class="right">${serviceTotal.toFixed(2)}</td>
+      </tr>
+      <tr>
+        <td>Processing Fee</td>
+        <td class="right">${processingFee.toFixed(2)}</td>
+      </tr>
+      <tr style="font-weight:700;">
+        <td>Grand Total (Incl. GST)</td>
+        <td class="right">${grandTotal.toFixed(2)}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>Payment</h2>
+<table>
+  <tbody>
+    <tr>
+      <td>Amount Paid</td>
+      <td>A$${grandTotal.toFixed(2)}</td>
+    </tr>
+  </tbody>
+</table>
+
+<footer>
+  ${pickupInstructionsHtml}
+  <br/>
+  Thank you for choosing ${COMPANY_NAME}.
+  ${isMobile ? '<br/>Use your browser Share or Print option to save this invoice.' : ''}
+</footer>
+
+</div>
 </body>
 </html>`;
 
-    // Try to open a new window; if blocked, fallback to same window
-    const win = window.open('', '_blank');
-    const targetWindow = win && !win.closed ? win : window;
-    const doc = targetWindow.document;
+  const win = window.open('', '_blank');
+  const target = win && !win.closed ? win : window;
+  target.document.open();
+  target.document.write(html);
+  target.document.close();
 
-    doc.open();
-    doc.write(html);
-    doc.close();
+  if (!isMobile && win && !win.closed) {
+    setTimeout(() => {
+      win.focus();
+      win.print();
+    }, 300);
+  }
+};
 
-    // Auto-print only on desktop
-    if (!isMobile && win && !win.closed) {
-      // Give the browser a moment to render before printing
-      setTimeout(() => {
-        try {
-          win.focus();
-          win.print();
-        } catch {
-          // ignore
-        }
-      }, 300);
-    }
-  };
 
   // Render UI
   // Processing (loading) screen

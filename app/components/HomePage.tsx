@@ -74,7 +74,7 @@ function getMinDateForInput() {
 const PAYMENT_FEE_RATE = 0.025; // 2.5%
 
 function calculateProcessingFee(amount: number) {
-  return Math.round(amount * PAYMENT_FEE_RATE);
+   return Number((amount * PAYMENT_FEE_RATE).toFixed(2));
 }
 
 function calculateFinalAmount(amount: number) {

@@ -51,7 +51,7 @@ export default function TermsPage() {
           <ul className="list-disc list-inside space-y-2 text-slate-600">
             <li>All rates are in AUD, inclusive of GST (10%).</li>
             <li>Full payment is required at the time of booking.</li>
-            <li>A <strong>2.2% payment processing fee</strong> applies to all transactions and is non-refundable.</li>
+            <li>A <strong>2.5% payment processing fee</strong> applies to all transactions and is non-refundable.</li>
             <li>We accept all major credit/debit cards (online/phone only). No cash accepted onboard.</li>
           </ul>
         </TermsSection>

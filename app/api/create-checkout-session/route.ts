@@ -84,12 +84,15 @@ function getPassengerRanges(
 -------------------------------------------------- */
 
 function calculateProcessingFee(amount: number): number {
-  return Math.round(amount * PAYMENT_FEE_RATE);
+  return Number((amount * PAYMENT_FEE_RATE).toFixed(2));
 }
 
+
 function calculateFinalAmount(amount: number): number {
-  return amount + calculateProcessingFee(amount);
+  const processingFee = calculateProcessingFee(amount);
+  return Number((amount + processingFee).toFixed(2));
 }
+
 
 /* -------------------------------------------------
    POST

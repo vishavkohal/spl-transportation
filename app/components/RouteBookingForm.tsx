@@ -48,8 +48,8 @@ function maxBagsForPax(pax: number) {
 
 const PAYMENT_FEE_RATE = 0.025; // 2.5%
 
-function calculateProcessingFee(amount: number) {
-  return Math.round(amount * PAYMENT_FEE_RATE);
+function calculateProcessingFee(amount: number): number {
+  return Number((amount * PAYMENT_FEE_RATE).toFixed(2));
 }
 
 function calculateFinalAmount(amount: number) {
@@ -127,15 +127,29 @@ export default function RouteBookingForm({ route }: { route: Route }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: leadId,
-          bookingType: 'standard',
-          source: 'route-page',
-          quotedPrice: baseTotal,
-          pickupLocation,
-          dropoffLocation,
-          ...form,
-          contactNumber: `${form.countryCode}${form.phone}`
-        })
+  id: leadId,
+  bookingType: 'standard',
+  source: 'route-page',
+
+  pickupLocation,
+  dropoffLocation,
+  pickupDate: form.pickupDate,
+  pickupTime: form.pickupTime,
+  passengers: form.passengers,
+  luggage: form.luggage,
+  flightNumber: form.flightNumber,
+  childSeat: form.childSeat,
+
+  fullName: form.fullName,
+  email: form.email,
+  contactNumber:
+    form.countryCode && form.phone
+      ? `${form.countryCode}${form.phone}`
+      : null,
+
+  quotedPrice: (basePrice),
+  currency: 'AUD'
+})
       });
 
       const data = await res.json();
