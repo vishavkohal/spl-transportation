@@ -130,9 +130,12 @@ export function buildBookingReceiptHtml(
   const paymentId = (session?.payment_intent as string | null) || (session?.id as string | null) || '';
 
   const total = Number(booking.totalPrice ?? 0);
-  const gst = +(total * (10 / 110)).toFixed(2);
-  const subtotal = +(total - gst).toFixed(2);
-
+  const serviceTotal = Number((total / 1.025).toFixed(2));
+  // Processing fee already included
+  const processingFee = Number((total - serviceTotal).toFixed(2));
+  const gst = Number((serviceTotal * 10 / 110).toFixed(2));
+  const subtotal =  Number((serviceTotal - gst).toFixed(2));
+  const grandTotal = total;
   const style = `
     body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial; color:#111827; }
     .wrap { max-width:700px; margin:0 auto; padding:18px; }
@@ -237,6 +240,7 @@ export function buildBookingReceiptHtml(
               <table cellspacing="0" cellpadding="0" style="width:100%;">
                 <tr><td>Subtotal</td><td class="right">${subtotal.toFixed(2)}</td></tr>
                 <tr><td>GST (10%)</td><td class="right">${gst.toFixed(2)}</td></tr>
+                <tr><td>Processing Fee (2.5%)</td><td class="right">${processingFee.toFixed(2)}</td></tr>
                 <tr><td style="font-weight:700">Total (Incl. GST)</td><td class="right" style="font-weight:700">${total.toFixed(2)}</td></tr>
               </table>
             </td></tr>
