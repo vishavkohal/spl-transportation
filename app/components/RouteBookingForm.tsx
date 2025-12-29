@@ -6,6 +6,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import type { Route } from '@/app/types';
 
 const MAX_PASSENGERS = 8;
+const MAX_LUGGAGE_LIMIT = 10; // Absolute fallback limit
 
 /* ---------------- Utils ---------------- */
 
@@ -16,9 +17,12 @@ function parsePassengerRange(range: string): [number, number] {
 
 function priceForPassengers(pricing: Route['pricing'], pax: number) {
   if (!pricing?.length) return 0;
+  // Fallback to 1 pax for pricing lookup if input is currently 0 or empty
+  const lookupPax = pax || 1; 
+  
   const tier = pricing.find(p => {
     const [min, max] = parsePassengerRange(p.passengers);
-    return pax >= min && pax <= max;
+    return lookupPax >= min && lookupPax <= max;
   });
   return tier?.price ?? pricing[0].price;
 }
@@ -38,10 +42,18 @@ function minTimeForDate(date: string) {
   ).padStart(2, '0')}`;
 }
 
-function maxBagsForPax(pax: number) {
-  if (pax <= 4) return 3;
-  if (pax <= 6) return 2;
-  return 4;
+// RULES:
+// 1-5 pax: 3 bags
+// 6 pax:   2 bags
+// 7-8 pax: 4 bags
+function getMaxBagsForCurrentPax(pax: number): number {
+  const count = pax || 1; // Treat 0 input as 1 for validation purposes
+  
+  if (count <= 5) return 3;
+  if (count === 6) return 2;
+  if (count > 6 && count <= MAX_PASSENGERS) return 4;
+  
+  return MAX_LUGGAGE_LIMIT;
 }
 
 /* ---------------- Payment Fee ---------------- */
@@ -83,6 +95,42 @@ export default function RouteBookingForm({ route }: { route: Route }) {
   const update = (k: string, v: any) =>
     setForm(p => ({ ...p, [k]: v }));
 
+  /* ---------------- Strict Input Handlers ---------------- */
+
+  const handlePassengerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Parse immediately to remove leading zeros (e.g. "01" -> 1)
+    let val = parseInt(e.target.value, 10);
+
+    // Handle backspace/empty input (treat as 0 temporarily)
+    if (isNaN(val)) val = 0;
+
+    // Strict Rule: Don't allow typing higher than MAX
+    if (val > MAX_PASSENGERS) return;
+
+    // Calculate new luggage limit based on new passenger count
+    const newMaxLuggage = getMaxBagsForCurrentPax(val);
+
+    setForm(prev => ({
+      ...prev,
+      passengers: val,
+      // If current luggage is now too high for new passenger count, clamp it down
+      luggage: prev.luggage > newMaxLuggage ? newMaxLuggage : prev.luggage
+    }));
+  };
+
+  const handleLuggageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = parseInt(e.target.value, 10);
+    if (isNaN(val)) val = 0;
+
+    // Check limit dynamically based on current passengers
+    const maxAllowed = getMaxBagsForCurrentPax(form.passengers);
+
+    // Strict Rule: Don't allow typing higher than allowed limit
+    if (val > maxAllowed) return;
+
+    update('luggage', val);
+  };
+
   /* ---------------- Pricing ---------------- */
 
   const basePrice = useMemo(
@@ -107,8 +155,8 @@ export default function RouteBookingForm({ route }: { route: Route }) {
     form.pickupDate &&
     form.pickupTime &&
     form.passengers >= 1 &&
-    form.passengers <= MAX_PASSENGERS &&
-    form.luggage <= maxBagsForPax(form.passengers);
+    form.passengers <= MAX_PASSENGERS; 
+    // Luggage is validated by the input handler itself now
 
   const isStep2Valid =
     form.fullName.trim().length >= 3 &&
@@ -127,29 +175,29 @@ export default function RouteBookingForm({ route }: { route: Route }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-  id: leadId,
-  bookingType: 'standard',
-  source: 'route-page',
+          id: leadId,
+          bookingType: 'standard',
+          source: 'route-page',
 
-  pickupLocation,
-  dropoffLocation,
-  pickupDate: form.pickupDate,
-  pickupTime: form.pickupTime,
-  passengers: form.passengers,
-  luggage: form.luggage,
-  flightNumber: form.flightNumber,
-  childSeat: form.childSeat,
+          pickupLocation,
+          dropoffLocation,
+          pickupDate: form.pickupDate,
+          pickupTime: form.pickupTime,
+          passengers: form.passengers,
+          luggage: form.luggage,
+          flightNumber: form.flightNumber,
+          childSeat: form.childSeat,
 
-  fullName: form.fullName,
-  email: form.email,
-  contactNumber:
-    form.countryCode && form.phone
-      ? `${form.countryCode}${form.phone}`
-      : null,
+          fullName: form.fullName,
+          email: form.email,
+          contactNumber:
+            form.countryCode && form.phone
+              ? `${form.countryCode}${form.phone}`
+              : null,
 
-  quotedPrice: (basePrice),
-  currency: 'AUD'
-})
+          quotedPrice: (basePrice),
+          currency: 'AUD'
+        })
       });
 
       const data = await res.json();
@@ -205,7 +253,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
   /* ---------------- UI ---------------- */
 
   const inputBase =
-    'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-1 focus:ring-[#18234B] focus:border-[#18234B]';
+    'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-1 focus:ring-[#18234B] focus:border-[#18234B] text-black';
 
   const label =
     'text-xs font-medium text-gray-600';
@@ -259,26 +307,32 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 type="number"
                 min={1}
                 max={MAX_PASSENGERS}
-                value={form.passengers}
-                onChange={e => update('passengers', Number(e.target.value))}
+                // Use '' if 0 so user sees empty field instead of '0'
+                value={form.passengers === 0 ? '' : form.passengers}
+                onChange={handlePassengerChange}
                 className={inputBase}
+                placeholder="1"
               />
             </div>
 
             <div className="space-y-1">
-              <label className={label}>Luggage</label>
+              <label className={label}>
+                Luggage <span className="text-gray-400 text-[10px]">(Max {getMaxBagsForCurrentPax(form.passengers)})</span>
+              </label>
               <input
                 type="number"
                 min={0}
-                max={maxBagsForPax(form.passengers)}
-                value={form.luggage}
-                onChange={e => update('luggage', Number(e.target.value))}
+                max={getMaxBagsForCurrentPax(form.passengers)}
+                // Use '' if 0 so user sees empty field instead of '0'
+                value={form.luggage === 0 ? '' : form.luggage}
+                onChange={handleLuggageChange}
                 className={inputBase}
+                placeholder="0"
               />
             </div>
           </div>
 
-          <label className="flex items-center gap-3 text-sm">
+          <label className="flex items-center gap-3 text-sm text-gray-700">
             <input
               type="checkbox"
               checked={form.childSeat}
@@ -290,7 +344,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
           <div className="flex justify-between items-center border-t pt-3">
             <div>
               <div className="text-gray-500 text-sm">Estimated fare</div>
-              <div className="text-2xl font-bold">${baseTotal}</div>
+              <div className="text-2xl font-bold text-black">${baseTotal}</div>
               <div className="text-xs text-gray-500">
                 GST included · Processing fee applied at checkout
               </div>

@@ -117,7 +117,7 @@ export default async function RoutePage({
               {["Fixed Price", "Private Vehicle", "No Hidden Fees"].map((t) => (
                 <span
                   key={t}
-                  className="px-4 py-2 text-sm font-medium rounded-full bg-white/70 backdrop-blur shadow-sm"
+                  className="px-4 py-2 text-sm text-black font-medium rounded-full bg-white/70 backdrop-blur shadow-sm"
                 >
                   ✓ {t}
                 </span>
@@ -164,7 +164,7 @@ export default async function RoutePage({
           {/* INTRO */}
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold mb-6">
+              <h2 className="text-3xl font-bold mb-6 text-black">
                 {pageContent.intro.h2}
               </h2>
               {pageContent.intro.paragraphs.map((p, i) => (
@@ -179,12 +179,12 @@ export default async function RoutePage({
                 {pageContent.intro.bullets.map((b, i) => (
                   <li key={i} className="flex gap-3">
                     <span
-                      className="w-6 h-6 rounded-full text-white flex items-center justify-center"
+                      className="w-6 h-6 rounded-full flex items-center justify-center"
                       style={{ backgroundColor: ACCENT_COLOR }}
                     >
                       ✓
                     </span>
-                    <span className="font-medium">{b}</span>
+                    <span className="font-medium text-black">{b}</span>
                   </li>
                 ))}
               </ul>
@@ -193,7 +193,7 @@ export default async function RoutePage({
 
           {/* DESTINATION */}
           <div>
-            <h3 className="text-3xl font-bold mb-6">
+            <h3 className="text-3xl font-bold mb-6 text-black">
               {pageContent.destination.h3}
             </h3>
             {pageContent.destination.paragraphs.map((p, i) => (
@@ -205,7 +205,7 @@ export default async function RoutePage({
 
           {/* TRAVEL OPTIONS */}
           <div>
-            <h4 className="text-2xl font-bold mb-6">
+            <h4 className="text-2xl font-bold mb-6 text-black">
               {pageContent.travelOptions.h4}
             </h4>
             {pageContent.travelOptions.paragraphs.map((p, i) => (
@@ -217,7 +217,7 @@ export default async function RoutePage({
 
           {/* WHY US */}
           <div className="bg-white rounded-3xl p-10 shadow">
-            <h2 className="text-3xl font-bold mb-6">
+            <h2 className="text-3xl font-bold mb-6 text-black">
               {pageContent.whyUs.h2}
             </h2>
 
@@ -236,7 +236,7 @@ export default async function RoutePage({
                   >
                     ✓
                   </span>
-                  <span>{b}</span>
+                  <span className="text-black">{b}</span>
                 </li>
               ))}
             </ul>
@@ -252,13 +252,13 @@ export default async function RoutePage({
 
           {/* FAQ */}
           <div>
-            <h2 className="text-3xl font-bold mb-8">
+            <h2 className="text-3xl font-bold mb-8 text-black">
               Frequently Asked Questions
             </h2>
             <div className="space-y-6">
               {pageContent.faqs.map((f, i) => (
                 <div key={i} className="bg-white rounded-xl p-6 shadow">
-                  <h3 className="font-semibold mb-2">{f.question}</h3>
+                  <h3 className="font-semibold mb-2 text-black">{f.question}</h3>
                   <p className="text-gray-600">{f.answer}</p>
                 </div>
               ))}
@@ -271,12 +271,12 @@ export default async function RoutePage({
       <section className="bg-neutral-100 py-20">
         <div className="max-w-7xl mx-auto px-4 grid lg:grid-cols-2 gap-12">
           <div>
-            <h2 className="text-3xl font-bold mb-6">
+            <h2 className="text-3xl font-bold mb-6 text-black">
               Landmarks along the route
             </h2>
             <ul className="grid sm:grid-cols-2 gap-3">
               {landmarks.map((l) => (
-                <li key={l} className="bg-white rounded-lg px-4 py-3 shadow">
+                <li key={l} className="bg-white rounded-lg px-4 py-3 shadow text-gray-700">
                   📍 {l}
                 </li>
               ))}
