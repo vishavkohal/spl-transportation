@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { BookingProvider } from "./providers/BookingProvider";
 import Navigation from "../app/components/Navigation";
 import Footer from "../app/components/Footer";
-
+import UtmTracker from "@/app/components/UtmTracker";
 const BASE_URL = "https://www.spltransportation.com.au";
 const GA_ID = "G-0F1THLNR5M";
 
@@ -136,6 +136,7 @@ export default function RootLayout({
       <body className="bg-gray-50 text-gray-900">
         {/* ✅ Global App State */}
         <BookingProvider>
+          <UtmTracker />
           {children}
         </BookingProvider>
       </body>

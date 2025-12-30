@@ -51,6 +51,7 @@ type Booking = {
 
 type BookingLead = {
   id: string;
+
   fullName?: string | null;
   email?: string | null;
   contactNumber?: string | null;
@@ -66,10 +67,21 @@ type BookingLead = {
   currency?: string | null;
 
   status: 'draft' | 'converted';
+
+  // UI / device source
   source?: string | null;
+
+  // ✅ MARKETING ATTRIBUTION (NEW)
+  utmSource?: string | null;
+  utmMedium?: string | null;
+  utmCampaign?: string | null;
+  utmTerm?: string | null;
+  utmContent?: string | null;
+  utmCapturedAt?: string | null;
 
   createdAt: string;
 };
+
 // Define the custom colors
 const PRIMARY_COLOR = '#18234B'; // Dark Navy
 const ACCENT_COLOR = '#A61924'; // Deep Red
@@ -1440,6 +1452,7 @@ function LeadsAdminPanel() {
   const [leads, setLeads] = useState<BookingLead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [utmFilter, setUtmFilter] = useState<string>('all');
 
   useEffect(() => {
     fetch('/api/admin/leads')
@@ -1448,23 +1461,40 @@ function LeadsAdminPanel() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return leads;
+ const filtered = useMemo(() => {
+  let result = leads;
+
+  // 🔍 Text search
+  if (search.trim()) {
     const q = search.toLowerCase();
-    return leads.filter(l =>
+    result = result.filter(l =>
       [
         l.fullName,
         l.email,
         l.contactNumber,
         l.pickupLocation,
         l.dropoffLocation,
-        l.source
+        l.source,
+        l.utmSource
       ]
         .join(' ')
         .toLowerCase()
         .includes(q)
     );
-  }, [leads, search]);
+  }
+
+  // 🎯 UTM filter
+  if (utmFilter !== 'all') {
+    result = result.filter(l => {
+      if (utmFilter === 'direct') {
+        return !l.utmSource;
+      }
+      return l.utmSource === utmFilter;
+    });
+  }
+
+  return result;
+}, [leads, search, utmFilter]);
 
   return (
     <div className="bg-gray-50 rounded-lg">
@@ -1472,13 +1502,27 @@ function LeadsAdminPanel() {
         <h2 className="text-2xl font-bold" style={{ color: PRIMARY_COLOR }}>
           Leads
         </h2>
+       
+  <input
+    className="border p-2 rounded text-sm"
+    placeholder="Search leads…"
+    value={search}
+    onChange={e => setSearch(e.target.value)}
+  />
 
-        <input
-          className="border p-2 rounded text-sm"
-          placeholder="Search leads…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+  <select
+    className="border p-2 rounded text-sm"
+    value={utmFilter}
+    onChange={e => setUtmFilter(e.target.value)}
+  >
+    <option value="all">All Sources</option>
+    <option value="google">Google</option>
+    <option value="affiliate">Affiliate</option>
+    <option value="email">Email</option>
+    <option value="direct">Direct / Organic</option>
+  </select>
+   <div className="flex gap-2">
+</div>
       </div>
 
       {loading && <p>Loading leads…</p>}
@@ -1489,49 +1533,86 @@ function LeadsAdminPanel() {
 
       <ul className="space-y-3">
         {filtered.map(l => (
-          <li key={l.id} className="bg-white border rounded p-4">
-            <div className="flex justify-between">
-              <div>
-                <div className="font-semibold text-lg">
-                  {l.fullName || '—'}
-                </div>
-                <div className="text-xs text-gray-600">
-                  {l.email} {l.contactNumber && `• ${l.contactNumber}`}
-                </div>
-                <div className="text-sm mt-1">
-                  {l.bookingType === 'hourly'
-                    ? `Hourly (${l.hourlyHours ?? '—'} hrs)`
-                    : `${l.pickupLocation} → ${l.dropoffLocation}`}
-                </div>
-                <div className="text-xs text-gray-400">
-                  Source: {l.source || 'unknown'}
-                </div>
-              </div>
+  <li key={l.id} className="bg-white border rounded p-4 space-y-3">
+    <div className="flex justify-between gap-6">
 
-              <div className="text-right">
-                <div className="font-bold">
-                  {l.quotedPriceCents
-                    ? `${(l.quotedPriceCents / 100).toFixed(2)} ${
-                        l.currency || 'AUD'
-                      }`
-                    : '—'}
-                </div>
-                <span
-                  className={`text-xs px-2 py-1 rounded border ${
-                    l.status === 'converted'
-                      ? 'bg-green-50 border-green-200 text-green-700'
-                      : 'bg-yellow-50 border-yellow-200 text-yellow-700'
-                  }`}
-                >
-                  {l.status.toUpperCase()}
-                </span>
-                <div className="text-xs text-gray-400 mt-1">
-                  {new Date(l.createdAt).toLocaleString()}
-                </div>
-              </div>
+      {/* LEFT */}
+      <div>
+        <div className="font-semibold text-lg">
+          {l.fullName || '—'}
+        </div>
+
+        <div className="text-xs text-gray-600">
+          {l.email || '—'}
+          {l.contactNumber && ` • ${l.contactNumber}`}
+        </div>
+
+        <div className="text-sm mt-1">
+          {l.bookingType === 'hourly'
+            ? `Hourly (${l.hourlyHours ?? '—'} hrs)`
+            : `${l.pickupLocation} → ${l.dropoffLocation}`}
+        </div>
+
+        <div className="text-xs text-gray-400 mt-1">
+          UI Source: {l.source || 'unknown'}
+        </div>
+
+        {/* ✅ UTM ATTRIBUTION */}
+        <div className="mt-2 text-xs bg-gray-50 border rounded p-2 space-y-1">
+          <div><strong>UTM Source:</strong> {l.utmSource || '—'}</div>
+          <div><strong>UTM Medium:</strong> {l.utmMedium || '—'}</div>
+          <div><strong>UTM Campaign:</strong> {l.utmCampaign || '—'}</div>
+          <div><strong>UTM Term:</strong> {l.utmTerm || '—'}</div>
+          <div><strong>UTM Content:</strong> {l.utmContent || '—'}</div>
+          {l.utmCapturedAt && (
+            <div className="text-gray-400">
+              Captured: {new Date(l.utmCapturedAt).toLocaleString()}
             </div>
-          </li>
-        ))}
+          )}
+        </div>
+      </div>
+
+      {/* RIGHT */}
+      <div className="text-right flex flex-col items-end gap-2">
+        <div className="font-bold">
+          {l.quotedPriceCents
+            ? `${(l.quotedPriceCents / 100).toFixed(2)} ${l.currency || 'AUD'}`
+            : '—'}
+        </div>
+
+        <span
+          className={`text-xs px-2 py-1 rounded border ${
+            l.status === 'converted'
+              ? 'bg-green-50 border-green-200 text-green-700'
+              : 'bg-yellow-50 border-yellow-200 text-yellow-700'
+          }`}
+        >
+          {l.status.toUpperCase()}
+        </span>
+
+        <div className="text-xs text-gray-400">
+          {new Date(l.createdAt).toLocaleString()}
+        </div>
+
+        {/* 🗑 DELETE */}
+        <button
+          onClick={async () => {
+            if (!confirm('Delete this lead permanently?')) return;
+
+            await fetch(`/api/admin/leads/${l.id}`, {
+              method: 'DELETE',
+            });
+
+            setLeads(prev => prev.filter(x => x.id !== l.id));
+          }}
+          className="text-xs text-red-600 hover:underline"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </li>
+))}
       </ul>
     </div>
   );

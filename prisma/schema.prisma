@@ -95,7 +95,20 @@ model BookingLead {
   currency              String   @default("AUD")
 
   status                String   @default("draft") // draft | converted
+
+  // UI / device source (NOT marketing attribution)
   source                String?
+
+  /* ----------------------------------------
+     MARKETING ATTRIBUTION (UTM)
+     Stored ONLY if present in URL
+  ---------------------------------------- */
+  utmSource             String?
+  utmMedium             String?
+  utmCampaign           String?
+  utmTerm               String?
+  utmContent            String?
+  utmCapturedAt         DateTime?
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt

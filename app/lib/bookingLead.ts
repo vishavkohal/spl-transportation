@@ -1,9 +1,16 @@
-// lib/bookingLead.ts
 import { prisma } from '@/lib/prisma';
 
 /* ----------------------------------------
    Types
 ----------------------------------------- */
+
+export type UtmPayload = {
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
+  utm_term?: string;
+  utm_content?: string;
+};
 
 export type BookingLeadPayload = {
   id?: string;
@@ -37,7 +44,11 @@ export type BookingLeadPayload = {
   quotedPrice?: number;
   currency?: string;
 
+  // Non-attribution source (UI / device)
   source?: string; // "homepage", "mobile", etc
+
+  // ✅ Attribution (optional, only if URL had UTMs)
+  utm?: UtmPayload;
 };
 
 // Prisma shim (same pattern as booking)
@@ -55,6 +66,7 @@ export async function upsertBookingLead(
     contactNumber,
     quotedPrice,
     currency,
+    utm,
     ...rest
   } = payload;
 
@@ -63,7 +75,10 @@ export async function upsertBookingLead(
     return null;
   }
 
-  // Update existing lead
+  /* ----------------------------------------
+     UPDATE EXISTING LEAD
+     ❌ DO NOT overwrite attribution
+  ----------------------------------------- */
   if (id) {
     return leadClient.update({
       where: { id },
@@ -80,18 +95,32 @@ export async function upsertBookingLead(
     });
   }
 
-  // Create new lead
+  /* ----------------------------------------
+     CREATE NEW LEAD
+     ✅ Capture UTMs only once (first-click)
+  ----------------------------------------- */
   return leadClient.create({
     data: {
       ...rest,
+
       email: email ?? null,
       contactNumber: contactNumber ?? null,
+
       quotedPriceCents:
         typeof quotedPrice === 'number'
           ? Math.round(quotedPrice * 100)
           : null,
+
       currency: currency ?? 'AUD',
       status: 'draft',
+
+      // ✅ Attribution (may be null if no UTMs)
+      utmSource: utm?.utm_source ?? null,
+      utmMedium: utm?.utm_medium ?? null,
+      utmCampaign: utm?.utm_campaign ?? null,
+      utmTerm: utm?.utm_term ?? null,
+      utmContent: utm?.utm_content ?? null,
+      utmCapturedAt: utm ? new Date() : null,
     },
   });
 }

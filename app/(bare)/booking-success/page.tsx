@@ -11,6 +11,13 @@ export default function BookingSuccessPage() {
       }
     >
       <BookingSuccessClient />
+       {/* Conversion Tracking – fires on success page load */}
+      <iframe
+        src="https://adflagshipmedia10715581.o18a.com/p?m=27840&t=f&gb=1"
+        width="0"
+        height="0"
+        style={{ display: 'none', border: 0 }}
+      />
     </Suspense>
   );
 }

@@ -23,6 +23,8 @@ import CustomerReviews from './CustomerReviews';
 import HeroBackground from "./HeroBackground";
 import { PHONE_COUNTRIES_LIST } from '../lib/phonecodes';
 import { useDebouncedCallback } from 'use-debounce';
+import { getStoredUtms } from '@/app/lib/utm';
+
 // Custom colors
 const PRIMARY_COLOR = '#18234B';
 const ACCENT_COLOR = '#A61924';
@@ -526,8 +528,9 @@ const isHourlyStep1Valid = () => {
     }
   };
 
-  const [leadId, setLeadId] = useState<string | null>(null);
-  // ----------------------------------
+const [leadId, setLeadId] = useState<string | null>(null);
+
+// ----------------------------------
 // STEP 2 LEAD AUTOSAVE (ONLY WITH CONTACT INFO)
 // ----------------------------------
 const saveLead = useDebouncedCallback(async () => {
@@ -538,23 +541,30 @@ const saveLead = useDebouncedCallback(async () => {
   if (!formData.email && !formData.contactNumber) return;
 
   try {
+    const utms = getStoredUtms(); // ✅ read once per autosave
+
     const res = await fetch('/api/leads/upsert', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        id: leadId,
+        id: leadId, // 👈 if present → UPDATE, else CREATE
         bookingType: bookingMode,
         quotedPrice:
           bookingMode === 'standard'
             ? calculatedPrice
             : hourlyPrice,
-        source: 'homepage',
-        ...formData
-      })
+        source: 'homepage', // UI context only
+
+        // ✅ Attribution (only sent if exists)
+        utm: utms ?? undefined,
+
+        ...formData,
+      }),
     });
 
     const data = await res.json();
 
+    // Capture leadId once (idempotent)
     if (data?.leadId && !leadId) {
       setLeadId(data.leadId);
     }
@@ -563,14 +573,16 @@ const saveLead = useDebouncedCallback(async () => {
     console.error('Lead autosave failed', err);
   }
 }, 2500);
+
 useEffect(() => {
   saveLead();
 }, [
   bookingStep,
   formData.fullName,
   formData.email,
-  formData.contactNumber
+  formData.contactNumber,
 ]);
+
 
   return (
     <div className="min-h-screen bg-white-50">
