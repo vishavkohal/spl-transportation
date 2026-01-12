@@ -50,6 +50,26 @@ body {
   animation: shimmer 1.4s infinite;
 }
 
+
+/* Fix spacing after horizontal rules inside prose */
+.prose hr {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Add extra spacing BEFORE headings that follow hr */
+.prose hr + h2 {
+  margin-top: 2rem;
+}
+
+.prose hr + h3 {
+  margin-top: 2rem;
+}
+
+.prose hr + h4 {
+  margin-top: 2rem;
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);

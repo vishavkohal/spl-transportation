@@ -129,13 +129,57 @@ export default async function BlogPostPage({
       </div>
 
       {/* Content */}
-      <article
-        className="prose prose-sm sm:prose-base max-w-none
-          prose-headings:mt-6 prose-headings:mb-3
-          prose-p:mb-3 prose-li:mb-1
-          prose-a:text-blue-700 prose-a:underline"
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      />
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+<article
+  className="
+    prose prose-sm sm:prose-base lg:prose-lg
+    max-w-none
+
+    /* Headings spacing */
+    prose-headings:tracking-tight
+    prose-headings:text-[#18234B]
+
+    prose-h2:mt-16
+    prose-h2:mb-6
+    prose-h3:mt-12
+    prose-h3:mb-5
+    prose-h4:mt-10
+    prose-h4:mb-4
+
+    /* Paragraph spacing */
+    prose-p:mb-6
+    prose-p:leading-[1.75]
+    prose-p:text-gray-700
+
+    /* Lists spacing */
+    prose-ul:my-7
+    prose-li:mb-3
+    prose-li:leading-[1.7]
+    prose-li:text-gray-700
+
+    /* Horizontal rule spacing */
+    prose-hr:my-16
+    prose-hr:border-gray-200
+
+    /* 🚀 KEY FIX: extra space after HR before next heading */
+    prose-hr + h2:mt-20
+    prose-hr + h3:mt-16
+    prose-hr + h4:mt-14
+
+    /* Strong text */
+    prose-strong:font-semibold
+    prose-strong:text-gray-900
+
+    /* Links */
+    prose-a:text-[#A61924]
+    prose-a:font-medium
+    prose-a:no-underline
+    hover:prose-a:underline
+  "
+  dangerouslySetInnerHTML={{ __html: post.content }}
+/>
+
+</div>
     </main>
   );
 }
