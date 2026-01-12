@@ -11,7 +11,140 @@ export type BlogPost = {
   content: string;
 };
 
-export const blogPosts: BlogPost[] = [
+export const blogPosts: BlogPost[] = [{
+  slug: "cairns-airport-to-port-douglas-transfers-ultimate-2026-guide",
+  title: "Cairns Airport to Port Douglas Transfers: The Ultimate 2026 Travel Guide",
+  excerpt:
+    "Just landed in Cairns? Discover the best ways to travel from Cairns Airport to Port Douglas in 2026 — shared shuttles, private transfers, luxury chauffeurs, costs, travel tips, and expert advice for a smooth start to your Tropical North Queensland holiday.",
+  publishedAt: "2026-01-10T00:00:00.000Z",
+  updatedAt: "2026-01-10T00:00:00.000Z",
+  readMinutes: 8,
+  tags: [
+    "Cairns Airport",
+    "Port Douglas",
+    "Airport Transfers",
+    "Private Transfers",
+    "Queensland Travel",
+    "Great Barrier Reef Drive",
+    "Travel Guide 2026"
+  ],
+  content: `
+<p>You’ve landed at Cairns Airport. The tropical air hits instantly, the holiday mood kicks in, and the Great Barrier Reef adventure is about to begin. But before you reach your resort in Port Douglas, there’s one final step — the transfer.</p>
+
+<p>The journey from Cairns Airport to Port Douglas covers around <strong>67 kilometres</strong> and takes roughly <strong>one hour</strong> in normal conditions. The route follows the famous <em>Great Barrier Reef Drive</em>, widely regarded as one of the most scenic coastal highways in Australia.</p>
+
+<p>This guide breaks down the <strong>best transfer options in 2026</strong>, helping you start your Tropical North Queensland holiday stress-free.</p>
+
+<hr />
+
+<h2>🚐 1. Shared Shuttle Transfers (Budget-Friendly Option)</h2>
+
+<p>Shared airport shuttles are the most popular option for solo travellers and couples travelling light.</p>
+
+<h3>How it Works</h3>
+<p>Modern, air-conditioned minibuses operate on fixed schedules. After collecting your luggage, you meet at a designated pickup point. The shuttle then drops passengers off at multiple hotels along the way.</p>
+
+<p><strong>Pros:</strong></p>
+<ul>
+  <li>Lowest cost per person</li>
+  <li>Reliable schedules</li>
+</ul>
+
+<p><strong>Cons:</strong></p>
+<ul>
+  <li>Waiting time for other passengers</li>
+  <li>Your hotel may be the final stop</li>
+</ul>
+
+<p><strong>Expert Tip:</strong> Book at least <strong>48 hours in advance</strong>, especially during the dry season (June–October).</p>
+
+<hr />
+
+<h2>🚘 2. Private Transfers (Fast & Comfortable)</h2>
+
+<p>If convenience matters, a private Cairns Airport to Port Douglas transfer is the most comfortable option.</p>
+
+<h3>Why Go Private?</h3>
+<p>Your driver tracks your flight in real time, meets you in the arrivals hall with a name sign, assists with luggage, and drives you directly to your accommodation — no waiting, no extra stops.</p>
+
+<ul>
+  <li><strong>Speed:</strong> Save 30–40 minutes compared to shared shuttles</li>
+  <li><strong>Flexibility:</strong> Child seats, grocery stops, custom requests</li>
+  <li><strong>Value for Groups:</strong> Often similar cost to multiple shuttle tickets</li>
+</ul>
+
+<hr />
+
+<h2>✨ 3. Luxury Chauffeur Services</h2>
+
+<p>Perfect for honeymoons, weddings, or luxury resort stays, chauffeur services offer premium SUVs such as Audi Q7s or Mercedes GLEs.</p>
+
+<p>Expect privacy, chilled bottled water, professional drivers, and a seamless arrival experience.</p>
+
+<hr />
+
+<h2>🚕 4. Taxis & Rideshare (What to Know)</h2>
+
+<p>Uber and taxis operate at Cairns Airport, but they’re not always ideal for Port Douglas transfers.</p>
+
+<ul>
+  <li><strong>Return Trip Issue:</strong> Drivers may decline long-distance trips</li>
+  <li><strong>Surge Pricing:</strong> Costs spike during peak arrivals or bad weather</li>
+  <li><strong>Taxi Meters:</strong> Traffic or roadworks can inflate final fares</li>
+</ul>
+
+<p>In many cases, pre-booked private transfers offer better value and certainty.</p>
+
+<hr />
+
+<h2>🌊 Highlights Along the Great Barrier Reef Drive</h2>
+
+<p>Your transfer doubles as a scenic tour. Keep your camera ready for:</p>
+
+<ul>
+  <li><strong>Ellis Beach</strong> – Where rainforest meets the Coral Sea</li>
+  <li><strong>Rex Lookout</strong> – Iconic panoramic coastal views</li>
+  <li><strong>Clifftop Roads</strong> – Reef on one side, mountains on the other</li>
+</ul>
+
+<p>Many private drivers are happy to stop briefly for photos.</p>
+
+<hr />
+
+<h2>💡 Pro Tips for a Smooth Arrival</h2>
+
+<ul>
+  <li><strong>Flight Tracking:</strong> Choose a provider that monitors delays</li>
+  <li><strong>Child Seats:</strong> Queensland law requires age-appropriate restraints</li>
+  <li><strong>Terminal Check:</strong> Cairns has separate domestic and international terminals</li>
+</ul>
+
+<hr />
+
+<h2>❓ Frequently Asked Questions</h2>
+
+<p><strong>How much does a taxi cost from Cairns Airport to Port Douglas?</strong><br />
+Expect around AUD $180–$230. Pre-booked private transfers are often better value.</p>
+
+<p><strong>Is there a public bus from Cairns to Port Douglas?</strong><br />
+No direct public bus operates. You’ll need a shuttle or private transfer.</p>
+
+<p><strong>How long does the drive take?</strong><br />
+Around one hour in normal conditions. Wet season rain can cause delays.</p>
+
+<p><strong>Are transfers available late at night?</strong><br />
+Shared shuttles usually stop by early evening, but private transfers operate 24/7.</p>
+
+<p><strong>Is the road winding?</strong><br />
+Yes — the Captain Cook Highway has curves. Motion-sensitive travellers should sit in front.</p>
+
+<hr />
+
+<h2>✅ Final Thoughts</h2>
+
+<p>Starting your holiday right matters. While shared shuttles suit budget travellers, a <strong>private Cairns Airport to Port Douglas transfer</strong> delivers peace of mind, comfort, and a relaxed start to your Tropical North Queensland adventure.</p>
+`
+},
   {
     slug: "top-places-to-visit-in-cairns-tropical-north-queensland",
     title: "Top Places to Visit in Cairns & Tropical North Queensland (2025 Travel Guide)",
