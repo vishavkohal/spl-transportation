@@ -24,7 +24,7 @@ function priceForPassengers(pricing: Route['pricing'], pax: number) {
     const [min, max] = parsePassengerRange(p.passengers);
     return lookupPax >= min && lookupPax <= max;
   });
-  return tier?.price ?? pricing[0].price;
+  return tier?.price ?? pricing[pricing.length - 1].price;
 }
 
 function minDate() {

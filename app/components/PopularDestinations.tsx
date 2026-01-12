@@ -53,7 +53,7 @@ const popularRouteConfigs = [
     key: "cairns-city-tablelands",
     from: "Cairns City",
     to: "Tablelands",
-    label: "Atherton Tablelands Tour",
+    label: "Atherton Tablelands",
     subtitle:
       "Journey through lush highlands, crater lakes, and stunning waterfalls.",
   },
