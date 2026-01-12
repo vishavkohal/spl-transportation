@@ -3,12 +3,16 @@ export type BlogPost = {
   slug: string;
   title: string;
   excerpt: string;
-  publishedAt: string; // ISO date string
+  publishedAt: string;
   updatedAt?: string;
   readMinutes: number;
   tags: string[];
-  // simple string content; you can later switch to MDX
   content: string;
+
+  featuredImage: {
+    src: string;
+    alt: string;
+  };
 };
 
 export const blogPosts: BlogPost[] = [{
@@ -142,7 +146,11 @@ Yes. The Captain Cook Highway has many curves. Motion-sensitive travellers shoul
 <h3>✅ In Conclusion: Begin Your Vacation the Right Way</h3>
 
 <p>Your journey to Tropical North Queensland should be relaxing — not stressful. Shared shuttles are great for budget travellers, but a <strong>private Cairns Airport to Port Douglas transfer</strong> offers comfort, reliability, and peace of mind, ensuring your holiday starts perfectly.</p>
-`
+`,
+featuredImage: {
+  src: "/images/blog/cairns-airport-to-port-douglas-transfer.jpg",
+  alt: "Great Barrier Reef Drive from Cairns Airport to Port Douglas"
+},
 }
 ,
   {
@@ -302,6 +310,10 @@ Yes. The Captain Cook Highway has many curves. Motion-sensitive travellers shoul
 <p>Booking a private transfer means your driver is waiting when you land, your vehicle is sized correctly for your group and luggage, and your price is fixed in advance in Australian dollars. It’s the most comfortable, stress-free way to start or end your trip in Tropical North Queensland.</p>
 
 <p>If you're planning to visit several of the locations above, consider grouping attractions by direction — for example, a northern beaches and Port Douglas day, a Kuranda and Skyrail day, and a southern tablelands and Paronella Park day — and arranging transfers or tours accordingly.</p>
-`
+`,
+featuredImage: {
+  src: "/images/blog/cairns-airport-to-port-douglas-transfer.jpg",
+  alt: "Great Barrier Reef Drive from Cairns Airport to Port Douglas"
+}
   }
 ];
