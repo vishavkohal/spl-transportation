@@ -76,7 +76,7 @@ function getMinDateForInput() {
 const PAYMENT_FEE_RATE = 0.025; // 2.5%
 
 function calculateProcessingFee(amount: number) {
-   return Number((amount * PAYMENT_FEE_RATE).toFixed(2));
+  return Number((amount * PAYMENT_FEE_RATE).toFixed(2));
 }
 
 function calculateFinalAmount(amount: number) {
@@ -130,20 +130,20 @@ function getHourlyPrice(formData: BookingFormData): number {
    Framer Motion variants
 ------------------------------*/
 const heroContentVariants: Variants = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 5, filter: 'blur(4px)' },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7, ease: 'easeOut' }
+    filter: 'blur(0px)',
+    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] }
   }
 };
 
 const heroDotsVariants: Variants = {
-  hidden: { opacity: 0, y: 10 },
+  hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: 'easeOut', delay: 0.4 }
+    transition: { duration: 0.5 }
   }
 };
 
@@ -152,21 +152,36 @@ const bookingCardVariants: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: 'easeOut', delay: 0.2 }
+    transition: {
+      type: 'spring',
+      stiffness: 40,
+      damping: 20,
+      mass: 1,
+      delay: 0.1
+    }
   }
 };
 
+// NEW: Smooth step transition variants
 const stepTransitionVariants: Variants = {
-  hidden: { opacity: 0, y: 15 },
+  hidden: { opacity: 0, x: 20, position: 'absolute' }, // float right
   visible: {
     opacity: 1,
-    y: 0,
-    transition: { duration: 0.3, ease: 'easeOut' }
+    x: 0,
+    position: 'relative',
+    transition: { type: "spring", stiffness: 300, damping: 30 }
   },
-  exit: { opacity: 0, y: -10, transition: { duration: 0.2, ease: 'easeIn' } }
+  exit: {
+    opacity: 0,
+    x: -20,
+    position: 'absolute',
+    transition: { duration: 0.2 }
+  }
 };
 
-type BookingMode = 'standard' | 'hourly';
+
+
+type BookingMode = 'standard' | 'hourly' | 'daytrip';
 
 export default function HomePage(props: {
   formData: BookingFormData;
@@ -206,21 +221,35 @@ export default function HomePage(props: {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [bookingMode, setBookingMode] = useState<BookingMode>('standard');
 
+  // Day Trip state
+  const [dayTripPricing, setDayTripPricing] = useState<{ passengers: string; price: number; vehicleType: string }[]>([]);
+  const [dayTripPickup, setDayTripPickup] = useState('');
+  const [dayTripDestination, setDayTripDestination] = useState('');
+  const [selectedDayTripVehicle, setSelectedDayTripVehicle] = useState<{ vehicleType: string; price: number } | null>(null);
+  const [isDayTripRedirecting, setIsDayTripRedirecting] = useState(false); // NEW: loading state for day trip redirect
+
   const minDateForInput = getMinDateForInput();
 
   const markTouched = (field: string) => {
     setTouched(prev => ({ ...prev, [field]: true }));
   };
 
-  // Scroll + slideshow
+  // Listen for day trip selection from RoutesSection
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-      if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
+    const handleDayTripSelect = (e: CustomEvent<{ pricing: { passengers: string; price: number; vehicleType: string }[] }>) => {
+      setBookingMode('daytrip');
+      setDayTripPricing(e.detail.pricing);
+      if (e.detail.pricing.length > 0) {
+        setSelectedDayTripVehicle({ vehicleType: e.detail.pricing[0].vehicleType, price: e.detail.pricing[0].price });
       }
-    }
+    };
+
+    window.addEventListener('selectDayTrip', handleDayTripSelect as EventListener);
+    return () => window.removeEventListener('selectDayTrip', handleDayTripSelect as EventListener);
   }, []);
+
+  // Scroll + slideshow
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -297,12 +326,12 @@ export default function HomePage(props: {
         return value ? null : 'Required';
 
       case 'hourlyHours': {
-  const hours = Number(value);
-  if (!hours || Number.isNaN(hours)) return 'Required';
-  if (hours < 2) return 'Min 2 hours';
-  if (hours > 8) return 'Max 8 hours';
-  return null;
-}
+        const hours = Number(value);
+        if (!hours || Number.isNaN(hours)) return 'Required';
+        if (hours < 2) return 'Min 2 hours';
+        if (hours > 8) return 'Max 8 hours';
+        return null;
+      }
 
 
       case 'hourlyVehicleType':
@@ -315,17 +344,16 @@ export default function HomePage(props: {
 
   const getInputClass = (field: string, hasIconPadding: boolean = true) => {
     const error = getFieldError(field);
-    const padding = hasIconPadding ? 'pl-10' : 'pl-4';
+    const padding = hasIconPadding ? 'pl-10' : 'pl-3'; // pl-3 aligns with Day Trip px-3 if no icon
 
     const base =
-      `w-full ${padding} pr-4 py-3 rounded-xl outline-none font-medium text-base ` +
-      `transition-all duration-200 appearance-none relative z-10 `;
-    const theme = 'bg-white text-gray-900 ';
+      `w-full ${padding} pr-3 py-2.5 rounded-lg outline-none font-medium text-sm ` + // rounded-lg, py-2.5, text-sm
+      `transition-all duration-200 appearance-none relative z-10 text-black `;      // text-black
 
     if (error) {
       return (
         base +
-        theme +
+        'bg-red-50 ' + // Light red bg for error
         'border border-red-500 ring-1 ring-red-500 focus:ring-2 focus:ring-red-500 ' +
         'focus:border-red-500 placeholder-red-300'
       );
@@ -333,8 +361,8 @@ export default function HomePage(props: {
 
     return (
       base +
-      theme +
-      'border border-gray-200 focus:ring-2 focus:border-transparent placeholder-gray-400'
+      'bg-white ' + // Match Day Trip bg-white
+      'border border-gray-300 focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B] placeholder-gray-400' // Match Day Trip borders/ring
     );
   };
 
@@ -385,21 +413,21 @@ export default function HomePage(props: {
   // STEP 1 validity (HOURLY)
   const hourlyPrice = getHourlyPrice(formData);
 
-const isHourlyStep1Valid = () => {
-  if (!formData.hourlyPickupLocation) return false;
-  if (!formData.pickupDate || !formData.pickupTime) return false;
-  if (!isPickupAtLeast30Mins(formData.pickupDate, formData.pickupTime))
-    return false;
+  const isHourlyStep1Valid = () => {
+    if (!formData.hourlyPickupLocation) return false;
+    if (!formData.pickupDate || !formData.pickupTime) return false;
+    if (!isPickupAtLeast30Mins(formData.pickupDate, formData.pickupTime))
+      return false;
 
-  const hours = Number(formData.hourlyHours || 0);
-  if (!hours || hours < 2) return false;
-  if (hours > 8) return false;          // 👈 new line
+    const hours = Number(formData.hourlyHours || 0);
+    if (!hours || hours < 2) return false;
+    if (hours > 8) return false;          // 👈 new line
 
-  if (!formData.hourlyVehicleType) return false;
-  if (hourlyPrice <= 0) return false;
+    if (!formData.hourlyVehicleType) return false;
+    if (hourlyPrice <= 0) return false;
 
-  return true;
-};
+    return true;
+  };
 
 
   // STEP 2 validity (shared)
@@ -528,404 +556,775 @@ const isHourlyStep1Valid = () => {
     }
   };
 
-const [leadId, setLeadId] = useState<string | null>(null);
+  const [leadId, setLeadId] = useState<string | null>(null);
 
-// ----------------------------------
-// STEP 2 LEAD AUTOSAVE (ONLY WITH CONTACT INFO)
-// ----------------------------------
-const saveLead = useDebouncedCallback(async () => {
-  // ❌ Never save in Step 1
-  if (bookingStep !== 2) return;
+  // ----------------------------------
+  // STEP 2 LEAD AUTOSAVE (ONLY WITH CONTACT INFO)
+  // ----------------------------------
+  const saveLead = useDebouncedCallback(async () => {
+    // ❌ Never save in Step 1
+    if (bookingStep !== 2) return;
 
-  // ❌ No contact info → not a lead
-  if (!formData.email && !formData.contactNumber) return;
+    // ❌ No contact info → not a lead
+    if (!formData.email && !formData.contactNumber) return;
 
-  try {
-    const utms = getStoredUtms(); // ✅ read once per autosave
+    try {
+      const utms = getStoredUtms(); // ✅ read once per autosave
 
-    const res = await fetch('/api/leads/upsert', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: leadId, // 👈 if present → UPDATE, else CREATE
-        bookingType: bookingMode,
-        quotedPrice:
-          bookingMode === 'standard'
-            ? calculatedPrice
-            : hourlyPrice,
-        source: 'homepage', // UI context only
+      const res = await fetch('/api/leads/upsert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: leadId, // 👈 if present → UPDATE, else CREATE
+          bookingType: bookingMode,
+          quotedPrice:
+            bookingMode === 'standard'
+              ? calculatedPrice
+              : bookingMode === 'daytrip'
+                ? selectedDayTripVehicle?.price
+                : hourlyPrice,
+          source: 'homepage', // UI context only
 
-        // ✅ Attribution (only sent if exists)
-        utm: utms ?? undefined,
+          // Day Trip specific fields
+          dayTripPickup: bookingMode === 'daytrip' ? dayTripPickup : undefined,
+          dayTripDestination: bookingMode === 'daytrip' ? dayTripDestination : undefined,
+          dayTripVehicleType: bookingMode === 'daytrip' ? selectedDayTripVehicle?.vehicleType : undefined,
 
-        ...formData,
-      }),
-    });
+          // ✅ Attribution (only sent if exists)
+          utm: utms ?? undefined,
 
-    const data = await res.json();
+          ...formData,
+        }),
+      });
 
-    // Capture leadId once (idempotent)
-    if (data?.leadId && !leadId) {
-      setLeadId(data.leadId);
+      const data = await res.json();
+
+      // Capture leadId once (idempotent)
+      if (data?.leadId && !leadId) {
+        setLeadId(data.leadId);
+      }
+    } catch (err) {
+      // Silent fail — never block UX
+      console.error('Lead autosave failed', err);
     }
-  } catch (err) {
-    // Silent fail — never block UX
-    console.error('Lead autosave failed', err);
-  }
-}, 2500);
+  }, 2500);
 
-useEffect(() => {
-  saveLead();
-}, [
-  bookingStep,
-  formData.fullName,
-  formData.email,
-  formData.contactNumber,
-]);
+  useEffect(() => {
+    saveLead();
+  }, [
+    bookingStep,
+    formData.fullName,
+    formData.email,
+    formData.contactNumber,
+    // Triggers for Day Trip & Hourly updates
+    dayTripPickup,
+    dayTripDestination,
+    selectedDayTripVehicle,
+    hourlyPrice, // ensure hourly updates trigger autosave too
+    saveLead
+  ]);
 
 
   return (
     <div className="min-h-screen bg-white-50">
-      {/* Hero Section */}
-      <div className="relative h-[560px] lg:h-[520px] xl:h-[580px] overflow-hidden">
-        <HeroBackground />
-{/* Optional: fade-in slideshow AFTER hydration */}
-<div className="absolute inset-0 pointer-events-none">
-  {heroImages.slice(1).map((src, index) => (
-    <div
-      key={src}
-      className={`absolute inset-0 transition-opacity duration-1000 ${
-        index + 1 === currentImageIndex ? "opacity-100" : "opacity-0"
-      }`}
-    >
-      <Image
-        src={src}
-        alt=""
-        fill
-        sizes="100vw"
-        className="object-cover"
-      />
-    </div>
-  ))}
-</div>
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/70 to-black/20 z-10"></div>
-<motion.div
-  className="relative z-20 h-full container mx-auto px-4 flex items-center"
-  variants={heroContentVariants}
-  initial="hidden"
-  animate="visible"
->
-  <div className="py-10 lg:py-0 max-w-5xl lg:max-w-6xl mx-auto">
-    {/* Tag */}
+      {/* NEW HERO LAYOUT */}
+      <div className="relative flex flex-col lg:block lg:h-screen lg:min-h-[800px]">
 
-      <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-4 leading-tight">
-        Seamless Transfers
-        <br />
-        Across Queensland
-      </h1>
+        {/* Background Image Wrapper */}
+        <div className="relative h-[35vh] min-h-[300px] lg:absolute lg:inset-0 lg:h-full lg:w-full z-0">
+          <HeroBackground />
+          <div className="absolute inset-0 bg-black/30 lg:bg-gradient-to-r lg:from-black/60 lg:via-black/40 lg:to-transparent z-10" />
 
-      <p className="text-gray-200 text-sm sm:text-base mt-2 max-w-xl mx-auto lg:mx-0">
-        Reliable, private transport for airport pickups, hotels, events and business travel
-        in Cairns & surrounding regions.
-      </p>
+          {/* Mobile Headline Overlay */}
+          <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-4 z-20 lg:hidden pointer-events-none">
+            <h1 className="text-3xl font-extrabold text-white drop-shadow-lg font-serif tracking-wide leading-tight mb-4">
+              Experience the<br /> Pinnacle of Travel
+            </h1>
 
-    <p className="text-gray-200 text-xs sm:text-sm mt-2 mb-6 max-w-xl">
-      Free quotes for all destinations.
-    </p>
-
-    {/* CTAs */}
-    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center lg:justify-center">
-      <button
-        type="button"
-        onClick={() =>
-          formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }
-        className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-black/30 bg-white text-gray-900 hover:bg-gray-100 transition"
-      >
-        Book your transfer
-        <ArrowRight className="w-4 h-4 ml-2" />
-      </button>
-
-      <a
-        href={`tel:${COMPANY_PHONE}`}
-        className="inline-flex items-center justify-center px-6 py-3 rounded-xl text-sm font-semibold border border-white/40 text-white hover:bg-white/10 transition"
-      >
-        Call now
-        <Phone className="w-4 h-4 ml-2" />
-      </a>
-    </div>
-
-    {/* Trust row */}
-    <div className="mt-5 flex flex-wrap gap-3 text-[11px] text-gray-200 justify-center lg:justify-center">
-      <span className="inline-flex items-center gap-1.5">
-        <CheckCircle className="w-3 h-3 text-emerald-400" />
-        Professional, licensed drivers
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <Clock className="w-3 h-3 text-amber-300" />
-        On-time airport pickups
-      </span>
-      <span className="inline-flex items-center gap-1.5">
-        <Users className="w-3 h-3 text-sky-300" />
-        Private rides
-      </span>
-    </div>
-  </div>
-</motion.div>
-
-
-        <motion.div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2"
-          variants={heroDotsVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          {heroImages.map((_, index) => (
-            <button
-              key={index}
-              className="w-2.5 h-2.5 rounded-full transition-all duration-300"
-              style={{
-                backgroundColor:
-                  index === currentImageIndex
-                    ? ACCENT_COLOR
-                    : 'rgba(255, 255, 255, 0.4)'
-              }}
-              onClick={() => setCurrentImageIndex(index)}
-            />
-          ))}
-        </motion.div>
-      </div>
-
-      {/* Booking Card */}
-     <div className="container max-w-5xl mx-auto px-4 relative z-30 -mt-24 lg:-mt-16 xl:-mt-20 mb-16">
-       <motion.div
-  ref={formTopRef}
-  className="
-    rounded-2xl 
-    bg-white/95 lg:bg-white/90 
-    backdrop-blur-sm lg:backdrop-blur-xl 
-    shadow-xl lg:shadow-2xl 
-    border border-white/70 
-    overflow-hidden 
-    transition-all duration-300
-  "
-  variants={bookingCardVariants}
-  initial="hidden"
-  whileInView="visible"
-  viewport={{ once: true, amount: 0.2 }}
->
-
-          {/* Progress bar */}
-          <div className="h-1 w-full bg-gray-100">
-            <div
-              className="h-full transition-all duration-500 ease-out"
-              style={{
-                width: bookingStep === 1 ? '50%' : '100%',
-                backgroundColor: ACCENT_COLOR
-              }}
-            ></div>
-          </div>
-
-     <div className="p-6 lg:p-8">
-  <div className="flex flex-wrap gap-3 mb-4">
-    {/* Standard */}
-    <button
-      type="button"
-      onClick={() => {
-        setBookingMode('standard');
-        setBookingStep(1);
-      }}
-      style={{
-        borderColor: bookingMode === 'standard' ? PRIMARY_COLOR : '#d1d5db',
-        backgroundColor: bookingMode === 'standard' ? PRIMARY_COLOR : '#f3f4f6',
-        color: bookingMode === 'standard' ? '#ffffff' : PRIMARY_COLOR,
-      }}
-      className={`
-        px-4 py-2 rounded-lg text-sm font-semibold border transition-all 
-        shadow-sm cursor-pointer select-none 
-        hover:scale-[1.02] active:scale-[0.98]
-        focus:outline-none focus:ring-2 focus:ring-offset-2
-      `}
-    >
-      Standard Transfer
-    </button>
-
-    {/* Hourly */}
-    <button
-      type="button"
-      onClick={() => {
-        setBookingMode('hourly');
-        setBookingStep(1);
-      }}
-      style={{
-        borderColor: bookingMode === 'hourly' ? PRIMARY_COLOR : '#d1d5db',
-        backgroundColor: bookingMode === 'hourly' ? PRIMARY_COLOR : '#f3f4f6',
-        color: bookingMode === 'hourly' ? '#ffffff' : PRIMARY_COLOR,
-      }}
-      className={`
-        px-4 py-2 rounded-lg text-sm font-semibold border transition-all 
-        shadow-sm cursor-pointer select-none 
-        hover:scale-[1.02] active:scale-[0.98]
-        focus:outline-none focus:ring-2 focus:ring-offset-2
-      `}
-    >
-      Chauffeur & Hourly Hire
-    </button>
-  </div>
-
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-              <div>
-                <h2
-                  className="text-2xl font-bold text-gray-900 tracking-tight"
-                  style={{ color: PRIMARY_COLOR }}
-                >
-                  {bookingStep === 1
-                    ? bookingMode === 'standard'
-                      ? 'Booking Details'
-                      : 'Hourly Hire Details'
-                    : 'Confirm & Pay'}
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  {bookingStep === 1
-                    ? bookingMode === 'standard'
-                      ? 'Enter your trip information below'
-                      : 'Tell us where to pick you up and how long you need the chauffeur'
-                    : 'Review your trip, add contact info & pay securely via Stripe'}
-                </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-white drop-shadow-md">
+                <CheckCircle className="w-3 h-3 text-white" />
+                <span>Airport Meet & Greet</span>
               </div>
-
-             <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-1 self-start md:self-auto">
-                <div
-                  className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-default ${
-                    bookingStep === 1
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500'
-                  }`}
-                >
-                  1. Ride
-                </div>
-                <div
-                  className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-default ${
-                    bookingStep === 2
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500'
-                  }`}
-                >
-                  2. Checkout
-                </div>
+              <div className="flex items-center gap-1.5 text-xs font-medium text-white drop-shadow-md">
+                <CheckCircle className="w-3 h-3 text-white" />
+                <span>Premium Fleet</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-medium text-white drop-shadow-md">
+                <CheckCircle className="w-3 h-3 text-white" />
+                <span>Private Rides</span>
               </div>
             </div>
 
-            {/* Step content with animation */}
-            <AnimatePresence mode="wait">
-              {bookingMode === 'standard' ? (
-                bookingStep === 1 ? (
-                  <motion.div
-                    key="standard-step1"
-                    variants={stepTransitionVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                  >
-                    <Step1StandardContent
-                      formData={formData}
-                      handleInputChange={handleInputChange}
-                      AVAILABLE_LOCATIONS={AVAILABLE_LOCATIONS}
-                      dropoffOptions={dropoffOptions}
-                      selectedRoute={selectedRoute}
-                      calculatedPrice={calculatedPrice}
-                      getFieldError={getFieldError}
-                      getInputClass={getInputClass}
-                      minDateForInput={minDateForInput}
-                      onPickupDateChange={onPickupDateChange}
-                      passengerInput={passengerInput}
-                      luggageInput={luggageInput}
-                      onPassengersChange={onPassengersChange}
-                      onPassengersBlur={onPassengersBlur}
-                      onLuggageChange={onLuggageChange}
-                      onLuggageBlur={onLuggageBlur}
-                      markTouched={markTouched}
-                      isStep1Valid={isStandardStep1Valid}
-                      goToStep2={goToStep2Standard}
-                      routesLoading={routesLoading}
-                    />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="standard-step2"
-                    variants={stepTransitionVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                  >
-                    <Step2StandardContent
-                      formData={formData}
-                      selectedRoute={selectedRoute}
-                      calculatedPrice={calculatedPrice}
-                      getFieldError={getFieldError}
-                      getInputClass={getInputClass}
-                      markTouched={markTouched}
-                      setBookingStep={setBookingStep}
-                      isStep2FormValid={isStep2FormValid}
-                      validateStep2={validateStep2}
-                      handleInputChange={handleInputChange}
-                    />
-                  </motion.div>
-                )
-              ) : bookingStep === 1 ? (
-                <motion.div
-                  key="hourly-step1"
-                  variants={stepTransitionVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                >
-                  <Step1HourlyContent
-                    formData={formData}
-                    handleInputChange={handleInputChange}
-                    getFieldError={getFieldError}
-                    getInputClass={getInputClass}
-                    minDateForInput={minDateForInput}
-                    onPickupDateChange={onPickupDateChange}
-                    passengerInput={passengerInput}
-                    luggageInput={luggageInput}
-                    onPassengersChange={onPassengersChange}
-                    onPassengersBlur={onPassengersBlur}
-                    onLuggageChange={onLuggageChange}
-                    onLuggageBlur={onLuggageBlur}
-                    markTouched={markTouched}
-                    isStep1Valid={isHourlyStep1Valid}
-                    goToStep2={goToStep2Hourly}
-                    hourlyPrice={hourlyPrice}
-                  />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="hourly-step2"
-                  variants={stepTransitionVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                >
-                  <Step2HourlyContent
-                    formData={formData}
-                    hourlyPrice={hourlyPrice}
-                    getFieldError={getFieldError}
-                    getInputClass={getInputClass}
-                    markTouched={markTouched}
-                    setBookingStep={setBookingStep}
-                    isStep2FormValid={isStep2FormValid}
-                    validateStep2={validateStep2}
-                    handleInputChange={handleInputChange}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Call CTA - Mobile */}
+            <div className="mt-6 pointer-events-auto">
+              <a
+                href="tel:+61470032460"
+                className="inline-flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm px-10 py-3 rounded-xl font-bold text-sm border border-white/60 text-white hover:bg-white/10 transition-colors w-full max-w-xs"
+                aria-label="Call Now"
+              >
+                <Phone className="w-4 h-4 text-white" />
+                <span>Call Now</span>
+              </a>
+            </div>
           </div>
-        </motion.div>
-      </div>
-    </div>
+        </div>
+
+        {/* Desktop Content Container */}
+        <div className="relative z-10 container mx-auto px-4 lg:h-full lg:flex lg:items-center">
+          <div className="grid lg:grid-cols-12 gap-8 w-full items-center">
+
+            {/* Desktop Headline (Left) */}
+            <div className="hidden lg:block lg:col-span-7 text-white pl-8 xl:pl-16">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                <h1 className="text-5xl xl:text-7xl font-bold mb-6 font-serif leading-tight">
+                  Experience the <br />
+                  Pinnacle of Travel
+                </h1>
+                <p className="text-lg text-gray-200 max-w-xl font-light mb-8 leading-relaxed">
+                  Chauffeured luxury transfers across Cairns, Port Douglas,
+                  and Tropical North Queensland. <br />
+                  <span className="text-base font-medium text-white/90">Free quotes for all destinations.</span>
+                </p>
+
+                <div className="flex flex-wrap gap-6 mb-8">
+                  <div className="flex items-center gap-2 text-sm font-medium text-white drop-shadow-md">
+                    <CheckCircle className="w-4 h-4 text-white" />
+                    <span>Airport Meet & Greet</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-medium text-white drop-shadow-md">
+                    <CheckCircle className="w-4 h-4 text-white" />
+                    <span>Premium Fleet</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-medium text-white drop-shadow-md">
+                    <CheckCircle className="w-4 h-4 text-white" />
+                    <span>Private Rides</span>
+                  </div>
+                </div>
+
+                {/* Call CTA - Desktop */}
+                <a
+                  href="tel:+61470032460"
+                  className="inline-flex items-center justify-center gap-3 bg-black/20 backdrop-blur-sm px-12 py-4 rounded-xl font-bold text-lg border border-white/60 text-white hover:bg-white/10 transition-all duration-300 min-w-[240px]"
+                  aria-label="Call Now"
+                >
+                  <Phone className="w-5 h-5 text-white" />
+                  <span>Call Now</span>
+                </a>
+              </motion.div>
+            </div>
+
+
+            {/* Booking Form Card (Right / Stacked) */}
+            {/* Booking Form Card (Right / Stacked) */}
+            <div className="lg:col-span-5 -mt-4 lg:mt-0 relative z-30 mb-12 lg:mb-0">
+              <motion.div
+                ref={formTopRef}
+                id="booking-form"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="
+                         rounded-2xl lg:rounded-3xl
+                         bg-white shadow-[0_20px_40px_rgba(0,0,0,0.15)]
+                         lg:shadow-[0_8px_32px_rgba(0,0,0,0.2)]
+                         overflow-hidden
+                       "
+              >
+
+                {/* Progress bar */}
+                <div className="h-1 w-full bg-gray-100">
+                  <div
+                    className="h-full transition-all duration-500 ease-out"
+                    style={{
+                      width: bookingStep === 1 ? '50%' : '100%',
+                      backgroundColor: ACCENT_COLOR
+                    }}
+                  ></div>
+                </div>
+
+                <div className="p-6 lg:p-8">
+                  {/* Mode Selection Tabs (Segmented Control) */}
+                  <div className="flex p-1.5 bg-gray-100 rounded-xl mb-8 relative">
+                    {/* Sliding Background (Optional advanced feature, using simple conditional styles for now) */}
+
+                    {/* Standard Tab */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBookingMode('standard');
+                        setBookingStep(1);
+                      }}
+                      className={`
+                        flex-1 py-3 rounded-lg text-sm font-bold text-center transition-all duration-200 ease-out
+                        ${bookingMode === 'standard'
+                          ? 'bg-[#18234B] text-white shadow-md'
+                          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'}
+                      `}
+                    >
+                      Standard
+                    </button>
+
+                    {/* Hourly Tab */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBookingMode('hourly');
+                        setBookingStep(1);
+                      }}
+                      className={`
+                        flex-1 py-3 rounded-lg text-sm font-bold text-center transition-all duration-200 ease-out
+                        ${bookingMode === 'hourly'
+                          ? 'bg-[#18234B] text-white shadow-md'
+                          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'}
+                      `}
+                    >
+                      Hourly Hire
+                    </button>
+
+                    {/* Day Trip Tab */}
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setBookingMode('daytrip');
+                        setBookingStep(1);
+                        // Fetch routes to populate day trip pricing if not already loaded
+                        if (dayTripPricing.length === 0) {
+                          try {
+                            const res = await fetch('/api/routes');
+                            const routes = await res.json();
+                            // Get day trip routes
+                            const pricing: { passengers: string; price: number; vehicleType: string }[] = [];
+                            routes.forEach((route: { from: string; to: string; pricing?: { passengers: string; price: number; vehicleType: string }[] }) => {
+                              if (route.from && route.from.toLowerCase().includes('day trip') && route.pricing) {
+                                route.pricing.forEach(p => {
+                                  if (!pricing.find(existing => existing.vehicleType === p.vehicleType)) {
+                                    pricing.push({
+                                      vehicleType: p.vehicleType,
+                                      passengers: p.passengers,
+                                      price: p.price
+                                    });
+                                  }
+                                });
+                              }
+                            });
+                            // sort by price
+                            pricing.sort((a, b) => a.price - b.price);
+                            setDayTripPricing(pricing);
+                            if (pricing.length > 0) {
+                              setSelectedDayTripVehicle({ vehicleType: pricing[0].vehicleType, price: pricing[0].price });
+                            }
+                          } catch (err) {
+                            console.error('Failed to load day trip routes', err);
+                          }
+                        }
+                      }}
+                      className={`
+                        flex-1 py-3 rounded-lg text-sm font-bold text-center transition-all duration-200 ease-out
+                        ${bookingMode === 'daytrip'
+                          ? 'bg-[#18234B] text-white shadow-md'
+                          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-200/50'}
+                      `}
+                    >
+                      Day Trips
+                    </button>
+                  </div>
+
+
+                  {/* Header */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                    <div>
+                      <h2
+                        className="text-2xl font-bold text-gray-900 tracking-tight"
+                        style={{ color: PRIMARY_COLOR }}
+                      >
+                        {bookingStep === 1
+                          ? bookingMode === 'standard'
+                            ? 'Booking Details'
+                            : bookingMode === 'daytrip'
+                              ? 'Day Trip Details'
+                              : 'Hourly Hire Details'
+                          : 'Confirm & Pay'}
+                      </h2>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {bookingStep === 1
+                          ? bookingMode === 'standard'
+                            ? 'Enter your trip information below'
+                            : bookingMode === 'daytrip'
+                              ? '8-hour charter to explore Tropical North Queensland'
+                              : 'Tell us where to pick you up and how long you need the chauffeur'
+                          : 'Review your trip, add contact info & pay securely via Stripe'}
+                      </p>
+                    </div>
+
+                    <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-1 self-start md:self-auto">
+                      <div
+                        className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-default ${bookingStep === 1
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-500'
+                          }`}
+                      >
+                        1. Ride
+                      </div>
+                      <div
+                        className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all cursor-default ${bookingStep === 2
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-500'
+                          }`}
+                      >
+                        2. Checkout
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step content with animation */}
+                  <AnimatePresence mode="wait">
+                    {bookingMode === 'standard' ? (
+                      bookingStep === 1 ? (
+                        <motion.div
+                          key="standard-step1"
+                          variants={stepTransitionVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                        >
+                          <Step1StandardContent
+                            formData={formData}
+                            handleInputChange={handleInputChange}
+                            AVAILABLE_LOCATIONS={AVAILABLE_LOCATIONS}
+                            dropoffOptions={dropoffOptions}
+                            selectedRoute={selectedRoute}
+                            calculatedPrice={calculatedPrice}
+                            getFieldError={getFieldError}
+                            getInputClass={getInputClass}
+                            minDateForInput={minDateForInput}
+                            onPickupDateChange={onPickupDateChange}
+                            passengerInput={passengerInput}
+                            luggageInput={luggageInput}
+                            onPassengersChange={onPassengersChange}
+                            onPassengersBlur={onPassengersBlur}
+                            onLuggageChange={onLuggageChange}
+                            onLuggageBlur={onLuggageBlur}
+                            markTouched={markTouched}
+                            isStep1Valid={isStandardStep1Valid}
+                            goToStep2={goToStep2Standard}
+                            routesLoading={routesLoading}
+                          />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="standard-step2"
+                          variants={stepTransitionVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                        >
+                          <Step2StandardContent
+                            formData={formData}
+                            selectedRoute={selectedRoute}
+                            calculatedPrice={calculatedPrice}
+                            getFieldError={getFieldError}
+                            getInputClass={getInputClass}
+                            markTouched={markTouched}
+                            setBookingStep={setBookingStep}
+                            isStep2FormValid={isStep2FormValid}
+                            validateStep2={validateStep2}
+                            handleInputChange={handleInputChange}
+                          />
+                        </motion.div>
+                      )
+                    ) : bookingMode === 'hourly' ? (
+                      bookingStep === 1 ? (
+                        <motion.div
+                          key="hourly-step1"
+                          variants={stepTransitionVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                        >
+                          <Step1HourlyContent
+                            formData={formData}
+                            handleInputChange={handleInputChange}
+                            getFieldError={getFieldError}
+                            getInputClass={getInputClass}
+                            minDateForInput={minDateForInput}
+                            onPickupDateChange={onPickupDateChange}
+                            passengerInput={passengerInput}
+                            luggageInput={luggageInput}
+                            onPassengersChange={onPassengersChange}
+                            onPassengersBlur={onPassengersBlur}
+                            onLuggageChange={onLuggageChange}
+                            onLuggageBlur={onLuggageBlur}
+                            markTouched={markTouched}
+                            isStep1Valid={isHourlyStep1Valid}
+                            goToStep2={goToStep2Hourly}
+                            hourlyPrice={hourlyPrice}
+                          />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="hourly-step2"
+                          variants={stepTransitionVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                        >
+                          <Step2HourlyContent
+                            formData={formData}
+                            hourlyPrice={hourlyPrice}
+                            getFieldError={getFieldError}
+                            getInputClass={getInputClass}
+                            markTouched={markTouched}
+                            setBookingStep={setBookingStep}
+                            isStep2FormValid={isStep2FormValid}
+                            validateStep2={validateStep2}
+                            handleInputChange={handleInputChange}
+                          />
+                        </motion.div>
+                      )
+                    ) : null}
+
+                    {/* Day Trip Mode */}
+                    {bookingMode === 'daytrip' && (
+                      bookingStep === 1 ? (
+                        <motion.div
+                          key="daytrip-step1"
+                          variants={stepTransitionVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                          className="space-y-4"
+                        >
+
+
+                          {/* Pickup Location */}
+                          <div className="space-y-1">
+                            <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                              <MapPin className="w-3 h-3" style={{ color: PRIMARY_COLOR }} />
+                              Pickup Location
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Enter pickup address or location"
+                              value={dayTripPickup}
+                              onChange={e => setDayTripPickup(e.target.value)}
+                              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm text-black focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B]"
+                            />
+                          </div>
+
+                          {/* Destination */}
+                          <div className="space-y-1">
+                            <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                              <Navigation className="w-3 h-3" style={{ color: PRIMARY_COLOR }} />
+                              Destination / Area to Explore
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="e.g., Port Douglas, Daintree Rainforest, Tablelands"
+                              value={dayTripDestination}
+                              onChange={e => setDayTripDestination(e.target.value)}
+                              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm text-black focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B]"
+                            />
+                          </div>
+
+                          {/* Vehicle Selection Dropdown */}
+                          <div className="space-y-1">
+                            <label className="text-xs font-semibold text-gray-700">Select Vehicle</label>
+                            <select
+                              value={selectedDayTripVehicle?.vehicleType || ''}
+                              onChange={e => {
+                                const selected = dayTripPricing.find(p => p.vehicleType === e.target.value);
+                                if (selected) {
+                                  setSelectedDayTripVehicle({ vehicleType: selected.vehicleType, price: selected.price });
+                                }
+                              }}
+                              className="w-full px-3 py-2.5 rounded-lg border border-gray-300 text-sm text-black focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B] bg-white"
+                            >
+                              <option value="">Choose a vehicle...</option>
+                              {dayTripPricing.map((p, idx) => (
+                                <option key={idx} value={p.vehicleType}>
+                                  {p.vehicleType} - {p.passengers} passengers - ${p.price}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Date, Time & Duration */}
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="space-y-1">
+                              <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                                <Calendar className="w-3 h-3" style={{ color: PRIMARY_COLOR }} />
+                                Date
+                              </label>
+                              <input
+                                type="date"
+                                value={formData.pickupDate}
+                                min={minDateForInput}
+                                onChange={e => handleInputChange('pickupDate', e.target.value)}
+                                className="w-[92%] mx-auto px-3 py-2.5 rounded-lg border border-gray-300 text-sm text-black focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B]"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                                <Clock className="w-3 h-3" style={{ color: PRIMARY_COLOR }} />
+                                Pickup Time
+                              </label>
+                              <input
+                                type="time"
+                                value={formData.pickupTime}
+                                onChange={e => handleInputChange('pickupTime', e.target.value)}
+                                className="w-[92%] mx-auto px-3 py-2.5 rounded-lg border border-gray-300 text-sm text-black focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B]"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                                <Clock className="w-3 h-3" style={{ color: PRIMARY_COLOR }} />
+                                Duration
+                              </label>
+                              <div
+                                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-semibold text-center"
+                                style={{ color: PRIMARY_COLOR }}
+                              >
+                                8 Hours
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Price Preview & Continue */}
+                          {selectedDayTripVehicle && (
+                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                              <div className="flex justify-between items-center mb-3">
+                                <span className="text-sm text-gray-600">Estimated Total</span>
+                                <span className="text-2xl font-bold" style={{ color: PRIMARY_COLOR }}>
+                                  ${selectedDayTripVehicle.price}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                disabled={!dayTripPickup || !dayTripDestination || !selectedDayTripVehicle || !formData.pickupDate || !formData.pickupTime}
+                                onClick={() => setBookingStep(2)}
+                                className="w-full py-3 rounded-xl font-bold text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                style={{ backgroundColor: PRIMARY_COLOR }}
+                              >
+                                Book Now
+                                <ArrowRight className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="daytrip-step2"
+                          variants={stepTransitionVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                        >
+                          <div className="flex flex-col md:flex-row gap-6">
+                            {/* Trip Summary - Left Side */}
+                            <div className="w-full md:w-1/2 bg-gray-50 rounded-xl border border-dashed border-gray-300 p-5 relative">
+                              <div className="absolute -left-3 top-1/2 -mt-3 w-6 h-6 bg-white rounded-full"></div>
+                              <div className="absolute -right-3 top-1/2 -mt-3 w-6 h-6 bg-white rounded-full"></div>
+
+                              <h3
+                                className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2"
+                                style={{ color: PRIMARY_COLOR }}
+                              >
+                                <span
+                                  className="w-2 h-2 rounded-full"
+                                  style={{ backgroundColor: ACCENT_COLOR }}
+                                ></span>
+                                Day Trip Summary
+                              </h3>
+
+                              <div className="space-y-3 text-sm">
+                                <div className="flex justify-between items-start">
+                                  <div className="flex flex-col">
+                                    <span className="text-xs text-gray-500">Pickup</span>
+                                    <span className="font-bold text-gray-900" style={{ color: PRIMARY_COLOR }}>
+                                      {dayTripPickup}
+                                    </span>
+                                  </div>
+                                  <div className="text-right flex flex-col items-end">
+                                    <span className="text-xs text-gray-500">Date</span>
+                                    <span className="font-semibold text-gray-900">{formData.pickupDate}</span>
+                                    <span
+                                      className="text-xs font-mono px-1 rounded"
+                                      style={{ color: ACCENT_COLOR, backgroundColor: `${ACCENT_COLOR}20` }}
+                                    >
+                                      {formData.pickupTime}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="w-full h-[1px] bg-gray-200"></div>
+
+                                <div className="flex justify-between items-start">
+                                  <div className="flex flex-col">
+                                    <span className="text-xs text-gray-500">Destination</span>
+                                    <span className="font-bold text-gray-900" style={{ color: PRIMARY_COLOR }}>
+                                      {dayTripDestination}
+                                    </span>
+                                  </div>
+                                  <div className="text-right flex flex-col items-end">
+                                    <span className="text-xs text-gray-500">Vehicle</span>
+                                    <span className="font-medium text-gray-900">{selectedDayTripVehicle?.vehicleType}</span>
+                                    <span className="text-xs text-gray-500">8 Hours</span>
+                                  </div>
+                                </div>
+
+                                <div className="pt-3 mt-3 border-t border-gray-200 flex justify-between items-end">
+                                  <div className="flex flex-col">
+                                    <span className="text-gray-500 font-medium">Total Quote</span>
+                                    <span className="text-xs text-gray-400">Day Trip Charter</span>
+                                  </div>
+                                  <span className="text-2xl font-bold" style={{ color: PRIMARY_COLOR }}>
+                                    ${selectedDayTripVehicle?.price}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Note - Compact */}
+                              <p className="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                                <strong>Note: Please contact us before booking.</strong> For any questions or issues—time, passengers, luggage, car type, price, or payment— reach us by phone or email. We’re happy to assist!
+                              </p>
+                            </div>
+
+                            {/* Contact & Payment - Right Side */}
+                            <div className="w-full md:w-1/2 flex flex-col">
+                              <h3 className="text-base font-bold mb-3" style={{ color: PRIMARY_COLOR }}>
+                                Contact Details
+                              </h3>
+
+                              <div className="space-y-2">
+                                <div>
+                                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
+                                  <input
+                                    type="text"
+                                    placeholder="e.g. John Doe"
+                                    value={formData.fullName}
+                                    onChange={e => handleInputChange('fullName', e.target.value)}
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B] text-gray-900"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+                                  <input
+                                    type="email"
+                                    placeholder="john@example.com"
+                                    value={formData.email}
+                                    onChange={e => handleInputChange('email', e.target.value)}
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B] text-gray-900"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone</label>
+                                  <input
+                                    type="tel"
+                                    placeholder="+61 400 000 000"
+                                    value={formData.contactNumber}
+                                    onChange={e => handleInputChange('contactNumber', e.target.value)}
+                                    className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B] text-gray-900"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Payment Summary */}
+                              {selectedDayTripVehicle && (
+                                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm space-y-2">
+                                  <h4 className="font-semibold text-gray-800 text-xs uppercase tracking-wide">Payment Summary</h4>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Trip fare</span>
+                                    <span className="font-medium text-gray-900">${selectedDayTripVehicle.price}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Processing fee (2.5%)</span>
+                                    <span className="font-medium text-gray-900">${(selectedDayTripVehicle.price * 0.025).toFixed(2)}</span>
+                                  </div>
+                                  <div className="border-t border-gray-200 pt-2 flex justify-between">
+                                    <span className="font-semibold text-gray-900">Total</span>
+                                    <span className="font-bold text-gray-900">${(selectedDayTripVehicle.price * 1.025).toFixed(2)}</span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Buttons */}
+                              <div className="flex gap-3 mt-4">
+                                <button
+                                  onClick={() => setBookingStep(1)}
+                                  className="px-4 py-2.5 rounded-xl font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
+                                  type="button"
+                                >
+                                  <ArrowLeft className="w-5 h-5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={!formData.fullName || !formData.email || !formData.contactNumber || isDayTripRedirecting}
+                                  onClick={async () => {
+                                    setIsDayTripRedirecting(true);
+                                    try {
+                                      const booking = {
+                                        bookingType: 'daytrip',
+                                        dayTripPickup,
+                                        dayTripDestination,
+                                        dayTripVehicleType: selectedDayTripVehicle?.vehicleType,
+                                        dayTripPrice: selectedDayTripVehicle?.price,
+                                        pickupDate: formData.pickupDate,
+                                        pickupTime: formData.pickupTime,
+                                        fullName: formData.fullName,
+                                        email: formData.email,
+                                        contactNumber: formData.contactNumber,
+                                        ...getStoredUtms(),
+                                      };
+                                      const res = await fetch('/api/create-checkout-session', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ booking }),
+                                      });
+                                      const data = await res.json();
+                                      if (data.url) window.location.href = data.url;
+                                      else {
+                                        alert(data.error || 'Failed to create checkout session');
+                                        setIsDayTripRedirecting(false);
+                                      }
+                                    } catch (err) {
+                                      console.error(err);
+                                      alert('Something went wrong. Please try again.');
+                                      setIsDayTripRedirecting(false);
+                                    }
+                                  }}
+                                  className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
+                                >
+                                  {isDayTripRedirecting ? (
+                                    <>
+                                      <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                                      Redirecting...
+                                    </>
+                                  ) : (
+                                    <>
+                                      Pay & Confirm
+                                      <CheckCircle className="w-4 h-4" />
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+        </div >
+      </div >
+    </div >
   );
 }
 
@@ -1004,14 +1403,10 @@ function Step1StandardContent(props: {
         <div className="lg:col-span-5 space-y-4">
           {/* Pickup */}
           <div className="group relative">
-            <MapPin
-              className={`absolute left-3 top-9 ${
-                getFieldError('pickupLocation') ? 'text-red-500' : ''
-              } w-5 h-5 z-20 pointer-events-none transition-colors`}
-              style={{ color: getFieldError('pickupLocation') ? undefined : ACCENT_COLOR }}
-            />
+
             <div className="flex justify-between items-center">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+              <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                <MapPin className="w-3 h-3 text-[#18234B]" />
                 Pickup
               </label>
               {routesLoading ? (
@@ -1033,7 +1428,7 @@ function Step1StandardContent(props: {
               onBlur={() => markTouched('pickupLocation')}
               disabled={isPickupDisabled}
               className={
-                getInputClass('pickupLocation') +
+                getInputClass('pickupLocation', false) +
                 (isPickupDisabled ? ' cursor-not-allowed opacity-60' : '')
               }
             >
@@ -1042,7 +1437,7 @@ function Step1StandardContent(props: {
               ) : (
                 <>
                   <option value="">Select Location</option>
-                  {AVAILABLE_LOCATIONS.map(loc => (
+                  {AVAILABLE_LOCATIONS.filter(loc => !loc.toLowerCase().includes('day trip')).map(loc => (
                     <option key={loc} value={loc}>
                       {loc}
                     </option>
@@ -1054,13 +1449,9 @@ function Step1StandardContent(props: {
 
           {/* Dropoff */}
           <div className="group relative">
-            <MapPin
-              className={`absolute left-3 top-9 ${
-                getFieldError('dropoffLocation') ? 'text-red-500' : 'text-gray-400'
-              } w-5 h-5 z-20 pointer-events-none transition-colors`}
-            />
             <div className="flex justify-between items-center">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+              <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                <MapPin className="w-3 h-3 text-[#18234B]" />
                 Dropoff
               </label>
               {routesLoading && formData.pickupLocation ? (
@@ -1082,7 +1473,7 @@ function Step1StandardContent(props: {
               onBlur={() => markTouched('dropoffLocation')}
               disabled={isDropoffDisabled}
               className={
-                getInputClass('dropoffLocation') +
+                getInputClass('dropoffLocation', false) +
                 (isDropoffDisabled ? ' cursor-not-allowed opacity-60' : '')
               }
             >
@@ -1123,7 +1514,8 @@ function Step1StandardContent(props: {
             <div className="col-span-1 sm:col-span-2">
               <div className="relative group">
                 <div className="flex justify-between">
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3 text-[#18234B]" />
                     Date
                   </label>
                   {getFieldError('pickupDate') && (
@@ -1133,11 +1525,6 @@ function Step1StandardContent(props: {
                   )}
                 </div>
                 <div className="relative">
-                  <Calendar
-                    className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                      getFieldError('pickupDate') ? 'text-red-500' : 'text-gray-400'
-                    } w-5 h-5 pointer-events-none z-20 transition-colors`}
-                  />
                   <input
                     type="date"
                     value={formData.pickupDate}
@@ -1145,7 +1532,7 @@ function Step1StandardContent(props: {
                     onChange={e => onPickupDateChange(e.target.value)}
                     onBlur={() => markTouched('pickupDate')}
                     className={`${getInputClass(
-                      'pickupDate'
+                      'pickupDate', false
                     )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
                   />
                 </div>
@@ -1155,8 +1542,9 @@ function Step1StandardContent(props: {
             {/* Time */}
             <div className="col-span-1 sm:col-span-2">
               <div className="relative group">
-                <div className="flex justify-between">
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                <div className="flex justify-between items-center gap-2">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 text-[#18234B]" />
                     Time
                   </label>
                   {getFieldError('pickupTime') && (
@@ -1166,11 +1554,6 @@ function Step1StandardContent(props: {
                   )}
                 </div>
                 <div className="relative">
-                  <Clock
-                    className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                      getFieldError('pickupTime') ? 'text-red-500' : 'text-gray-400'
-                    } w-5 h-5 pointer-events-none z-20 transition-colors`}
-                  />
                   <input
                     type="time"
                     value={formData.pickupTime}
@@ -1178,7 +1561,7 @@ function Step1StandardContent(props: {
                     onChange={e => handleInputChange('pickupTime', e.target.value)}
                     onBlur={() => markTouched('pickupTime')}
                     className={`${getInputClass(
-                      'pickupTime'
+                      'pickupTime', false
                     )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
                   />
                 </div>
@@ -1186,9 +1569,10 @@ function Step1StandardContent(props: {
             </div>
 
             {/* Pax */}
-            <div className="col-span-1 md:col-span-1">
+            <div className="col-span-1 sm:col-span-2">
               <div className="flex justify-between">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                  <Users className="w-3 h-3 text-[#18234B]" />
                   Pax
                 </label>
                 {getFieldError('passengers') && (
@@ -1198,7 +1582,6 @@ function Step1StandardContent(props: {
                 )}
               </div>
               <div className="relative group">
-                <Users className="absolute left-3 top-3.5 text-gray-400 w-4 h-4 pointer-events-none z-20 transition-colors" />
                 <input
                   type="number"
                   min={1}
@@ -1206,15 +1589,16 @@ function Step1StandardContent(props: {
                   value={passengerInput}
                   onChange={e => onPassengersChange(e.target.value)}
                   onBlur={onPassengersBlur}
-                  className={getInputClass('passengers').replace('pl-10', 'pl-9')}
+                  className={getInputClass('passengers', false)}
                 />
               </div>
             </div>
 
             {/* Luggage */}
-            <div className="col-span-1 md:col-span-1">
+            <div className="col-span-1 sm:col-span-2">
               <div className="flex justify-between">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                  <Briefcase className="w-3 h-3 text-[#18234B]" />
                   Bags
                 </label>
                 {getFieldError('luggage') && (
@@ -1224,7 +1608,6 @@ function Step1StandardContent(props: {
                 )}
               </div>
               <div className="relative group">
-                <Briefcase className="absolute left-3 top-3.5 text-gray-400 w-4 h-4 pointer-events-none z-20 transition-colors" />
                 <input
                   type="number"
                   min={0}
@@ -1232,27 +1615,24 @@ function Step1StandardContent(props: {
                   value={luggageInput}
                   onChange={e => onLuggageChange(e.target.value)}
                   onBlur={onLuggageBlur}
-                  className={getInputClass('luggage').replace('pl-10', 'pl-9')}
+                  className={getInputClass('luggage', false)}
                 />
               </div>
             </div>
 
             {/* Flight # */}
-            <div className="col-span-2 md:col-span-2">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+            <div className="col-span-2 sm:col-span-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                <Plane className="w-3 h-3 text-[#18234B]" />
                 Flight #
               </label>
               <div className="relative group">
-                <Plane className="absolute left-3 top-3.5 text-gray-400 w-4 h-4 pointer-events-none z-20 transition-colors" />
                 <input
                   type="text"
                   value={formData.flightNumber}
                   onChange={e => handleInputChange('flightNumber', e.target.value)}
-                  placeholder="       Optional"
-                  className={getInputClass('flightNumber', false).replace(
-                    'pl-10',
-                    'pl-9'
-                  )}
+                  placeholder="Optional"
+                  className={getInputClass('flightNumber', false)}
                 />
               </div>
             </div>
@@ -1345,11 +1725,11 @@ function Step1StandardContent(props: {
       ) : (
         <div className="mt-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl p-4 flex items-center gap-3">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
-       <p className="text-sm font-medium leading-relaxed">
-  For questions about bookings, routes, luggage, vehicles or pricing, feel free to contact us.  
-  For destinations outside our listed routes, we offer a rate of <span className="font-semibold">$3.80 per kilometre</span>.  
-  Reach us anytime by <a href="tel:+61470032460" className="underline">phone</a> or email.
-</p>
+          <p className="text-sm font-medium leading-relaxed">
+            For questions about bookings, routes, luggage, vehicles or pricing, feel free to contact us.
+            For destinations outside our listed routes, we offer a rate of <span className="font-semibold">$3.80 per kilometre</span>.
+            Reach us anytime by <a href="tel:+61470032460" className="underline">phone</a> or email.
+          </p>
 
 
         </div>
@@ -1387,11 +1767,11 @@ function Step1StandardContent(props: {
           disabled={!isStep1Valid()}
           className="w-full md:w-auto text-white px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide uppercase transition-all shadow-lg flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
           style={{
-            backgroundColor: isStep1Valid() ? PRIMARY_COLOR : undefined,
-            boxShadow: isStep1Valid() ? `0 8px 15px ${PRIMARY_COLOR}30` : undefined
+            backgroundColor: isStep1Valid() ? '#003366' : undefined,
+            boxShadow: isStep1Valid() ? `0 8px 15px rgba(0, 51, 102, 0.3)` : undefined
           }}
         >
-          Continue Booking <ArrowRight className="w-4 h-4" />
+          Book Now <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </div>
@@ -1441,46 +1821,42 @@ function Step1HourlyContent(props: {
     hourlyPrice
   } = props;
 
-return (
-  <div className="space-y-6">
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      <div className="lg:col-span-5 space-y-2">
-        {/* Label + error */}
-        <div className="flex justify-between items-center">
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
-            Pickup Location
-          </label>
-          {getFieldError('hourlyPickupLocation') && (
-            <span className="text-xs font-bold text-red-500 animate-pulse">
-              Required
-            </span>
-          )}
-        </div>
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="lg:col-span-5 space-y-2">
+          {/* Label + error */}
+          <div className="flex justify-between items-center">
+            <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+              <MapPin className="w-3 h-3 text-[#18234B]" />
+              Pickup Location
+            </label>
+            {getFieldError('hourlyPickupLocation') && (
+              <span className="text-xs font-bold text-red-500 animate-pulse">
+                Required
+              </span>
+            )}
+          </div>
 
-        {/* Input + icon */}
-        <div className="relative group">
-          <MapPin
-            className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-              getFieldError('hourlyPickupLocation') ? 'text-red-500' : 'text-gray-400'
-            } w-5 h-5 z-20 pointer-events-none transition-colors`}
-          />
-
-          <input
-            type="text"
-            value={formData.hourlyPickupLocation}
-            onChange={e =>
-              handleInputChange('hourlyPickupLocation', e.target.value)
-            }
-            onBlur={() => markTouched('hourlyPickupLocation')}
-            placeholder="Address, hotel, venue, etc."
-            className={`${getInputClass('hourlyPickupLocation', false)} pl-10`}
-          />
-        </div>
+          {/* Input + icon */}
+          <div className="relative group">
+            <input
+              type="text"
+              value={formData.hourlyPickupLocation}
+              onChange={e =>
+                handleInputChange('hourlyPickupLocation', e.target.value)
+              }
+              onBlur={() => markTouched('hourlyPickupLocation')}
+              placeholder="Address, hotel, venue, etc."
+              className={getInputClass('hourlyPickupLocation', false)}
+            />
+          </div>
 
           {/* Hours */}
           <div className="group relative">
             <div className="flex justify-between items-center">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+              <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                <Clock className="w-3 h-3 text-[#18234B]" />
                 No. of Hours
               </label>
               {getFieldError('hourlyHours') && (
@@ -1490,7 +1866,6 @@ return (
               )}
             </div>
             <div className="relative">
-              <Clock className="absolute left-3 top-3.5 text-gray-400 w-4 h-4 pointer-events-none z-20" />
               <input
                 type="number"
                 min={2}
@@ -1501,7 +1876,7 @@ return (
                 }
                 onBlur={() => markTouched('hourlyHours')}
                 placeholder="2+"
-                className={getInputClass('hourlyHours').replace('pl-10', 'pl-9')}
+                className={getInputClass('hourlyHours', false)}
               />
             </div>
           </div>
@@ -1509,7 +1884,7 @@ return (
           {/* Vehicle type */}
           <div className="group relative">
             <div className="flex justify-between items-center">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+              <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1">
                 Vehicle Type
               </label>
               {getFieldError('hourlyVehicleType') && (
@@ -1541,7 +1916,8 @@ return (
             <div className="col-span-1 sm:col-span-2">
               <div className="relative group">
                 <div className="flex justify-between">
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3 text-[#18234B]" />
                     Date
                   </label>
                   {getFieldError('pickupDate') && (
@@ -1551,11 +1927,6 @@ return (
                   )}
                 </div>
                 <div className="relative">
-                  <Calendar
-                    className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                      getFieldError('pickupDate') ? 'text-red-500' : 'text-gray-400'
-                    } w-5 h-5 pointer-events-none z-20 transition-colors`}
-                  />
                   <input
                     type="date"
                     value={formData.pickupDate}
@@ -1563,7 +1934,7 @@ return (
                     onChange={e => onPickupDateChange(e.target.value)}
                     onBlur={() => markTouched('pickupDate')}
                     className={`${getInputClass(
-                      'pickupDate'
+                      'pickupDate', false
                     )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
                   />
                 </div>
@@ -1573,8 +1944,9 @@ return (
             {/* Time */}
             <div className="col-span-1 sm:col-span-2">
               <div className="relative group">
-                <div className="flex justify-between">
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                <div className="flex justify-between items-center gap-2">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 text-[#18234B]" />
                     Time
                   </label>
                   {getFieldError('pickupTime') && (
@@ -1584,11 +1956,6 @@ return (
                   )}
                 </div>
                 <div className="relative">
-                  <Clock
-                    className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                      getFieldError('pickupTime') ? 'text-red-500' : 'text-gray-400'
-                    } w-5 h-5 pointer-events-none z-20 transition-colors`}
-                  />
                   <input
                     type="time"
                     value={formData.pickupTime}
@@ -1596,7 +1963,7 @@ return (
                     onChange={e => handleInputChange('pickupTime', e.target.value)}
                     onBlur={() => markTouched('pickupTime')}
                     className={`${getInputClass(
-                      'pickupTime'
+                      'pickupTime', false
                     )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
                   />
                 </div>
@@ -1604,9 +1971,10 @@ return (
             </div>
 
             {/* Pax */}
-            <div className="col-span-1 md:col-span-1">
+            <div className="col-span-1 sm:col-span-2">
               <div className="flex justify-between">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                  <Users className="w-3 h-3 text-[#18234B]" />
                   Pax
                 </label>
                 {getFieldError('passengers') && (
@@ -1616,7 +1984,6 @@ return (
                 )}
               </div>
               <div className="relative group">
-                <Users className="absolute left-3 top-3.5 text-gray-400 w-4 h-4 pointer-events-none z-20 transition-colors" />
                 <input
                   type="number"
                   min={1}
@@ -1624,15 +1991,16 @@ return (
                   value={passengerInput}
                   onChange={e => onPassengersChange(e.target.value)}
                   onBlur={onPassengersBlur}
-                  className={getInputClass('passengers').replace('pl-10', 'pl-9')}
+                  className={getInputClass('passengers', false)}
                 />
               </div>
             </div>
 
             {/* Luggage */}
-            <div className="col-span-1 md:col-span-1">
+            <div className="col-span-1 sm:col-span-2">
               <div className="flex justify-between">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                  <Briefcase className="w-3 h-3 text-[#18234B]" />
                   Bags
                 </label>
                 {getFieldError('luggage') && (
@@ -1642,7 +2010,6 @@ return (
                 )}
               </div>
               <div className="relative group">
-                <Briefcase className="absolute left-3 top-3.5 text-gray-400 w-4 h-4 pointer-events-none z-20 transition-colors" />
                 <input
                   type="number"
                   min={0}
@@ -1650,27 +2017,24 @@ return (
                   value={luggageInput}
                   onChange={e => onLuggageChange(e.target.value)}
                   onBlur={onLuggageBlur}
-                  className={getInputClass('luggage').replace('pl-10', 'pl-9')}
+                  className={getInputClass('luggage', false)}
                 />
               </div>
             </div>
 
             {/* Flight # */}
-            <div className="col-span-2 md:col-span-2">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1 ml-1">
+            <div className="col-span-2 sm:col-span-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                <Plane className="w-3 h-3 text-[#18234B]" />
                 Flight #
               </label>
               <div className="relative group">
-                <Plane className="absolute left-3 top-3.5 text-gray-400 w-4 h-4 pointer-events-none z-20 transition-colors" />
                 <input
                   type="text"
                   value={formData.flightNumber}
                   onChange={e => handleInputChange('flightNumber', e.target.value)}
-                  placeholder="       Optional"
-                  className={getInputClass('flightNumber', false).replace(
-                    'pl-10',
-                    'pl-9'
-                  )}
+                  placeholder="Optional"
+                  className={getInputClass('flightNumber', false)}
                 />
               </div>
             </div>
@@ -1754,11 +2118,11 @@ return (
           disabled={!isStep1Valid()}
           className="w-full md:w-auto text-white px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide uppercase transition-all shadow-lg flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
           style={{
-            backgroundColor: isStep1Valid() ? ACCENT_COLOR : undefined,
-            boxShadow: isStep1Valid() ? `0 8px 15px ${ACCENT_COLOR}30` : undefined
+            backgroundColor: isStep1Valid() ? '#003366' : undefined,
+            boxShadow: isStep1Valid() ? `0 8px 15px rgba(0, 51, 102, 0.3)` : undefined
           }}
         >
-          Continue Booking <ArrowRight className="w-4 h-4" />
+          Book Now <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </div>
@@ -1844,14 +2208,14 @@ function Step2StandardContent(props: {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-8">
+    <div className="flex flex-col md:flex-row gap-5">
       {/* Summary */}
-      <div className="w-full md:w-1/2 bg-gray-50 rounded-xl border border-dashed border-gray-300 p-6 relative order-1">
+      <div className="w-full md:w-1/2 bg-gray-50 rounded-xl border border-dashed border-gray-300 p-4 relative order-1">
         <div className="absolute -left-3 top-1/2 -mt-3 w-6 h-6 bg-white rounded-full"></div>
         <div className="absolute -right-3 top-1/2 -mt-3 w-6 h-6 bg-white rounded-full"></div>
 
         <h3
-          className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"
+          className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2"
           style={{ color: PRIMARY_COLOR }}
         >
           <span
@@ -1861,7 +2225,7 @@ function Step2StandardContent(props: {
           Trip Summary
         </h3>
 
-        <div className="space-y-4 text-sm">
+        <div className="space-y-3 text-sm">
           <div className="flex justify-between items-start">
             <div className="flex flex-col">
               <span className="text-xs text-gray-500">From</span>
@@ -1934,19 +2298,24 @@ function Step2StandardContent(props: {
             </span>
           </div>
         </div>
+
+        {/* Note - Compact */}
+        <p className="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <strong>Note: Please contact us before booking.</strong> For any questions or issues—time, passengers, luggage, car type, price, or payment— reach us by phone or email. We’re happy to assist!
+        </p>
       </div>
 
       {/* Contact + Payment */}
-      <div className="w-full md:w-1/2 flex flex-col justify-between order-2">
-        <div className="space-y-4">
+      <div className="w-full md:w-1/2 flex flex-col order-2">
+        <div className="space-y-2">
           <h3
-            className="text-lg font-bold text-gray-900"
+            className="text-base font-bold text-gray-900"
             style={{ color: PRIMARY_COLOR }}
           >
             Contact Details
           </h3>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* Name */}
             <div>
               <div className="flex justify-between">
@@ -2001,57 +2370,40 @@ function Step2StandardContent(props: {
           </div>
         </div>
 
-        {/* Note */}
-        <div className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-2 text-xs">
-          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-          <div>
-            <span className="font-bold uppercase tracking-wider block mb-0.5">
-              Note: Please contact us before booking.
-            </span>
-            For any questions or issues—time, passengers, luggage, car type,
-            price, or payment— reach us by phone or email. We’re happy to assist!
-          </div>
-        </div>
-
         {/* Payment Section */}
-        <div className="mt-6 space-y-3">
-  <h4 className="text-sm font-semibold text-gray-800">
-    Payment Summary
-  </h4>
+        <div className="mt-3 space-y-2">
+          <h4 className="text-sm font-semibold text-gray-800">
+            Payment Summary
+          </h4>
 
-  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm space-y-2">
-    <div className="flex justify-between">
-      <span className="text-gray-900">Trip fare</span>
-      <span className="font-medium text-gray-900">${calculatedPrice}</span>
-    </div>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-900">Trip fare</span>
+              <span className="font-medium text-gray-900">${calculatedPrice}</span>
+            </div>
 
-    <div className="flex justify-between">
-      <span className="text-gray-900">
-        Payment processing fee (2.5%)
-      </span>
-      <span className="font-medium text-gray-900">${processingFee}</span>
-    </div>
+            <div className="flex justify-between">
+              <span className="text-gray-900">
+                Payment processing fee (2.5%)
+              </span>
+              <span className="font-medium text-gray-900">${processingFee}</span>
+            </div>
 
-    <div className="border-t border-gray-200 pt-2 flex justify-between">
-      <span className="font-semibold text-gray-900">
-        Total amount payable
-      </span>
-      <span className="font-bold text-lg text-gray-900">
-        ${finalAmount}
-      </span>
-    </div>
-  </div>
-
-  <p className="text-xs text-gray-500 leading-relaxed">
-    All prices are inclusive of GST. Secure payment processing is provided via Stripe.
-    No additional charges apply.
-  </p>
+            <div className="border-t border-gray-200 pt-2 flex justify-between">
+              <span className="font-semibold text-gray-900">
+                Total amount payable
+              </span>
+              <span className="font-bold text-lg text-gray-900">
+                ${finalAmount}
+              </span>
+            </div>
+          </div>
           {paymentError && (
             <p className="text-xs text-red-500 mt-1">{paymentError}</p>
           )}
 
           {/* Buttons */}
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-3 mt-3">
             <button
               onClick={() => setBookingStep(1)}
               className="px-6 py-3 rounded-xl font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
@@ -2060,16 +2412,16 @@ function Step2StandardContent(props: {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <button
-  onClick={handlePayAndRedirect}
-  type="button"
-  disabled={!isStep2FormValid() || loadingPayment}
-  className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
->
-  {loadingPayment
-    ? 'Redirecting...'
-    : `Pay & Confirm Booking`}
-  <CheckCircle className="w-4 h-4" />
-</button>
+              onClick={handlePayAndRedirect}
+              type="button"
+              disabled={!isStep2FormValid() || loadingPayment}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
+            >
+              {loadingPayment
+                ? 'Redirecting...'
+                : `Pay & Confirm Booking`}
+              <CheckCircle className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -2159,14 +2511,14 @@ function Step2HourlyContent(props: {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-8">
+    <div className="flex flex-col md:flex-row gap-5">
       {/* Summary */}
-      <div className="w-full md:w-1/2 bg-gray-50 rounded-xl border border-dashed border-gray-300 p-6 relative order-1">
+      <div className="w-full md:w-1/2 bg-gray-50 rounded-xl border border-dashed border-gray-300 p-4 relative order-1">
         <div className="absolute -left-3 top-1/2 -mt-3 w-6 h-6 bg-white rounded-full"></div>
         <div className="absolute -right-3 top-1/2 -mt-3 w-6 h-6 bg-white rounded-full"></div>
 
         <h3
-          className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"
+          className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2"
           style={{ color: PRIMARY_COLOR }}
         >
           <span
@@ -2176,7 +2528,7 @@ function Step2HourlyContent(props: {
           Hourly Hire Summary
         </h3>
 
-        <div className="space-y-4 text-sm">
+        <div className="space-y-3 text-sm">
           <div className="flex justify-between items-start">
             <div className="flex flex-col">
               <span className="text-xs text-gray-500">Pickup</span>
@@ -2232,19 +2584,24 @@ function Step2HourlyContent(props: {
             </span>
           </div>
         </div>
+
+        {/* Note - Compact */}
+        <p className="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <strong>Note: Please contact us before booking.</strong> For any questions or issues—time, passengers, luggage, car type, price, or payment— reach us by phone or email. We’re happy to assist!
+        </p>
       </div>
 
       {/* Contact + Payment */}
-      <div className="w-full md:w-1/2 flex flex-col justify-between order-2">
-        <div className="space-y-4">
+      <div className="w-full md:w-1/2 flex flex-col order-2">
+        <div className="space-y-2">
           <h3
-            className="text-lg font-bold text-gray-900"
+            className="text-base font-bold text-gray-900"
             style={{ color: PRIMARY_COLOR }}
           >
             Contact Details
           </h3>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* Name */}
             <div>
               <div className="flex justify-between">
@@ -2299,59 +2656,34 @@ function Step2HourlyContent(props: {
           </div>
         </div>
 
-        {/* Note */}
-        <div className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start gap-2 text-xs">
-          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-          <div>
-            <span className="font-bold uppercase tracking-wider block mb-0.5">
-              Note: Please contact us before booking.
-            </span>
-            For any questions or issues—time, passengers, luggage, car type,
-            price, or payment— reach us by phone or email. We’re happy to assist!
-          </div>
-        </div>
-
         {/* Payment Section */}
-        <div className="mt-6 space-y-3">
-         <div className="mt-6 space-y-3">
-  <h4 className="text-sm font-semibold text-gray-800">
-    Payment Summary
-  </h4>
+        <div className="mt-3 space-y-2">
+          <h4 className="text-sm font-semibold text-gray-800">
+            Payment Summary
+          </h4>
 
-  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm space-y-2">
-    <div className="flex justify-between">
-      <span className="text-gray-900">Hourly hire quote</span>
-      <span className="font-medium text-gray-900">${hourlyPrice}</span>
-    </div>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Hourly hire quote</span>
+              <span className="font-medium text-gray-900">${hourlyPrice}</span>
+            </div>
 
-    <div className="flex justify-between">
-      <span className="text-gray-900">
-        Payment processing fee (2.5%)
-      </span>
-      <span className="font-medium text-gray-900">${processingFee}</span>
-    </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Processing fee (2.5%)</span>
+              <span className="font-medium text-gray-900">${processingFee}</span>
+            </div>
 
-    <div className="border-t border-gray-200 pt-2 flex justify-between">
-      <span className="font-semibold text-gray-900">
-        Total amount payable
-      </span>
-      <span className="font-bold text-lg text-gray-900">
-        ${finalAmount}
-      </span>
-    </div>
-  </div>
-
-  <p className="text-xs text-gray-500 leading-relaxed">
-    All prices are inclusive of GST. Secure payment processing is handled by Stripe.
-    No additional fees will be charged.
-  </p>
-</div>
+            <div className="border-t border-gray-200 pt-2 flex justify-between">
+              <span className="font-semibold text-gray-900">Total</span>
+              <span className="font-bold text-gray-900">${finalAmount}</span>
+            </div>
+          </div>
           {paymentError && (
             <p className="text-xs text-red-500 mt-1">{paymentError}</p>
           )}
 
           {/* Buttons */}
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-3 mt-3">
             <button
               onClick={() => setBookingStep(1)}
               className="px-6 py-3 rounded-xl font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
@@ -2359,17 +2691,17 @@ function Step2HourlyContent(props: {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-           <button
-  onClick={handlePayAndRedirect}
-  type="button"
-  disabled={!isStep2FormValid() || loadingPayment || !hourlyPrice}
-  className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
->
-  {loadingPayment
-    ? 'Redirecting...'
-    : `Pay & Confirm Booking`}
-  <CheckCircle className="w-4 h-4" />
-</button>
+            <button
+              onClick={handlePayAndRedirect}
+              type="button"
+              disabled={!isStep2FormValid() || loadingPayment || !hourlyPrice}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
+            >
+              {loadingPayment
+                ? 'Redirecting...'
+                : `Pay & Confirm Booking`}
+              <CheckCircle className="w-4 h-4" />
+            </button>
 
           </div>
         </div>
@@ -2497,9 +2829,8 @@ function PhoneInput({
       </div>
 
       <div
-        className={`flex items-stretch rounded-xl bg-white border ${
-          error ? 'border-red-500' : 'border-gray-200'
-        } shadow-sm overflow-hidden`}
+        className={`flex items-stretch rounded-xl bg-white border ${error ? 'border-red-500' : 'border-gray-200'
+          } shadow-sm overflow-hidden`}
       >
         {/* Country selector + editable dial code */}
         <div className="flex items-center bg-gray-50 border-r border-gray-200 px-2 py-2 gap-1.5 shrink-0">

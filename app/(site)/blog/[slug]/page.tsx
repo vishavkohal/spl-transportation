@@ -66,120 +66,229 @@ export default async function BlogPostPage({
   const { slug } = await params;
   const post = blogPosts.find(p => p.slug === slug);
 
-  if (!post) {
-    notFound();
-  }
+  if (!post) notFound();
 
   const published = new Date(post.publishedAt);
 
   return (
-    <main className="max-w-3xl mx-auto px-4 md:px-6 pt-28 md:pt-32 pb-16">
-      {/* Breadcrumb */}
-      <nav className="mb-4 text-xs text-gray-500">
-        <Link href="/" className="hover:underline">
-          Home
-        </Link>{" "}
-        /{" "}
-        <Link href="/blog" className="hover:underline">
-          Blog
-        </Link>{" "}
-        / <span className="text-gray-700">{post.title}</span>
-      </nav>
-
-      {/* Header */}
-      <header className="mb-8">
-        <p
-          className="text-xs sm:text-sm font-semibold tracking-[0.22em] uppercase mb-2"
-          style={{ color: ACCENT_COLOR }}
-        >
-          Travel Guide
-        </p>
-
-        <h1
-          className="text-3xl sm:text-4xl font-extrabold leading-tight mb-3"
-          style={{ color: PRIMARY_COLOR }}
-        >
-          {post.title}
-        </h1>
-
-        <p className="text-gray-600 text-sm sm:text-base mb-3">
-          {post.excerpt}
-        </p>
-
-        <p className="text-xs text-gray-500">
-          {published.toLocaleDateString("en-AU", {
-            year: "numeric",
-            month: "short",
-            day: "numeric"
-          })}{" "}
-          · {post.readMinutes} min read
-        </p>
-      </header>
-
-      {/* Featured Image */}
-      <div className="mb-10">
-        <Image
-          src={post.featuredImage.src}
-          alt={post.featuredImage.alt}
-          width={1200}
-          height={630}
-          priority
-          className="w-full h-auto rounded-xl object-cover"
-        />
+    <main className="relative">
+      {/* Soft Material background */}
+      <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden>
+        <div className="absolute top-0 left-0 right-0 h-[560px] bg-gradient-to-b from-slate-50 to-white" />
+        <div className="absolute -top-28 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-slate-100/60 blur-3xl" />
       </div>
 
-      {/* Content */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-<article
-  className="
-    prose prose-sm sm:prose-base lg:prose-lg
-    max-w-none
+      <section className="mx-auto max-w-4xl px-4 md:px-6 pt-28 md:pt-32 pb-16">
+        {/* Breadcrumb */}
+        <nav className="mb-6 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          <Link href="/" className="hover:text-slate-800 hover:underline">
+            Home
+          </Link>
+          <span className="opacity-60">/</span>
+          <Link href="/blog" className="hover:text-black hover:underline">
+            Blog
+          </Link>
+          <span className="opacity-60">/</span>
+          <span className="text-slate-700 line-clamp-1">{post.title}</span>
+        </nav>
 
-    /* Headings spacing */
-    prose-headings:tracking-tight
-    prose-headings:text-[#18234B]
+        {/* Header Card */}
+        <header className="rounded-3xl border border-slate-200 bg-white/85 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,23,42,0.06)] overflow-hidden">
+          {/* Brand strip */}
+          <div
+            className="h-1.5 w-full"
+            style={{
+              background:
+                "linear-gradient(90deg, #18234B 0%, #A61924 65%, #18234B 100%)"
+            }}
+          />
 
-    prose-h2:mt-16
-    prose-h2:mb-6
-    prose-h3:mt-12
-    prose-h3:mb-5
-    prose-h4:mt-10
-    prose-h4:mb-4
+          <div className="p-6 sm:p-8">
+            {/* Category chip */}
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase">
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: ACCENT_COLOR }}
+              />
+              <span style={{ color: PRIMARY_COLOR }}>Travel Guide</span>
+            </div>
 
-    /* Paragraph spacing */
-    prose-p:mb-6
-    prose-p:leading-[1.75]
-    prose-p:text-gray-700
+            <h1
+              className="text-3xl sm:text-4xl font-extrabold leading-tight"
+              style={{ color: PRIMARY_COLOR }}
+            >
+              {post.title}
+            </h1>
 
-    /* Lists spacing */
-    prose-ul:my-7
-    prose-li:mb-3
-    prose-li:leading-[1.7]
-    prose-li:text-gray-700
+            <p className="mt-3 text-gray-900 text-sm sm:text-base leading-relaxed font-medium">
+              {post.excerpt}
+            </p>
 
-    /* Horizontal rule spacing */
-    prose-hr:my-16
-    prose-hr:border-gray-200
+            {/* Meta chips */}
+            <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-gray-700 font-medium">
+              <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 border border-slate-200">
+                <span className="font-bold text-gray-900">Published</span>
+                <span>
+                  {published.toLocaleDateString("en-AU", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric"
+                  })}
+                </span>
+              </span>
 
-    /* 🚀 KEY FIX: extra space after HR before next heading */
-    prose-hr + h2:mt-20
-    prose-hr + h3:mt-16
-    prose-hr + h4:mt-14
+              <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-1 border border-slate-200">
+                <span className="font-bold text-gray-900">Reading</span>
+                <span>{post.readMinutes} min</span>
+              </span>
+            </div>
 
-    /* Strong text */
-    prose-strong:font-semibold
-    prose-strong:text-gray-900
+            {/* Tags row */}
+            {post.tags?.length ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {post.tags.slice(0, 6).map(tag => (
+                  <span
+                    key={tag}
+                    className="rounded-full px-3 py-1 text-[11px] border bg-white"
+                    style={{
+                      borderColor: "rgba(24,35,75,0.18)",
+                      color: PRIMARY_COLOR
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+          </div>
 
-    /* Links */
-    prose-a:text-[#A61924]
-    prose-a:font-medium
-    prose-a:no-underline
-    hover:prose-a:underline
-  "
-  dangerouslySetInnerHTML={{ __html: post.content }}
-/>
+          {/* Featured Image */}
+          <div className="px-6 sm:px-8 pb-6 sm:pb-8">
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+              <Image
+                src={post.featuredImage.src}
+                alt={post.featuredImage.alt}
+                width={1200}
+                height={630}
+                priority
+                className="w-full h-auto object-cover"
+              />
+            </div>
+          </div>
+        </header>
 
-</div>
+        {/* Content Card */}
+        <div className="mt-10 rounded-3xl border border-slate-200 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.08)] overflow-hidden">
+          <div className="p-6 sm:p-10">
+            <article
+              className="
+                prose prose-sm sm:prose-base lg:prose-lg
+                max-w-none
+                text-black
+
+                /* Headings */
+                prose-headings:tracking-tight
+                prose-headings:text-[#18234B]
+                prose-headings:font-bold
+                prose-h2:mt-16
+                prose-h2:mb-6
+                prose-h3:mt-12
+                prose-h3:mb-5
+                prose-h4:mt-10
+                prose-h4:mb-4
+
+                /* Paragraphs */
+                prose-p:mb-6
+                prose-p:leading-[1.9]
+                prose-p:text-black
+                prose-p:font-medium
+
+                /* Lists */
+                prose-ul:my-7
+                prose-ul:list-disc
+                prose-ul:pl-6
+                prose-li:mb-2
+                prose-li:leading-[1.75]
+                prose-li:text-black
+                prose-li:font-medium
+                prose-li:marker:text-[#A61924] /* Red bullets */
+
+                /* Blockquotes */
+                prose-blockquote:border-l-4
+                prose-blockquote:border-[#A61924]
+                prose-blockquote:bg-slate-50
+                prose-blockquote:px-6
+                prose-blockquote:py-4
+                prose-blockquote:rounded-r-lg
+                prose-blockquote:not-italic
+                prose-blockquote:text-black
+                prose-blockquote:font-medium
+
+                /* Divider */
+                prose-hr:my-16
+                prose-hr:border-slate-200
+
+                /* Extra space after hr */
+                prose-hr + h2:mt-20
+                prose-hr + h3:mt-16
+                prose-hr + h4:mt-14
+
+                /* Strong */
+                prose-strong:font-bold
+                prose-strong:text-[#18234B]
+
+                /* Links - High Visibility */
+                prose-a:text-[#A61924]
+                prose-a:font-bold
+                prose-a:underline
+                prose-a:underline-offset-4
+                prose-a:decoration-[#A61924]/40
+                prose-a:transition-all
+                hover:prose-a:decoration-[#A61924]
+                hover:prose-a:text-[#8a141d]
+              "
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="border-t border-slate-200 bg-slate-50 px-6 sm:px-10 py-7">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <p
+                  className="text-sm font-bold"
+                  style={{ color: PRIMARY_COLOR }}
+                >
+                  Need a private transfer?
+                </p>
+                <p className="text-xs text-slate-600 mt-1">
+                  Request a fixed-price quote with a professional driver and a
+                  premium vehicle.
+                </p>
+              </div>
+
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95"
+                style={{ backgroundColor: ACCENT_COLOR }}
+              >
+                Request a Quote
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Back to blog */}
+        <div className="mt-10">
+          <Link
+            href="/blog"
+            className="inline-flex items-center gap-2 text-sm font-semibold hover:underline"
+            style={{ color: PRIMARY_COLOR }}
+          >
+            ← Back to Blog
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }

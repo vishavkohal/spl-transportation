@@ -3,6 +3,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowRight, Download, X } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { InvoicePDF } from '../../components/pdf/InvoicePDF';
+
+const PDFDownloadLink = dynamic(
+  () => import('@react-pdf/renderer').then((mod) => mod.PDFDownloadLink),
+  { ssr: false }
+);
 
 const PRIMARY_COLOR = '#18234B';
 const ACCENT_COLOR = '#16a34a';
@@ -28,6 +35,7 @@ const FETCH_RETRY_BASE_MS = Number(process.env.NEXT_PUBLIC_FETCH_RETRY_BASE_MS ?
 
 interface BookingPayload {
   id?: string;
+  invoiceId?: string; // NEW
   createdAt?: string;
 
   pickupLocation: string;
@@ -69,7 +77,7 @@ const UX_TEXT = {
   processingBodyPendingPayment:
     'Payment is being processed. We’ll confirm your booking once payment completes.',
   confirmedTitle: 'Booking confirmed',
-  confirmedBody: (email: string) => `We’ve emailed your confirmation to ${email}.`,
+  confirmedBody: (email: string, invoiceId?: string) => `We’ve emailed your confirmation${invoiceId ? ` (Invoice #${invoiceId})` : ''} to ${email}.`,
   notConfirmedTimeout:
     'Your payment was received, but confirmation is taking longer than usual. Please contact support with your session ID.',
 };
@@ -379,235 +387,8 @@ export default function BookingSuccessClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
-  // Receipt downloader (unchanged)
- const handleDownloadReceipt = () => {
-  if (!bookingData) return;
-  const { booking } = bookingData;
-
-  const COMPANY_NAME =
-    process.env.NEXT_PUBLIC_COMPANY_NAME || 'SPL Transportation';
-  const COMPANY_ABN =
-    process.env.NEXT_PUBLIC_COMPANY_ABN || '64 957 177 372';
-  const COMPANY_EMAIL =
-    process.env.NEXT_PUBLIC_COMPANY_EMAIL ||
-    'spltransportation.australia@gmail.com';
-  const COMPANY_PHONE =
-    process.env.NEXT_PUBLIC_COMPANY_PHONE || '+61 470 032 460';
-  const COMPANY_ADDRESS =
-    process.env.NEXT_PUBLIC_COMPANY_ADDRESS || 'Cairns, QLD, Australia';
-  const LOGO = COMPANY_LOGO;
-
-  let invoiceNumber = `INV-${Date.now()}`;
-  let invoiceDate = new Date().toLocaleDateString();
-  let bookingRef = booking.id || invoiceNumber;
-
-  const currency = (booking.currency || 'AUD').toUpperCase();
-  const isHourly = booking.bookingType === 'hourly';
-
-  /* --------------------------------------------------
-     💰 AMOUNT CALCULATIONS (CORRECT & AUDIT SAFE)
-  -------------------------------------------------- */
-
-const totalPaid = Number(booking.totalPrice ?? 0); // 768.75 (includes fee)
-
-// 🔁 Reverse-calculate service amount
-const serviceTotal = Number((totalPaid / 1.025).toFixed(2)); // 750.00
-
-// Processing fee already included
-const processingFee = Number((totalPaid - serviceTotal).toFixed(2)); // 18.75
-
-// GST is ONLY on the service, NOT on processing fee
-const gst = Number((serviceTotal * 10 / 110).toFixed(2)); // 68.18
-const subtotalExGst = Number((serviceTotal - gst).toFixed(2)); // 681.82
-
-// Grand total = amount already paid
-const grandTotal = totalPaid;
-
-
-  const isMobile =
-    typeof navigator !== 'undefined' &&
-    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-
-  const pickupLocationText =
-  booking.bookingType === 'hourly'
-    ? booking.hourlyPickupLocation || booking.pickupLocation
-    : booking.pickupLocation;
-
-const pickupAddressText = booking.pickupAddress;
-
-const pickupInstructionsHtml = `
-  <div style="margin-top:12px; font-weight:700">Pickup instructions</div>
-  <div class="muted">
-    ${
-      booking.bookingType === 'hourly'
-        ? `Your chauffeur will report to ${pickupLocationText}${
-            pickupAddressText ? ' – ' + pickupAddressText : ''
-          } at the scheduled time.`
-        : `Your driver will meet you at ${pickupLocationText}${
-            pickupAddressText ? ' – ' + pickupAddressText : ''
-          }.`
-    }
-    Driver details will be sent 24 hours before pickup.
-  </div>
-`;
-
-
-  const html = `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Invoice - ${invoiceNumber}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; padding:24px; color:#111827; }
-    .wrap { max-width:800px; margin:0 auto; }
-    header { display:flex; justify-content:space-between; gap:16px; }
-    .brand { display:flex; gap:12px; align-items:center; }
-    .brand img { width:72px; height:72px; object-fit:contain; }
-    h1 { font-size:20px; margin-bottom:6px; }
-    h2 { font-size:14px; margin-top:18px; }
-    table { width:100%; border-collapse:collapse; margin-top:8px; }
-    td, th { border:1px solid #E5E7EB; padding:8px; font-size:13px; }
-    th { background:#F3F4F6; text-align:left; }
-    .right { text-align:right; }
-    .totals { display:flex; justify-content:flex-end; margin-top:12px; }
-    .totals table { width:320px; }
-    footer { margin-top:20px; font-size:12px; color:#6B7280; }
-  </style>
-</head>
-
-<body>
-<div class="wrap">
-
-<header>
-  <div class="brand">
-    <img src="${LOGO}" onerror="this.style.display='none'" />
-    <div>
-      <strong>${COMPANY_NAME}</strong><br/>
-      <span style="font-size:12px;">ABN: ${COMPANY_ABN}</span>
-    </div>
-  </div>
-  <div style="text-align:right;font-size:13px;">
-    ${COMPANY_EMAIL}<br/>
-    ${COMPANY_PHONE}<br/>
-    ${COMPANY_ADDRESS}
-  </div>
-</header>
-
-<h1>TAX INVOICE</h1>
-<div style="font-size:13px;">
-  Invoice #: ${invoiceNumber}<br/>
-  Date: ${invoiceDate}<br/>
-  Booking Ref: ${bookingRef}
-</div>
-
-<h2>Bill To</h2>
-<p style="font-size:13px;">
-  ${booking.fullName}<br/>
-  ${booking.email}<br/>
-  ${booking.contactNumber}
-</p>
-
-<h2>Service Details</h2>
-<table>
-  <tbody>
-    ${
-      isHourly
-        ? `
-      <tr><td>Service</td><td>Chauffeur & Hourly Hire</td></tr>
-      <tr><td>Vehicle</td><td>${booking.hourlyVehicleType}</td></tr>
-      <tr><td>Hours</td><td>${booking.hourlyHours}</td></tr>
-      `
-        : `
-      <tr><td>Route</td><td>${booking.pickupLocation} → ${booking.dropoffLocation}</td></tr>
-      `
-    }
-    <tr><td>Date & Time</td><td>${booking.pickupDate} at ${booking.pickupTime}</td></tr>
-    <tr><td>Passengers</td><td>${booking.passengers}</td></tr>
-  </tbody>
-</table>
-
-<h2>GST Breakdown (Included in ${currency} ${serviceTotal.toFixed(2)})</h2>
-<table>
-  <tbody>
-    <tr>
-      <td>Subtotal (Excl. GST)</td>
-      <td class="right">${subtotalExGst.toFixed(2)}</td>
-    </tr>
-    <tr>
-      <td>GST (10%)</td>
-      <td class="right">${gst.toFixed(2)}</td>
-    </tr>
-    <tr style="font-weight:600;">
-      <td>Subtotal (Incl. GST)</td>
-      <td class="right">${serviceTotal.toFixed(2)}</td>
-    </tr>
-  </tbody>
-</table>
-
-<h2>Additional Fees</h2>
-<table>
-  <tbody>
-    <tr>
-      <td>Processing Fee (2.5%)</td>
-      <td class="right">${processingFee.toFixed(2)}</td>
-    </tr>
-  </tbody>
-</table>
-
-<div class="totals">
-  <table>
-    <tbody>
-      <tr>
-        <td>Subtotal (Incl. GST)</td>
-        <td class="right">${serviceTotal.toFixed(2)}</td>
-      </tr>
-      <tr>
-        <td>Processing Fee</td>
-        <td class="right">${processingFee.toFixed(2)}</td>
-      </tr>
-      <tr style="font-weight:700;">
-        <td>Grand Total (Incl. GST)</td>
-        <td class="right">${grandTotal.toFixed(2)}</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<h2>Payment</h2>
-<table>
-  <tbody>
-    <tr>
-      <td>Amount Paid</td>
-      <td>A$${grandTotal.toFixed(2)}</td>
-    </tr>
-  </tbody>
-</table>
-
-<footer>
-  ${pickupInstructionsHtml}
-  <br/>
-  Thank you for choosing ${COMPANY_NAME}.
-  ${isMobile ? '<br/>Use your browser Share or Print option to save this invoice.' : ''}
-</footer>
-
-</div>
-</body>
-</html>`;
-
-  const win = window.open('', '_blank');
-  const target = win && !win.closed ? win : window;
-  target.document.open();
-  target.document.write(html);
-  target.document.close();
-
-  if (!isMobile && win && !win.closed) {
-    setTimeout(() => {
-      win.focus();
-      win.print();
-    }, 300);
-  }
-};
+  // Receipt downloader (replaced by PDFDownloadLink)
+  // const handleDownloadReceipt = () => { ... } removed
 
 
   // Render UI
@@ -800,25 +581,25 @@ const pickupInstructionsHtml = `
     typeof booking.hourlyHours === 'number'
       ? booking.hourlyHours
       : booking.hourlyHours
-      ? Number(booking.hourlyHours)
-      : '';
+        ? Number(booking.hourlyHours)
+        : '';
   const hourlyVehicle = booking.hourlyVehicleType || '';
 
   const heading = paid ? UX_TEXT.confirmedTitle : 'Booking being processed';
-  const subText = paid ? UX_TEXT.confirmedBody(booking.email) : UX_TEXT.processingBodyPaidSignal;
+  const subText = paid ? UX_TEXT.confirmedBody(booking.email, booking.invoiceId) : UX_TEXT.processingBodyPaidSignal;
 
   return (
     <>
-    {trackingFired && (
-      <iframe
-        src="https://adzsmart.o18.click/p?m=5240&t=f&gb=1"
-        width={0}
-        height={0}
-        style={{ display: 'none' }}
-        aria-hidden="true"
-        tabIndex={-1}
-      />
-    )}
+      {trackingFired && (
+        <iframe
+          src="https://adzsmart.o18.click/p?m=5240&t=f&gb=1"
+          width={0}
+          height={0}
+          style={{ display: 'none' }}
+          aria-hidden="true"
+          tabIndex={-1}
+        />
+      )}
       {/* Toast / banner */}
       <div aria-live="polite" className="fixed top-6 right-6 z-50 pointer-events-none">
         {showBanner && (
@@ -943,9 +724,17 @@ const pickupInstructionsHtml = `
           {/* Actions */}
           <div className="mt-6 flex flex-col md:flex-row gap-3 items-center justify-between">
             {paid && (
-              <button onClick={handleDownloadReceipt} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50">
-                <Download className="w-4 h-4" /> Download / Print receipt
-              </button>
+              <PDFDownloadLink
+                document={<InvoicePDF booking={booking} />}
+                fileName={`Invoice-${booking.id?.slice(-8) || 'receipt'}.pdf`}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                {({ loading }) => (
+                  <>
+                    <Download className="w-4 h-4" /> {loading ? 'Generating PDF...' : 'Download Receipt'}
+                  </>
+                )}
+              </PDFDownloadLink>
             )}
 
             <button onClick={() => router.push('/')} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white shadow" style={{ backgroundColor: PRIMARY_COLOR }}>

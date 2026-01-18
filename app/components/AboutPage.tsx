@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { Check, ArrowRight } from 'lucide-react';
 
 // Define the custom colors for readability
@@ -60,7 +61,7 @@ export default function AboutPage() {
           <div>
             <p
               className="font-bold tracking-wider uppercase text-sm mb-2"
-              style={{ color: ACCENT_COLOR }}
+              style={{ color: PRIMARY_COLOR }}
             >
               About Us
             </p>
@@ -74,7 +75,7 @@ export default function AboutPage() {
               <br />
               <span
                 className="relative"
-                style={{ color: ACCENT_COLOR }}
+                style={{ color: PRIMARY_COLOR }}
               >
                 Across Cairns &amp; Tropical North Queensland
                 <svg
@@ -94,7 +95,7 @@ export default function AboutPage() {
 
             <p className="text-gray-600 mb-4 text-lg leading-relaxed">
               For more than two decades we&apos;ve helped visitors and locals travel
-              between <strong>Cairns Airport</strong>, Cairns City, Port Douglas,
+              between <Link href="/transfers" className="text-blue-700 hover:underline"><strong>Cairns Airport</strong></Link>, Cairns City, Port Douglas,
               Palm Cove, Kuranda and the Atherton Tablelands with ease. Our focus
               is simple: <strong>safe, comfortable and on-time private transfers</strong>{' '}
               with a friendly local driver who knows the region.
@@ -113,7 +114,7 @@ export default function AboutPage() {
                 <div key={index} className="flex items-center space-x-4 group">
                   <div
                     className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition-colors duration-300"
-                    style={{ color: ACCENT_COLOR }}
+                    style={{ color: PRIMARY_COLOR }}
                   >
                     <Check className="w-5 h-5" strokeWidth={3} />
                   </div>
@@ -125,8 +126,8 @@ export default function AboutPage() {
             <button
               className="group text-white px-8 py-4 rounded-full font-bold shadow-lg hover:brightness-110 transition-all duration-300 flex items-center gap-2"
               style={{
-                backgroundColor: ACCENT_COLOR,
-                boxShadow: `0 4px 12px ${ACCENT_COLOR}30`,
+                backgroundColor: PRIMARY_COLOR,
+                boxShadow: `0 4px 12px ${PRIMARY_COLOR}30`,
               }}
               aria-label="Learn more about our Cairns private transfer service"
             >

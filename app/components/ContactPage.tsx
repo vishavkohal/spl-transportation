@@ -24,16 +24,16 @@ export default function ContactPage() {
     // Background remains light gray/white (bg-gray-50), removed dark background class
     <section className="py-20 bg-gray-50 transition-colors duration-300 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Section Header */}
         <div className="text-center mb-16">
-          <p 
+          <p
             className="font-bold tracking-wider uppercase text-sm mb-2"
             style={{ color: ACCENT_COLOR }} // Accent Color for "Get In Touch"
           >
             Get In Touch
           </p>
-          <h1 
+          <h1
             className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4"
             style={{ color: PRIMARY_COLOR }} // Primary Color for main heading
           >
@@ -43,55 +43,55 @@ export default function ContactPage() {
             Have a question about a route? Need a custom quote? We are here to help you 24/7.
           </p>
           {/* Accent-colored divider */}
-          <div 
+          <div
             className="w-24 h-1.5 mx-auto mt-6 rounded-full"
             style={{ backgroundColor: ACCENT_COLOR }}
           ></div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-10">
-          
+
           {/* Contact Info Cards (Left Column) */}
           <div className="space-y-6 h-full">
             {/* Phone */}
-            <ContactCard 
+            <ContactCard
               icon={Phone}
               title="Phone"
               content="+61470032460"
               subtext="Available for bookings"
               action="Call Now"
               href="tel:+61470032460"
-              accentColor={ACCENT_COLOR}
+              accentColor={PRIMARY_COLOR}
             />
 
             {/* Email */}
-            <ContactCard 
+            <ContactCard
               icon={Mail}
               title="Email"
               content="spltransportation.australia@gmail.com"
               subtext="Response within 24 hours"
               action="Send Email"
               href="mailto:spltransportation.australia@gmail.com"
-              accentColor={ACCENT_COLOR}
+              accentColor={PRIMARY_COLOR}
             />
 
             {/* Location */}
-            <ContactCard 
+            <ContactCard
               icon={MapPin}
               title="Service Area"
               content="Queensland, Australia"
               subtext="Cairns, Port Douglas & Palm Cove"
               action="View on Map"
               href="#"
-              accentColor={ACCENT_COLOR}
+              accentColor={PRIMARY_COLOR}
             />
           </div>
 
           {/* Contact Form (Right Column - Spans 2) */}
           <div className="lg:col-span-2 bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-gray-100 relative overflow-hidden">
-            
+
             <div className="relative z-10">
-              <h2 
+              <h2
                 className="text-3xl font-bold text-gray-900 mb-8"
                 style={{ color: PRIMARY_COLOR }} // Primary Color for form title
               >
@@ -105,7 +105,7 @@ export default function ContactPage() {
                 </div>
 
                 <InputField label="Phone Number" type="tel" placeholder="+61 ..." accentColor={ACCENT_COLOR} />
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-gray-700 ml-1">
                     Message
@@ -117,10 +117,10 @@ export default function ContactPage() {
                              rounded-xl text-gray-900 placeholder-gray-400 
                              focus:ring-2 focus:border-transparent focus:outline-none 
                              transition-all resize-none"
-                    style={{ 
-                        '--tw-ring-color': ACCENT_COLOR, // Apply Accent Color to focus ring
-                        '--tw-ring-offset-width': '0px' 
-                    } as React.CSSProperties} 
+                    style={{
+                      '--tw-ring-color': ACCENT_COLOR, // Apply Accent Color to focus ring
+                      '--tw-ring-offset-width': '0px'
+                    } as React.CSSProperties}
                     required
                   ></textarea>
                 </div>
@@ -129,15 +129,15 @@ export default function ContactPage() {
                   type="submit"
                   disabled={formStatus !== 'idle'}
                   className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 text-white
-                    ${formStatus === 'success' 
-                      ? 'bg-green-600 scale-[1.02]' 
+                    ${formStatus === 'success'
+                      ? 'bg-green-600 scale-[1.02]'
                       : 'hover:-translate-y-1 shadow-lg'
                     }
                   `}
                   // Set background color using inline style, handling success state explicitly
                   style={{
-                    backgroundColor: formStatus === 'success' ? '#10B981' : ACCENT_COLOR, // Using bg-green-600 equivalent for success
-                    boxShadow: formStatus === 'success' ? 'none' : `0 4px 12px ${ACCENT_COLOR}30`
+                    backgroundColor: formStatus === 'success' ? '#10B981' : PRIMARY_COLOR,
+                    boxShadow: formStatus === 'success' ? 'none' : `0 4px 12px ${PRIMARY_COLOR}30`
                   }}
                 >
                   {formStatus === 'idle' && (
@@ -163,13 +163,13 @@ export default function ContactPage() {
 // Props updated to accept accentColor
 function ContactCard({ icon: Icon, title, content, subtext, action, href, accentColor }: any) {
   return (
-    <a 
+    <a
       href={href}
       className="flex items-start gap-5 bg-white p-6 rounded-2xl 
                   border border-gray-100 shadow-sm hover:shadow-md 
                   transition-all duration-300 hover:-translate-y-1 group"
     >
-      <div 
+      <div
         className="w-12 h-12 flex items-center justify-center rounded-xl shadow-sm shrink-0 group-hover:scale-110 transition-transform"
         style={{ backgroundColor: accentColor }} // Accent Color for icon background
       >
@@ -179,7 +179,7 @@ function ContactCard({ icon: Icon, title, content, subtext, action, href, accent
         <h3 className="font-bold text-lg text-gray-900 mb-1">{title}</h3>
         <p className="text-gray-600 font-medium mb-1">{content}</p>
         <p className="text-sm text-gray-400 mb-3">{subtext}</p>
-        <span 
+        <span
           className="text-sm font-bold group-hover:underline"
           style={{ color: accentColor }} // Accent Color for action link
         >
@@ -206,10 +206,10 @@ function InputField({ label, type, placeholder, accentColor }: any) {
                   rounded-xl text-gray-900 placeholder-gray-400 
                   focus:ring-2 focus:border-transparent focus:outline-none 
                   transition-all"
-        style={{ 
-            '--tw-ring-color': accentColor, // Apply Accent Color to focus ring
-            '--tw-ring-offset-width': '0px' 
-        } as React.CSSProperties} 
+        style={{
+          '--tw-ring-color': accentColor, // Apply Accent Color to focus ring
+          '--tw-ring-offset-width': '0px'
+        } as React.CSSProperties}
       />
     </div>
   );

@@ -60,9 +60,9 @@ export default function Navigation() {
                 }}
                 onMouseEnter={e => (e.currentTarget.style.color = ACCENT_COLOR)}
                 onMouseLeave={e =>
-                  (e.currentTarget.style.color = isActive(link.href)
-                    ? ACCENT_COLOR
-                    : PRIMARY_COLOR)
+                (e.currentTarget.style.color = isActive(link.href)
+                  ? ACCENT_COLOR
+                  : PRIMARY_COLOR)
                 }
               >
                 {link.label}
@@ -79,9 +79,9 @@ export default function Navigation() {
               }}
               onMouseEnter={e => (e.currentTarget.style.color = ACCENT_COLOR)}
               onMouseLeave={e =>
-                (e.currentTarget.style.color = pathname.startsWith('/blog')
-                  ? ACCENT_COLOR
-                  : PRIMARY_COLOR)
+              (e.currentTarget.style.color = pathname.startsWith('/blog')
+                ? ACCENT_COLOR
+                : PRIMARY_COLOR)
               }
             >
               Blog
@@ -103,29 +103,22 @@ export default function Navigation() {
                 <Phone className="w-5 h-5" />
               </a>
 
-              <Link
-                href="/transfers"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full 
-                           text-white font-bold text-sm shadow-lg transition-all 
-                           hover:-translate-y-0.5 active:translate-y-0"
-                style={{
-                  backgroundColor: PRIMARY_COLOR,
-                  boxShadow: `0 4px 10px ${PRIMARY_COLOR}40`
+              {/* Desktop Book Now Button */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' });
                 }}
+                className="hidden lg:block px-6 py-2.5 rounded-full text-white font-bold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                style={{ backgroundColor: PRIMARY_COLOR }}
               >
                 Book Now
-              </Link>
+              </button>
+
+
             </div>
 
-            {/* Mobile Book Now (BEFORE hamburger) */}
-            <Link
-              href="/transfers"
-              className="lg:hidden px-4 py-2 rounded-full text-sm font-bold 
-                         text-white shadow-md active:scale-95"
-              style={{ backgroundColor: PRIMARY_COLOR }}
-            >
-              Book Now
-            </Link>
+
 
             {/* Mobile Toggle */}
             <div className="lg:hidden">
@@ -147,9 +140,8 @@ export default function Navigation() {
 
       {/* Mobile Menu */}
       <div
-        className={`lg:hidden bg-white border-b border-gray-200 overflow-hidden transition-all duration-300 ${
-          menuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-        }`}
+        className={`lg:hidden bg-white border-b border-gray-200 overflow-hidden transition-all duration-300 ${menuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}
       >
         <div className="px-4 py-4 space-y-2">
           {NAV_LINKS.map(link => (

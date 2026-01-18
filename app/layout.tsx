@@ -1,6 +1,19 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
+  display: "swap",
+});
 import 'leaflet/dist/leaflet.css';
 import { BookingProvider } from "./providers/BookingProvider";
 import Navigation from "../app/components/Navigation";
@@ -86,9 +99,9 @@ export default function RootLayout({
         {/* ✅ Google Analytics */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
-        <Script id="google-analytics" strategy="afterInteractive">
+        <Script id="google-analytics" strategy="lazyOnload">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){window.dataLayer.push(arguments);}
@@ -103,7 +116,7 @@ export default function RootLayout({
         <Script
           id="local-business-schema"
           type="application/ld+json"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
@@ -133,7 +146,7 @@ export default function RootLayout({
         />
       </head>
 
-      <body className="bg-gray-50 text-gray-900">
+      <body className={`${inter.variable} ${playfair.variable} bg-gray-50 text-gray-900 antialiased`}>
         {/* ✅ Global App State */}
         <BookingProvider>
           <UtmTracker />

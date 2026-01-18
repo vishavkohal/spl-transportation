@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getRoutes } from '@/app/lib/routesStore';
+import { createPendingBooking, BookingPayload } from '@/app/lib/booking';
 
 export const runtime = 'nodejs';
 
@@ -164,18 +165,54 @@ export async function POST(req: NextRequest) {
         );
       }
 
-    try {
-  baseAmount = priceForPassengers(route.pricing, passengers);
-} catch {
-  return NextResponse.json(
-    {
-      error: `This route is available only for ${getPassengerRanges(
-        route.pricing
-      )} passengers.`,
-    },
-    { status: 400 }
-  );
-}
+      try {
+        baseAmount = priceForPassengers(route.pricing, passengers);
+      } catch {
+        return NextResponse.json(
+          {
+            error: `This route is available only for ${getPassengerRanges(
+              route.pricing
+            )} passengers.`,
+          },
+          { status: 400 }
+        );
+      }
+    } else if (bookingType === 'daytrip') {
+      // Day trip - validate against API routes
+      const { dayTripVehicleType, dayTripPrice, dayTripPickup, dayTripDestination } = booking;
+
+      if (!dayTripVehicleType || !dayTripPrice) {
+        return NextResponse.json(
+          { error: 'Day trip vehicle and price are required' },
+          { status: 400 }
+        );
+      }
+
+      if (!dayTripPickup || !dayTripDestination) {
+        return NextResponse.json(
+          { error: 'Day trip pickup and destination are required' },
+          { status: 400 }
+        );
+      }
+
+      // Validate pricing against actual routes to prevent manipulation
+      const routes = await getRoutes();
+      const dayTripRoutes = routes.filter(r => r.from === 'Day trip (8 hours)');
+
+      const validPricing = dayTripRoutes.some(r =>
+        r.pricing?.some(p =>
+          p.vehicleType === dayTripVehicleType && Number(p.price) === Number(dayTripPrice)
+        )
+      );
+
+      if (!validPricing) {
+        return NextResponse.json(
+          { error: 'Invalid day trip pricing' },
+          { status: 400 }
+        );
+      }
+
+      baseAmount = Number(dayTripPrice);
     } else {
       return NextResponse.json(
         { error: 'Invalid bookingType' },
@@ -202,21 +239,32 @@ export async function POST(req: NextRequest) {
     const descriptionLines =
       bookingType === 'hourly'
         ? [
-            'Hourly Private Charter (GST inclusive)',
-            `Pickup: ${booking.hourlyPickupLocation}`,
-            `Vehicle: ${booking.hourlyVehicleType}`,
-            `Hours: ${booking.hourlyHours}`,
+          'Hourly Private Charter (GST inclusive)',
+          `Pickup: ${booking.hourlyPickupLocation}`,
+          `Vehicle: ${booking.hourlyVehicleType}`,
+          `Hours: ${booking.hourlyHours}`,
+          `Processing fee: 2.5% (GST inclusive)`,
+          `Name: ${fullName}`,
+          `Email: ${email}`,
+          `Mobile: ${contactNumber}`,
+        ]
+        : bookingType === 'daytrip'
+          ? [
+            'Day Trip Charter - 8 Hours (GST inclusive)',
+            `Pickup: ${booking.dayTripPickup}`,
+            `Destination: ${booking.dayTripDestination}`,
+            `Vehicle: ${booking.dayTripVehicleType}`,
+            `Date & time: ${pickupDate} at ${pickupTime}`,
             `Processing fee: 2.5% (GST inclusive)`,
             `Name: ${fullName}`,
             `Email: ${email}`,
             `Mobile: ${contactNumber}`,
           ]
-        : [
+          : [
             'Standard Transfer (GST inclusive)',
             `Route: ${pickupLocation} → ${dropoffLocation}`,
             `Date & time: ${pickupDate} at ${pickupTime}`,
-            `Passengers: ${passengers}, Bags: ${luggage}${
-              childSeat ? ', Child seat: Yes' : ''
+            `Passengers: ${passengers}, Bags: ${luggage}${childSeat ? ', Child seat: Yes' : ''
             }`,
             `Processing fee: 2.5% (GST inclusive)`,
             `Name: ${fullName}`,
@@ -241,7 +289,9 @@ export async function POST(req: NextRequest) {
               name:
                 bookingType === 'hourly'
                   ? 'SPL Hourly Charter'
-                  : 'SPL Standard Transfer',
+                  : bookingType === 'daytrip'
+                    ? 'SPL Day Trip Charter'
+                    : 'SPL Standard Transfer',
               description: descriptionLines.join('\n'),
             },
           },
@@ -257,6 +307,23 @@ export async function POST(req: NextRequest) {
         booking: JSON.stringify(booking),
       },
     });
+
+    /* -------------------------------------------------
+       💾 CREATE PENDING BOOKING
+    -------------------------------------------------- */
+    try {
+      const pendingBooking: BookingPayload = {
+        ...booking,
+        totalPrice: finalAmount,
+        currency: 'AUD',
+        bookingType,
+      };
+
+      await createPendingBooking(session.id, pendingBooking);
+    } catch (saveError) {
+      console.error('Failed to create pending booking:', saveError);
+      // We continue anyway so the user can still pay (webhook will create it if needed)
+    }
 
     return NextResponse.json({ url: session.url });
   } catch (err) {

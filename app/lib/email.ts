@@ -2,6 +2,7 @@
 import Stripe from 'stripe';
 import { Resend } from 'resend';
 import pRetry from 'p-retry';
+import { calculatePriceBreakdown, formatCurrency } from './priceMath';
 
 // Re-export type used elsewhere if needed
 export type BookingEmailData = {
@@ -25,10 +26,15 @@ export type BookingEmailData = {
 
   totalPrice: number; // in AUD
 
-  bookingType?: 'standard' | 'hourly';
+  bookingType?: 'standard' | 'hourly' | 'daytrip';
   hourlyPickupLocation?: string | null;
   hourlyHours?: number | null;
   hourlyVehicleType?: string | null;
+
+  // New Day Trip fields
+  dayTripPickup?: string | null;
+  dayTripDestination?: string | null;
+  dayTripVehicleType?: string | null;
 };
 
 // Resend client
@@ -60,6 +66,7 @@ async function sendWithRetries(payload: {
   to: string | string[];
   subject: string;
   html: string;
+  attachments?: { filename: string; content: Buffer }[];
 }) {
   if (!resend) {
     throw new Error('Resend client not configured (RESEND_API_KEY missing).');
@@ -122,20 +129,24 @@ export function buildBookingReceiptHtml(
 
   const childSeatText = booking.childSeat ? 'Yes' : 'No';
   const isHourly = booking.bookingType === 'hourly';
+  const isDayTrip = booking.bookingType === 'daytrip';
 
   const hourlyPickup = booking.hourlyPickupLocation || booking.pickupLocation || '';
   const hourlyHours = typeof booking.hourlyHours === 'number' ? booking.hourlyHours : booking.hourlyHours ? Number(booking.hourlyHours) : undefined;
   const hourlyVehicle = booking.hourlyVehicleType || '';
 
+  const dayTripPickup = booking.dayTripPickup || '';
+  const dayTripDest = booking.dayTripDestination || '';
+  const dayTripVehicle = booking.dayTripVehicleType || '';
+
   const paymentId = (session?.payment_intent as string | null) || (session?.id as string | null) || '';
 
-  const total = Number(booking.totalPrice ?? 0);
-  const serviceTotal = Number((total / 1.025).toFixed(2));
-  // Processing fee already included
-  const processingFee = Number((total - serviceTotal).toFixed(2));
-  const gst = Number((serviceTotal * 10 / 110).toFixed(2));
-  const subtotal =  Number((serviceTotal - gst).toFixed(2));
-  const grandTotal = total;
+  /* ------------------------------------------------------------------
+     💰 AMOUNT CALCULATIONS (CENTRALIZED)
+  ------------------------------------------------------------------ */
+  const { totalPaid, serviceTotal, processingFee, gst, subtotalExGst } = calculatePriceBreakdown(booking.totalPrice);
+  const total = totalPaid; // Alias for template usage
+  const subtotal = subtotalExGst; // Alias for template usage
   const style = `
     body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial; color:#111827; }
     .wrap { max-width:700px; margin:0 auto; padding:18px; }
@@ -151,8 +162,22 @@ export function buildBookingReceiptHtml(
     .right { text-align:right; }
   `;
 
-  const tripRows = isHourly
-    ? `
+  let tripRows = '';
+
+  if (isDayTrip) {
+    tripRows = `
+      <tr><td style="font-weight:600">Service</td><td>Day Trip Charter (8 Hours)</td></tr>
+      <tr><td style="font-weight:600">Pickup Location</td><td>${dayTripPickup}</td></tr>
+      <tr><td style="font-weight:600">Destination/Area</td><td>${dayTripDest}</td></tr>
+      <tr><td style="font-weight:600">Vehicle</td><td>${dayTripVehicle || 'Standard'}</td></tr>
+      <tr><td style="font-weight:600">Date & Time</td><td>${booking.pickupDate} at ${booking.pickupTime}</td></tr>
+      <tr><td style="font-weight:600">Passengers</td><td>${booking.passengers}</td></tr>
+      <tr><td style="font-weight:600">Luggage</td><td>${booking.luggage}</td></tr>
+      ${booking.flightNumber ? `<tr><td style="font-weight:600">Flight #</td><td>${booking.flightNumber}</td></tr>` : ''}
+      <tr><td style="font-weight:600">Child Seat</td><td>${childSeatText}</td></tr>
+    `;
+  } else if (isHourly) {
+    tripRows = `
       <tr><td style="font-weight:600">Service</td><td>Chauffeur & Hourly Hire</td></tr>
       <tr><td style="font-weight:600">Pickup</td><td>${hourlyPickup}</td></tr>
       <tr><td style="font-weight:600">Hours</td><td>${hourlyHours ?? 'N/A'}</td></tr>
@@ -162,8 +187,10 @@ export function buildBookingReceiptHtml(
       <tr><td style="font-weight:600">Luggage</td><td>${booking.luggage}</td></tr>
       ${booking.flightNumber ? `<tr><td style="font-weight:600">Flight #</td><td>${booking.flightNumber}</td></tr>` : ''}
       <tr><td style="font-weight:600">Child Seat</td><td>${childSeatText}</td></tr>
-    `
-    : `
+    `;
+  } else {
+    // Standard
+    tripRows = `
       <tr><td style="font-weight:600">From</td><td>${booking.pickupLocation}${booking.pickupAddress ? ' – ' + booking.pickupAddress : ''}</td></tr>
       <tr><td style="font-weight:600">To</td><td>${booking.dropoffLocation}${booking.dropoffAddress ? ' – ' + booking.dropoffAddress : ''}</td></tr>
       <tr><td style="font-weight:600">Date & Time</td><td>${booking.pickupDate} at ${booking.pickupTime}</td></tr>
@@ -172,6 +199,7 @@ export function buildBookingReceiptHtml(
       ${booking.flightNumber ? `<tr><td style="font-weight:600">Flight #</td><td>${booking.flightNumber}</td></tr>` : ''}
       <tr><td style="font-weight:600">Child Seat</td><td>${childSeatText}</td></tr>
     `;
+  }
 
   const html = `
    <!doctype html>
@@ -310,22 +338,23 @@ export function buildBookingSummaryHtml(
  */
 export async function sendCustomerEmail(
   booking: BookingEmailData,
-  session?: Stripe.Checkout.Session | null
+  session?: Stripe.Checkout.Session | null,
+  attachments?: { filename: string; content: Buffer }[]
 ): Promise<void> {
   // If booking has id & createdAt, compute a deterministic invoice number
   let opts: { invoiceNumber?: string; invoiceDate?: string; bookingRef?: string } | undefined = undefined;
-  if (booking.id && booking.createdAt) {
-    try {
-      const created = new Date(booking.createdAt);
-      const datePart = created.toISOString().split('T')[0].replace(/-/g, '');
-      opts = {
-        invoiceNumber: `${booking.id}-${datePart}`,
-        invoiceDate: created.toLocaleDateString(),
-        bookingRef: booking.id,
-      };
-    } catch (e) {
-      // ignore and fall back to random invoice number in builder
-    }
+
+  if (booking.id) {
+    // Prefer stored invoiceId if available, else generate consistent fallback
+    const invoiceId = (booking as any).invoiceId || (booking.id && booking.createdAt
+      ? `INV-${new Date(booking.createdAt).toISOString().slice(0, 10).replace(/-/g, '')}-${booking.id.slice(0, 4).toUpperCase()}`
+      : `INV-${Math.floor(Math.random() * 100000)}`);
+
+    opts = {
+      invoiceNumber: invoiceId,
+      invoiceDate: booking.createdAt ? new Date(booking.createdAt).toLocaleDateString() : new Date().toLocaleDateString(),
+      bookingRef: booking.id,
+    };
   }
 
   const html = buildBookingSummaryHtml(booking, session, opts);
@@ -343,6 +372,7 @@ export async function sendCustomerEmail(
       to: booking.email,
       subject: `Your ${COMPANY_NAME} Booking Confirmation`,
       html,
+      attachments,
     });
   } catch (err) {
     console.error('Failed to send customer email after retries:', err);
@@ -355,35 +385,32 @@ export async function sendCustomerEmail(
  */
 export async function sendAdminEmail(
   booking: BookingEmailData,
-  session?: Stripe.Checkout.Session | null
+  session?: Stripe.Checkout.Session | null,
+  attachments?: { filename: string; content: Buffer }[]
 ): Promise<void> {
   const isHourly = booking.bookingType === 'hourly';
-  const subject = isHourly
-    ? `New Hourly Hire Booking – ${booking.hourlyPickupLocation || booking.pickupLocation}`
-    : `New Booking – ${booking.pickupLocation} → ${booking.dropoffLocation}`;
+  const isDayTrip = booking.bookingType === 'daytrip';
+
+  let subject = `New Booking – ${booking.pickupLocation} → ${booking.dropoffLocation}`;
+
+  if (isDayTrip) {
+    subject = `New Day Trip Booking – ${booking.dayTripDestination || 'Day Trip'}`;
+  } else if (isHourly) {
+    subject = `New Hourly Hire Booking – ${booking.hourlyPickupLocation || booking.pickupLocation}`;
+  }
 
   // Compute invoice opts if possible
   let opts: { invoiceNumber?: string; invoiceDate?: string; bookingRef?: string } | undefined = undefined;
   if (booking.id && booking.createdAt) {
     try {
-      const created = new Date(booking.createdAt);
-
-      // Get YYYYMMDD
-      const y = created.getFullYear();
-      const m = String(created.getMonth() + 1).padStart(2, "0");
-      const d = String(created.getDate()).padStart(2, "0");
-      const datePart = `${y}${m}${d}`;
-
-      // Get HHMMSSmmm
-      const hh = String(created.getHours()).padStart(2, "0");
-      const mm = String(created.getMinutes()).padStart(2, "0");
-      const ss = String(created.getSeconds()).padStart(2, "0");
-      const ms = String(created.getMilliseconds()).padStart(3, "0");
-      const timePart = `${hh}${mm}${ss}${ms}`;
+      // Use existing invoiceId if available
+      const invoiceId = (booking as any).invoiceId || (booking.id && booking.createdAt
+        ? `INV-${new Date(booking.createdAt).toISOString().slice(0, 10).replace(/-/g, '')}-${booking.id.slice(0, 4).toUpperCase()}`
+        : `INV-${Math.floor(Math.random() * 100000)}`);
 
       opts = {
-        invoiceNumber: `INV-${datePart}-${timePart}`,
-        invoiceDate: created.toLocaleDateString(),
+        invoiceNumber: invoiceId,
+        invoiceDate: new Date(booking.createdAt).toLocaleDateString(),
         bookingRef: booking.id,
       };
     } catch (e) {
@@ -406,6 +433,7 @@ export async function sendAdminEmail(
       to: ADMIN_EMAIL,
       subject,
       html,
+      attachments,
     });
   } catch (err) {
     console.error('Failed to send admin email after retries:', err);

@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { motion, type Variants } from 'framer-motion';
+import Link from 'next/link';
 
 // Brand colors
 const PRIMARY_COLOR = '#18234B'; // Dark Navy
@@ -10,14 +12,17 @@ const ACCENT_COLOR = '#A61924';  // Deep Red;
 // Types
 type FaqItem = {
   question: string;
-  answer: string;
+  answer: string | React.ReactNode;
 };
 
 const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'How do I book a transfer?',
-    answer:
-      'You can book directly through our online booking form or contact our team by phone or email. Once your booking is confirmed, you will receive a confirmation email with all the details.',
+    answer: (
+      <>
+        You can book directly through our <button onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })} className="text-blue-700 hover:underline font-medium">online booking form</button> or <Link href="/contact" className="text-blue-700 hover:underline font-medium">contact our team</Link> by phone or email. Once your booking is confirmed, you will receive a confirmation email with all the details.
+      </>
+    ) as any,
   },
   {
     question: 'Can I make changes to my booking?',
@@ -51,10 +56,30 @@ const FAQ_ITEMS: FaqItem[] = [
   },
   {
     question: 'What is your cancellation policy?',
-    answer:
-      'Cancellations made with reasonable notice before the scheduled pickup time can usually be refunded or credited, subject to our booking terms. Late cancellations or no-shows may incur a fee. Full details are provided in your booking confirmation.',
+    answer: (
+      <>
+        Cancellations made with reasonable notice before the scheduled pickup time can usually be refunded or credited, subject to our <Link href="/terms" className="text-blue-700 hover:underline font-medium">booking terms</Link>. Late cancellations or no-shows may incur a fee. Full details are provided in your booking confirmation.
+      </>
+    ) as any,
   },
 ];
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'spring', stiffness: 40, damping: 20 },
+  },
+};
 
 const FaqSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -64,7 +89,7 @@ const FaqSection: React.FC = () => {
   };
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-6 md:py-12 bg-[#F8F9FA] mx-3 md:mx-6 rounded-[2.5rem] shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] overflow-hidden">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -72,7 +97,7 @@ const FaqSection: React.FC = () => {
             className="font-semibold tracking-[0.24em] uppercase text-xs sm:text-[11px] mb-2"
             style={{ color: ACCENT_COLOR }}
           >
-               Answers to Common Questions
+            Answers to Common Questions
           </p>
 
           <h2
@@ -81,9 +106,9 @@ const FaqSection: React.FC = () => {
           >
             Frequently Asked Questions
             <div
-            className="w-20 h-1.5 mx-auto mt-3 rounded-full"
-            style={{ backgroundColor: ACCENT_COLOR }}
-          />
+              className="w-20 h-1.5 mx-auto mt-3 rounded-full"
+              style={{ backgroundColor: ACCENT_COLOR }}
+            />
           </h2>
 
           <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto">
@@ -93,13 +118,20 @@ const FaqSection: React.FC = () => {
         </div>
 
         {/* FAQ list */}
-        <div className="space-y-4">
+        <motion.div
+          className="space-y-4"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+        >
           {FAQ_ITEMS.map((item, index) => {
             const isOpen = openIndex === index;
 
             return (
-              <div
+              <motion.div
                 key={item.question}
+                variants={itemVariants}
                 className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
               >
                 <button
@@ -111,9 +143,8 @@ const FaqSection: React.FC = () => {
                     {item.question}
                   </span>
                   <ChevronDown
-                    className={`w-5 h-5 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180' : ''
-                    }`}
+                    className={`w-5 h-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
+                      }`}
                     style={{ color: ACCENT_COLOR }}
                   />
                 </button>
@@ -123,10 +154,10 @@ const FaqSection: React.FC = () => {
                     {item.answer}
                   </div>
                 )}
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

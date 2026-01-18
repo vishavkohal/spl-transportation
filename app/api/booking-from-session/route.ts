@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
     if (existing) {
       const bookingForClient: BookingPayload = {
         id: (existing as any).id,
+        invoiceId: (existing as any).invoiceId,
         createdAt: (existing as any).createdAt
           ? new Date((existing as any).createdAt).toISOString()
           : undefined,

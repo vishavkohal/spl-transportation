@@ -2,7 +2,7 @@
 import React from 'react';
 import { BusFront, Plane, Car } from 'lucide-react';
 // 1. Import the CSS Module
-import styles from './PlaceCarousel.module.css'; 
+import styles from './PlaceCarousel.module.css';
 
 const DESTINATIONS = [
   { name: 'Cairns Airport', icon: <Plane className="w-5 h-5 mr-2 text-red-600" /> },
@@ -20,10 +20,10 @@ const CAROUSEL_ITEMS = [...DESTINATIONS, ...DESTINATIONS];
 
 export default function PlaceCarousel() {
   return (
-    <div className="bg-white py-4 border-y border-gray-100 overflow-hidden relative shadow-inner">
+    <div className="bg-[#F8F9FA] py-4 border-y border-gray-100 overflow-hidden relative shadow-inner">
       {/* FADE OVERLAYS */}
-      <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
-      <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#F8F9FA] to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#F8F9FA] to-transparent z-10 pointer-events-none" />
 
       {/* 2. Apply the imported class from the CSS module */}
       <div className={`flex flex-nowrap ${styles.infiniteScroll}`}>

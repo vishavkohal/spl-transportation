@@ -43,7 +43,7 @@ const CUSTOMER_REVIEWS: Review[] = [
 
 // Animations
 const sectionHeaderVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 15 },
   visible: {
     opacity: 1,
     y: 0,
@@ -59,18 +59,21 @@ const reviewsContainerVariants: Variants = {
 };
 
 const reviewCardVariants: Variants = {
-  hidden: { opacity: 0, y: 30, scale: 0.97 },
+  hidden: { opacity: 0, y: 15 },
   visible: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    transition: { duration: 0.5, ease: 'easeOut' },
+    transition: {
+      type: 'spring',
+      stiffness: 40,
+      damping: 20
+    },
   },
 };
 
 const CustomerReviews: React.FC = () => {
   return (
-    <section className="py-20 bg-gray-50 transition-colors duration-300">
+    <section className="py-6 md:py-12 bg-[#F8F9FA] transition-colors duration-300 mx-3 md:mx-6 mb-6 md:mb-12 rounded-[2.5rem] shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Section Title */}
@@ -94,9 +97,8 @@ const CustomerReviews: React.FC = () => {
           >
             What Our Customers Say
           </h2>
-
           <div
-            className="w-24 h-1.5 mx-auto mt-4 rounded-full"
+            className="w-24 h-1.5 mt-4 rounded-full mx-auto"
             style={{ backgroundColor: ACCENT_COLOR }}
           />
         </motion.div>
@@ -116,19 +118,15 @@ const CustomerReviews: React.FC = () => {
               whileHover={{
                 y: -6,
                 scale: 1.02,
-                boxShadow: '0 18px 45px rgba(0, 0, 0, 0.25)',
+                boxShadow: '0 18px 45px rgba(0, 0, 0, 0.15)',
               }}
-              className="relative rounded-2xl p-8 border shadow-xl transition-all duration-300"
-              style={{
-                backgroundColor: PRIMARY_COLOR,
-                borderColor: PRIMARY_COLOR,
-              }}
+              className="relative rounded-2xl p-8 border border-gray-100 bg-white shadow-sm transition-all duration-300"
             >
               {/* Quote Icon */}
-              <div className="absolute top-6 right-8 opacity-15">
+              <div className="absolute top-6 right-8 opacity-10">
                 <Quote
                   className="w-12 h-12"
-                  style={{ color: ACCENT_COLOR }}
+                  style={{ color: PRIMARY_COLOR }}
                 />
               </div>
 
@@ -141,7 +139,7 @@ const CustomerReviews: React.FC = () => {
                     style={{
                       color: i < review.rating
                         ? ACCENT_COLOR
-                        : 'rgba(255,255,255,0.25)',
+                        : '#e2e8f0', // lighter gray for empty stars
                     }}
                     fill={i < review.rating ? ACCENT_COLOR : 'none'}
                   />
@@ -149,17 +147,17 @@ const CustomerReviews: React.FC = () => {
               </div>
 
               {/* Comment */}
-              <p className="leading-relaxed mb-8 italic text-white relative z-10">
+              <p className="leading-relaxed mb-8 italic text-slate-600 relative z-10">
                 &quot;{review.comment}&quot;
               </p>
 
               {/* Divider */}
-              <div className="w-full h-px mb-6" style={{ backgroundColor: 'rgba(255,255,255,0.25)' }} />
+              <div className="w-full h-px mb-6 bg-gray-100" />
 
               {/* User Info */}
               <div className="flex justify-between items-end">
                 <div>
-                  <p className="font-bold text-lg text-white">{review.name}</p>
+                  <p className="font-bold text-lg" style={{ color: PRIMARY_COLOR }}>{review.name}</p>
                   <p
                     className="text-sm font-medium"
                     style={{ color: ACCENT_COLOR }}
@@ -167,7 +165,7 @@ const CustomerReviews: React.FC = () => {
                     Verified Client
                   </p>
                 </div>
-                <p className="text-sm text-white/60">{review.date}</p>
+                <p className="text-sm text-slate-400">{review.date}</p>
               </div>
             </motion.div>
           ))}

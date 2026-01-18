@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -12,10 +17,30 @@
   }
 }
 
+/* Apply Fonts Globally */
+body {
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-serif);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+  /* Prevent horizontal scroll from animations */
 }
 
 /* globals.css */
@@ -25,14 +50,17 @@ body {
 .skeleton {
   position: relative;
   overflow: hidden;
-  background-color: #e5e7eb; /* Tailwind gray-200 */
-  border-radius: 9999px; /* rounded-full feel, adjust via Tailwind if needed */
+  background-color: #e5e7eb;
+  /* Tailwind gray-200 */
+  border-radius: 9999px;
+  /* rounded-full feel, adjust via Tailwind if needed */
 }
 
 .skeleton-block {
   position: relative;
   overflow: hidden;
-  background-color: #e5e7eb; /* Tailwind gray-200 */
+  background-color: #e5e7eb;
+  /* Tailwind gray-200 */
 }
 
 .skeleton::after,
@@ -41,12 +69,10 @@ body {
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background-image: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.7) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background-image: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.7) 50%,
+      rgba(255, 255, 255, 0) 100%);
   animation: shimmer 1.4s infinite;
 }
 
@@ -58,16 +84,31 @@ body {
 }
 
 /* Add extra spacing BEFORE headings that follow hr */
-.prose hr + h2 {
+.prose hr+h2 {
   margin-top: 2rem;
 }
 
-.prose hr + h3 {
+.prose hr+h3 {
   margin-top: 2rem;
 }
 
-.prose hr + h4 {
+.prose hr+h4 {
   margin-top: 2rem;
+}
+
+/* ===== Blog Link Styling ===== */
+.prose a {
+  color: #A61924 !important;
+  font-weight: 700 !important;
+  text-decoration: underline !important;
+  text-underline-offset: 4px !important;
+  text-decoration-color: rgba(166, 25, 36, 0.5) !important;
+  transition: all 0.2s ease-in-out;
+}
+
+.prose a:hover {
+  color: #8a141d !important;
+  text-decoration-color: #A61924 !important;
 }
 
 @keyframes shimmer {

@@ -32,6 +32,7 @@ model RoutePricing {
 model Booking {
   id                   String   @id @default(cuid())
   stripeSessionId      String   @unique
+  invoiceId            String?  @unique // Custom format: INV-YYYYMMDD-XXXX
 
   pickupLocation       String
   pickupAddress        String?
@@ -59,6 +60,13 @@ model Booking {
   hourlyHours          Int?
   hourlyVehicleType    String?
 
+  // Day Trip
+  dayTripPickup        String?
+  dayTripDestination   String?
+  dayTripVehicleType   String?
+
+  status               String   @default("PENDING") // PENDING, PAID, CANCELLED
+
   createdAt            DateTime @default(now())
 }
 
@@ -85,6 +93,11 @@ model BookingLead {
   hourlyPickupLocation  String?
   hourlyHours           Int?
   hourlyVehicleType     String?
+
+  // Day Trip
+  dayTripPickup         String?
+  dayTripDestination    String?
+  dayTripVehicleType    String?
 
   // Contact (MANDATORY for saving)
   fullName              String?

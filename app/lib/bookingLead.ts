@@ -15,7 +15,7 @@ export type UtmPayload = {
 export type BookingLeadPayload = {
   id?: string;
 
-  bookingType: 'standard' | 'hourly';
+  bookingType: 'standard' | 'hourly' | 'daytrip';
 
   // Standard transfer
   pickupLocation?: string;
@@ -35,6 +35,11 @@ export type BookingLeadPayload = {
   hourlyPickupLocation?: string | null;
   hourlyHours?: number | null;
   hourlyVehicleType?: string | null;
+
+  // Day Trip
+  dayTripPickup?: string | null;
+  dayTripDestination?: string | null;
+  dayTripVehicleType?: string | null;
 
   // Contact (REQUIRED to save)
   fullName?: string;

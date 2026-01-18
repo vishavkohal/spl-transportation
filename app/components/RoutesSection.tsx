@@ -1,16 +1,16 @@
 'use client';
 
-import React from 'react';
-import { BusFront, Clock, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import { MapPin, Clock, Users, ChevronRight, Plane, Building2, Palmtree } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 import Image from 'next/image';
 import type { Route } from '../types';
 
-// Define the custom colors for readability
-const PRIMARY_COLOR = '#18234B'; // Dark Navy (Headings, accents)
-const ACCENT_COLOR = '#A61924'; // Deep Red (Accent/Button)
+// Brand colors
+const PRIMARY_COLOR = '#18234B';
+const ACCENT_COLOR = '#A61924';
 
-// Vehicle type → image mapping
+// Vehicle images
 const VEHICLE_IMAGES: Record<string, string> = {
   Sedan: '/vehicles/sedan.svg',
   SUV: '/vehicles/suv.svg',
@@ -25,44 +25,29 @@ type RoutesSectionProps = {
   onSelectRoute?: (route: Route) => void;
 };
 
+// Filter categories
+const FILTER_CATEGORIES = [
+  { id: 'all', label: 'All Routes', icon: null },
+  { id: 'airport', label: 'Airport', icon: Plane },
+  { id: 'city', label: 'City', icon: Building2 },
+  { id: 'beach', label: 'Beach', icon: Palmtree }
+];
+
 // Animation variants
-const headingVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: 'easeOut' }
-  }
-};
-
-const subtextVariants: Variants = {
-  hidden: { opacity: 0, y: 12 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: 'easeOut', delay: 0.08 }
-  }
-};
-
-const cardsContainerVariants: Variants = {
-  hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.1
-    }
+    transition: { staggerChildren: 0.08 }
   }
 };
 
 const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 24, rotateX: -4 },
+  hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
-    rotateX: 0,
-    transition: {
-      duration: 0.35,
-      ease: 'easeOut'
-    }
+    transition: { type: 'spring', stiffness: 50, damping: 15 }
   }
 };
 
@@ -73,363 +58,478 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
   setCurrentPage,
   onSelectRoute
 }) => {
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
   const handleBooking = (route: Route) => {
     try {
       if (typeof onSelectRoute === 'function') onSelectRoute(route);
       if (typeof setCurrentPage === 'function') setCurrentPage('home');
+      const bookingForm = document.getElementById('booking-form');
+      if (bookingForm) {
+        bookingForm.scrollIntoView({ behavior: 'smooth' });
+      }
     } catch (e) {
-      console.error('Error during route selection/page change:', e);
+      console.error('Error during route selection:', e);
     }
   };
 
-  // 🔹 Shimmer skeleton cards while data is loading
-  const renderSkeletonCards = () => {
-    const skeletonItems = Array.from({ length: 5 });
+  // Filter routes based on search and category
+  const filteredRoutes = routes.filter(route => {
+    const matchesSearch =
+      searchQuery === '' ||
+      route.from.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      route.to.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return (
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 justify-items-center mt-2">
-        {skeletonItems.map((_, idx) => (
-          <div
-            key={idx}
-            className="
-              w-full max-w-[350px] mx-auto
-              rounded-xl border border-white/70 bg-white/60 
-              backdrop-blur-sm
-              p-3 sm:p-4 shadow-sm
-            "
-          >
-            {/* Top chip */}
-            <div className="mb-2 h-3 w-20 skeleton-block rounded-full" />
+    const matchesFilter =
+      activeFilter === 'all' ||
+      (activeFilter === 'airport' &&
+        (route.from.toLowerCase().includes('airport') ||
+          route.to.toLowerCase().includes('airport'))) ||
+      (activeFilter === 'city' &&
+        (route.from.toLowerCase().includes('city') ||
+          route.to.toLowerCase().includes('city') ||
+          route.from.toLowerCase().includes('cairns') ||
+          route.to.toLowerCase().includes('cairns'))) ||
+      (activeFilter === 'beach' &&
+        (route.from.toLowerCase().includes('cove') ||
+          route.to.toLowerCase().includes('cove') ||
+          route.from.toLowerCase().includes('beach') ||
+          route.to.toLowerCase().includes('beach')));
 
-            {/* Route title */}
-            <div className="mb-2.5 border-b border-gray-100/70 pb-2.5">
-              <div className="h-4 w-3/4 mx-auto rounded skeleton-block mb-2" />
-              <div className="flex justify-center gap-3">
-                <div className="h-3 w-16 rounded skeleton-block" />
-                <div className="h-3 w-16 rounded skeleton-block" />
-              </div>
-            </div>
+    return matchesSearch && matchesFilter;
+  });
 
-            {/* Pricing rows (2 skeleton rows) */}
-            <div className="flex flex-col gap-1.5">
-              {[0, 1].map(i => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2.5 rounded-lg border border-gray-200/70 px-2.5 py-2 bg-slate-50/60"
-                >
-                  <div className="flex items-center gap-2.5 flex-1">
-                    <div className="h-7 w-8 rounded skeleton-block" />
-                    <div className="flex flex-col gap-1 flex-1">
-                      <div className="h-3 w-20 rounded skeleton-block" />
-                      <div className="h-3 w-24 rounded skeleton-block" />
-                    </div>
-                  </div>
-                  <div className="h-3 w-10 rounded skeleton-block" />
-                </div>
-              ))}
-            </div>
+  // Separate day trip routes and combine their pricing
+  const dayTripRoutes = routes.filter(r => r.from === 'Day trip (8 hours)');
+  const regularRoutes = filteredRoutes.filter(r => r.from !== 'Day trip (8 hours)');
 
-            {/* Note */}
-            <div className="mt-3 border-top border-gray-100/70 pt-2">
-              <div className="h-3 w-5/6 rounded skeleton-block" />
-            </div>
+  // Combine all day trip pricing into one array
+  const dayTripPricing = dayTripRoutes.flatMap(r => r.pricing || []);
 
-            {/* Button */}
-            <div className="mt-3 h-8 w-full rounded-lg skeleton-block" />
+  // Get lowest price for a route
+  const getLowestPrice = (route: Route) => {
+    if (!route.pricing || route.pricing.length === 0) return 0;
+    return Math.min(...route.pricing.map(p => Number(p.price)));
+  };
+
+  // Handler for day trip booking - scrolls to form with special flag
+  const handleDayTripBooking = () => {
+    // Dispatch custom event for day trip mode
+    window.dispatchEvent(new CustomEvent('selectDayTrip', {
+      detail: { pricing: dayTripPricing }
+    }));
+    const bookingForm = document.getElementById('booking-form');
+    if (bookingForm) {
+      bookingForm.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // Skeleton cards
+  const renderSkeletonCards = () => (
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, idx) => (
+        <div
+          key={idx}
+          className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+        >
+          <div className="mb-4">
+            <div className="h-5 w-3/4 skeleton-block rounded mb-2" />
+            <div className="h-4 w-1/2 skeleton-block rounded" />
           </div>
-        ))}
-      </div>
-    );
-  };
+          <div className="flex gap-2 mb-4">
+            <div className="h-8 w-20 skeleton-block rounded-full" />
+            <div className="h-8 w-20 skeleton-block rounded-full" />
+          </div>
+          <div className="h-10 w-full skeleton-block rounded-xl" />
+        </div>
+      ))}
+    </div>
+  );
 
-  // 🔹 Decide what to render *inside the glass panel*
+  // Main content
   const renderContent = () => {
-    if (loading) {
-      return renderSkeletonCards();
-    }
+    if (loading) return renderSkeletonCards();
 
     if (error) {
       return (
-        <p className="text-red-500 font-medium text-center text-xs md:text-sm mt-2">
-          Error: {error}
+        <p className="text-red-500 font-medium text-center py-8">
+          Error loading routes: {error}
         </p>
       );
     }
 
     if (!routes || routes.length === 0) {
       return (
-        <p className="text-gray-600 text-center text-xs md:text-sm mt-2">
-          No routes configured.
+        <p className="text-gray-600 text-center py-8">
+          No routes available at the moment.
         </p>
       );
     }
 
-    // ✅ Normal case: we have routes
+    if (filteredRoutes.length === 0) {
+      return (
+        <p className="text-gray-600 text-center py-8">
+          No routes match your search. Try a different filter.
+        </p>
+      );
+    }
+
     return (
       <>
-        <motion.p
-          className="text-gray-600 text-center mb-4 md:mb-5 max-w-2xl md:max-w-3xl mx-auto leading-relaxed text-[11px] sm:text-xs md:text-sm"
-          variants={subtextVariants}
-        >
-          Select a route below and you can finalise your date, passengers and payment
-          in the booking form.
-        </motion.p>
-
-       <motion.div
-  className="
-    grid 
-    grid-cols-1 sm:grid-cols-2 md:grid-cols-3 
-    gap-x-5 md:gap-x-6 
-    gap-y-7 md:gap-y-8 
-    justify-items-center
-  "
-  variants={cardsContainerVariants}
->
-
-  {routes.map(route => (
-  <motion.article
-    key={route.id}
-    variants={cardVariants}
-    whileHover={{
-      y: -3,
-      scale: 1.01,
-      boxShadow: '0 18px 40px rgba(15,23,42,0.18)'
-    }}
-    className="
-      group flex flex-col
-      rounded-xl border border-white/70 bg-white/85 
-      backdrop-blur-sm
-      p-3 sm:p-4 
-      shadow-sm
-      hover:bg-white
-      transition-all duration-200
-      w-full max-w-[350px] mx-auto
-    "
-  >
-    {/* Label chip */}
-    {route.label && (
-      <div className="mb-1 flex justify-between items-center">
-        <span
-          className="
-            inline-flex items-center rounded-full 
-            px-2.5 py-[2.5px] 
-            text-[10px] font-semibold uppercase tracking-wide
-            bg-gradient-to-r from-red-100 to-red-50
-            text-red-700 border border-red-200/80
-          "
-        >
-          {route.label}
-        </span>
-      </div>
-    )}
-
-    {/* HEADER: route + distance / time */}
-    <header className="mb-3 border-b border-gray-100 pb-2.5 w-full">
-    <h2
-  className="
-    text-lg sm:text-lg md:text-xl 
-    font-semibold 
-    tracking-tight 
-    text-center leading-snug
-  "
-  style={{ color: PRIMARY_COLOR }}
->
-  {route.from}
-  <span
-    className="
-      mx-1.5 
-      text-2xl sm:text-2xl md:text-2xl 
-      font-bold
-    "
-    style={{ color: ACCENT_COLOR }}
-  >
-    →
-  </span>
-  {route.to}
-</h2>
-
-
-      <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-gray-500 justify-center">
-        <span className="inline-flex items-center">
-          <BusFront className="mr-1 h-3.5 w-3.5" />
-          {route.distance}
-        </span>
-        <span className="inline-flex items-center">
-          <Clock className="mr-1 h-3.5 w-3.5" />
-          {route.duration}
-        </span>
-      </div>
-    </header>
-
-    {/* PRICING LIST */}
-    <section className="space-y-1.5">
-      {/* Mini header row */}
-      <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-gray-400 px-1">
-        <span>Vehicle &amp; capacity</span>
-        <span>One-way fare</span>
-      </div>
-
-      {route.pricing.map((p, idx) => {
-        const isFeatured = idx === 0;
-        const imageSrc = VEHICLE_IMAGES[p.vehicleType] ?? '/vehicles/sedan.svg';
-
-        return (
-          <div
-            key={idx}
-            className={`
-              flex items-center gap-2.5 rounded-lg border px-2.5 py-2 
-              text-[11px] sm:text-xs 
-              bg-slate-50/80 
-              ${
-                isFeatured
-                  ? 'border-red-200 ring-1 ring-red-100/80'
-                  : 'border-gray-200/80'
-              }
-            `}
+        {/* Day Trip Featured Card */}
+        {dayTripPricing.length > 0 && activeFilter === 'all' && searchQuery === '' && (
+          <motion.div
+            className="mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
           >
-            {/* Vehicle image + text */}
-            <div className="flex items-center gap-2.5 flex-1 min-w-0">
-              <div className="relative h-7 w-8 flex-shrink-0 sm:h-8 sm:w-9">
-                <Image
-                  src={imageSrc}
-                  alt={p.vehicleType}
-                  fill
-                  className="object-contain"
-                />
-              </div>
+            <div
+              className="
+                relative overflow-hidden rounded-2xl
+                bg-gradient-to-r from-[#18234B] to-[#2a3a6b]
+                border-2 border-[#18234B]
+                p-8
+                shadow-[0_8px_30px_rgba(0,0,0,0.2)]
+              "
+            >
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/5 rounded-full blur-2xl" />
 
-              <div className="flex flex-col leading-tight min-w-0">
-                <p className="font-semibold text-gray-900 text-[11px] sm:text-[12px] truncate">
-                  {p.vehicleType}
-                </p>
-                <p className="mt-[2px] flex items-center text-[10px] text-gray-500">
-                  <Users className="mr-1 h-3 w-3" />
-                  {p.passengers} Passengers
-                </p>
+              <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                {/* Left: Info */}
+                <div className="flex-1">
+                  <div className="inline-flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full mb-4">
+                    <Clock className="w-4 h-4 text-white" />
+                    <span className="text-white text-sm font-medium">8 Hours Charter</span>
+                  </div>
+
+                  <h3 className="text-2xl lg:text-3xl font-bold text-white mb-2">
+                    Full Day Trip
+                  </h3>
+                  <p className="text-white/80 text-sm lg:text-base max-w-md">
+                    Explore Tropical North Queensland at your own pace.
+                    Custom pickup & destination with professional chauffeur.
+                  </p>
+
+                  {/* Vehicle Options */}
+                  <div className="flex flex-wrap gap-3 mt-5">
+                    {dayTripPricing.map((p, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20"
+                      >
+                        <div className="relative w-8 h-6">
+                          <Image
+                            src={VEHICLE_IMAGES[p.vehicleType] ?? '/vehicles/suv.svg'}
+                            alt={p.vehicleType}
+                            fill
+                            className="object-contain brightness-0 invert"
+                          />
+                        </div>
+                        <div className="text-white">
+                          <p className="text-xs font-medium">{p.vehicleType}</p>
+                          <p className="text-lg font-bold">${Number(p.price)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right: CTA */}
+                <div className="flex flex-col items-start lg:items-end gap-3">
+                  <div className="text-white/70 text-sm">Starting from</div>
+                  <div className="text-4xl font-extrabold text-white">
+                    ${Math.min(...dayTripPricing.map(p => Number(p.price)))}
+                  </div>
+                  <button
+                    onClick={handleDayTripBooking}
+                    className="
+                      mt-2 px-8 py-3.5 rounded-xl
+                      bg-white text-[#18234B]
+                      font-bold text-sm
+                      shadow-lg hover:shadow-xl
+                      transform hover:scale-[1.03]
+                      transition-all duration-200
+                      flex items-center gap-2
+                    "
+                  >
+                    Book Day Trip
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
+          </motion.div>
+        )}
 
-            {/* Price */}
-            <div className="flex flex-col items-end flex-shrink-0">
-              {isFeatured && (
-                <span className="text-[9px] uppercase font-semibold text-black-500 mb-0.5">
-                  From
-                </span>
-              )}
-              <p
-                className="whitespace-nowrap text-lg sm:text-base font-bold leading-none"
-                style={{
-                  color: isFeatured ? ACCENT_COLOR : PRIMARY_COLOR
-                }}
+        {/* Regular Routes Grid */}
+        <motion.div
+          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+        >
+          {regularRoutes.map((route, index) => {
+            const lowestPrice = getLowestPrice(route);
+            const isPopular = index === 0;
+
+            return (
+              <motion.article
+                key={route.id}
+                variants={cardVariants}
+                className={`
+                group relative flex flex-col
+                rounded-2xl bg-white
+                border-2 ${isPopular ? 'border-[#18234B]' : 'border-gray-200'}
+                p-6
+                shadow-[0_8px_30px_rgba(0,0,0,0.12)]
+                hover:shadow-[0_12px_40px_rgba(0,0,0,0.18)]
+                hover:-translate-y-1
+                transition-all duration-300
+              `}
               >
-                ${Number(p.price).toFixed(0)}
-              </p>
-            </div>
-          </div>
-        );
-      })}
-    </section>
+                {/* Popular Badge */}
+                {isPopular && (
+                  <div
+                    className="absolute -top-3 left-6 px-3 py-1 rounded-full text-xs font-bold text-white shadow-md"
+                    style={{ backgroundColor: PRIMARY_COLOR }}
+                  >
+                    Most Popular
+                  </div>
+                )}
 
-<footer className="mt-3 pt-2 border-t border-gray-100 flex flex-col gap-3">
-  {/* Note */}
-  <p className="text-[10px] leading-snug text-gray-500 italic">
-    <span className="font-semibold text-gray-600">Note:</span>{' '}
-    {route.description ?? 'Fixed pricing per vehicle, with no hidden fees.'}
-  </p>
+                {/* Route Header */}
+                <div className="mb-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div
+                      className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{ backgroundColor: `${PRIMARY_COLOR}10` }}
+                    >
+                      <MapPin className="w-5 h-5" style={{ color: PRIMARY_COLOR }} />
+                    </div>
+                    <h3
+                      className="flex-1 text-base sm:text-lg font-bold leading-tight"
+                      style={{ color: PRIMARY_COLOR }}
+                    >
+                      {route.from}
+                      <span className="mx-2 text-gray-400">→</span>
+                      {route.to}
+                    </h3>
+                  </div>
 
-  {/* Button */}
-  <button
-    onClick={e => {
-      e.stopPropagation();
-      handleBooking(route);
-    }}
-    className="
-      w-full
-      rounded-lg px-4 py-2 
-      text-xs sm:text-sm font-semibold 
-      text-white 
-      shadow-md shadow-red-500/20
-      transition-all
-      hover:brightness-110 active:scale-[0.98]
-    "
-    style={{ backgroundColor: PRIMARY_COLOR }}
-    aria-label={`Book route from ${route.from} to ${route.to}`}
-  >
-    Book this route
-  </button>
-</footer>
+                  {/* Quick Info Chips */}
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-medium text-gray-600">
+                      <Clock className="w-3.5 h-3.5 text-gray-400" />
+                      {route.duration}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-medium text-gray-600">
+                      <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                      {route.distance}
+                    </span>
+                  </div>
+                </div>
 
-  </motion.article>
-))}
+                {/* Vehicle Options Preview */}
+                <div className="flex-1 mb-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                    Available Vehicles
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {route.pricing.slice(0, 3).map((p, idx) => {
+                      const imageSrc = VEHICLE_IMAGES[p.vehicleType] ?? '/vehicles/sedan.svg';
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100"
+                        >
+                          <div className="relative w-8 h-6">
+                            <Image
+                              src={imageSrc}
+                              alt={p.vehicleType}
+                              fill
+                              className="object-contain opacity-70"
+                            />
+                          </div>
+                          <div className="text-xs">
+                            <p className="font-semibold text-gray-700">{p.vehicleType}</p>
+                            <p className="text-gray-400 flex items-center gap-0.5">
+                              <Users className="w-3 h-3" /> {p.passengers}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
+                {/* Price & CTA */}
+                <div className="pt-4 border-t border-gray-100">
+                  <div className="flex items-end justify-between mb-4">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-0.5">Starting from</p>
+                      <p
+                        className="text-2xl font-extrabold"
+                        style={{ color: PRIMARY_COLOR }}
+                      >
+                        ${lowestPrice.toFixed(0)}
+                        <span className="text-sm font-normal text-gray-500 ml-1">
+                          /vehicle
+                        </span>
+                      </p>
+                    </div>
+                    <p className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded">
+                      Fixed Price
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleBooking(route);
+                    }}
+                    className="
+                    w-full py-3.5 rounded-xl
+                    font-bold text-sm text-white
+                    shadow-md hover:shadow-lg
+                    transform hover:scale-[1.02]
+                    transition-all duration-200
+                    flex items-center justify-center gap-2
+                  "
+                    style={{ backgroundColor: PRIMARY_COLOR }}
+                  >
+                    Select & Continue
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.article>
+            );
+          })}
         </motion.div>
       </>
     );
   };
 
   return (
-    <motion.div
+    <section
       className="
         relative 
-        bg-gradient-to-b from-slate-50 via-slate-50/90 to-slate-100
-        px-4 md:px-6 
-        pb-14 pt-12 md:pt-16
+        bg-gradient-to-b from-slate-50 to-white
+        px-4 md:px-8 mx-4 md:mx-8 mb-8 md:mb-16
+        py-12 md:py-16
+        rounded-[2rem] 
+        shadow-[0_0_60px_-15px_rgba(0,0,0,0.15)]
+        overflow-hidden
       "
-      initial="visible"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.15 }}
     >
-      <div className="max-w-7xl mx-auto">
-        {/* Centered Heading */}
-        <motion.div
-          className="flex flex-col justify-center items-center mb-5 md:mb-7 text-center"
-          variants={headingVariants}
-        >
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-red-50 to-transparent rounded-full blur-3xl opacity-50" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-blue-50 to-transparent rounded-full blur-3xl opacity-40" />
+
+      <div className="relative max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-10">
           <p
-            className="text-[11px] sm:text-xs md:text-sm font-semibold tracking-[0.24em] uppercase mb-1.5"
+            className="text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase mb-2"
             style={{ color: ACCENT_COLOR }}
           >
             Private Airport & City Transfers
           </p>
-
           <h2
-            className="text-3xl sm:text-3xl md:text-4xl font-extrabold leading-tight"
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight mb-4"
             style={{ color: PRIMARY_COLOR }}
           >
-            Private Transfer Routes
-            <span className="block sm:inline"> &amp; Fixed Pricing</span>
-            <div
-              className="w-24 h-1.5 mx-auto mt-4 rounded-full"
-              style={{ backgroundColor: ACCENT_COLOR }}
-            />
+            Choose Your Route
           </h2>
+          <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
+            Select from our popular transfer routes. All prices are per vehicle
+            with no hidden fees or surprises.
+          </p>
+        </div>
 
-          <motion.p
-            className="mt-3 text-[12px] sm:text-sm md:text-base text-gray-600 max-w-xl md:max-w-2xl leading-relaxed"
-            variants={subtextVariants}
-          >
-            Browse our most popular routes between airports, hotels and key
-            destinations. Pricing is per vehicle, not per person, with no hidden extras.
-          </motion.p>
-        </motion.div>
+        {/* Filters & Search */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+          {/* Category Filters */}
+          <div className="flex flex-wrap justify-center gap-2">
+            {FILTER_CATEGORIES.map(cat => {
+              const Icon = cat.icon;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveFilter(cat.id)}
+                  className={`
+                    inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
+                    transition-all duration-200
+                    ${activeFilter === cat.id
+                      ? 'bg-[#18234B] text-white shadow-md'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300'
+                    }
+                  `}
+                >
+                  {Icon && <Icon className="w-4 h-4" />}
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
 
-        {/* Glass panel wrapper for cards / skeleton / messages */}
-        <div
-          className="
-            mt-4 md:mt-6 
-            rounded-3xl 
-            bg-white/80 
-            backdrop-blur-sm 
-            border border-white/70 
-            shadow-[0_18px_45px_rgba(15,23,42,0.08)]
-            px-3 sm:px-5 md:px-6 
-            py-4 sm:py-5 md:py-6
-          "
-        >
-          {renderContent()}
+          {/* Search Box */}
+          <div className="relative w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Search routes..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="
+                w-full sm:w-64 px-4 py-2.5 pl-10
+                rounded-full border border-gray-200
+                text-sm placeholder:text-gray-400
+                focus:outline-none focus:border-[#18234B] focus:ring-2 focus:ring-[#18234B]/20
+                transition-all
+              "
+            />
+            <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          </div>
+        </div>
+
+        {/* Route Cards Grid */}
+        {renderContent()}
+
+        {/* Trust Indicators */}
+        <div className="mt-12 pt-8 border-t border-gray-100">
+          <div className="flex flex-wrap justify-center gap-6 text-center text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                <span className="text-green-600 text-lg">✓</span>
+              </div>
+              <span>No Hidden Fees</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <span className="text-blue-600 text-lg">🚗</span>
+              </div>
+              <span>Professional Drivers</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                <span className="text-purple-600 text-lg">⏱</span>
+              </div>
+              <span>Flight Tracking</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                <span className="text-orange-600 text-lg">💳</span>
+              </div>
+              <span>Secure Payment</span>
+            </div>
+          </div>
         </div>
       </div>
-    </motion.div>
+    </section>
   );
 };
 

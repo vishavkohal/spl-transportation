@@ -4,9 +4,8 @@ import { BookOpen, UserCheck, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Theme Colors
-const PRIMARY_COLOR = '#18234B'; 
+const PRIMARY_COLOR = '#18234B';
 const ACCENT_COLOR = '#A61924';
-const CARD_BG = '#FFFFFF';
 const TEXT_COLOR_DARK = '#18234B';
 const MUTED_TEXT_COLOR = '#5F6368';
 
@@ -36,29 +35,9 @@ const steps = [
   },
 ];
 
-// Motion Variants
-const containerVariants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: 'easeOut', staggerChildren: 0.12 },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.98 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.35, ease: 'easeOut' },
-  },
-};
-
 export default function HowToBookModern() {
   return (
-    <div className="py-20 px-6" style={{ backgroundColor: PRIMARY_COLOR }}>
+    <div className="py-6 md:py-12 px-4 md:px-6 mx-3 md:mx-6 mb-6 md:mb-12 rounded-[2.5rem] shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] overflow-hidden bg-[#F8F9FA]">
       <motion.div
         className="max-w-6xl mx-auto"
         initial="hidden"
@@ -76,7 +55,7 @@ export default function HowToBookModern() {
         {/* Heading */}
         <motion.h2
           className="text-4xl md:text-5xl font-extrabold text-center tracking-tight"
-          style={{ color: 'white' }}
+          style={{ color: PRIMARY_COLOR }}
         >
           How to Book Your Transfer
           <div
@@ -87,8 +66,7 @@ export default function HowToBookModern() {
 
         {/* Subtitle */}
         <motion.p
-          className="mt-4 mb-12 text-center text-sm md:text-base max-w-2xl mx-auto leading-relaxed"
-          style={{ color: '#E5E7EB' }}
+          className="mt-4 mb-12 text-center text-sm md:text-base max-w-2xl mx-auto leading-relaxed text-slate-600"
         >
           Booking your private airport or city transfer is simple.
           Just follow these quick steps and we&apos;ll handle the rest.
@@ -112,7 +90,7 @@ export default function HowToBookModern() {
               <div className="flex items-center mb-3 space-x-3">
                 <span
                   className="text-3xl font-black"
-                  style={{ color: ACCENT_COLOR }}
+                  style={{ color: PRIMARY_COLOR }}
                 >
                   {step.id}
                 </span>
@@ -124,7 +102,7 @@ export default function HowToBookModern() {
                 </span>
                 <step.icon
                   className="w-6 h-6"
-                  style={{ color: ACCENT_COLOR }}
+                  style={{ color: PRIMARY_COLOR }}
                 />
               </div>
 
