@@ -118,30 +118,44 @@ export default function RootLayout({
           type="application/ld+json"
           strategy="lazyOnload"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "LocalBusiness",
-              name: "SPL Transportation",
-              url: BASE_URL,
-              image: `${BASE_URL}/logo.png`,
-              description:
-                "Private airport and regional transfers across Cairns, Port Douglas and Far North Queensland.",
-              telephone: "+61 450 565 078",
-              address: {
-                "@type": "PostalAddress",
-                addressCountry: "AU",
-                addressRegion: "QLD",
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                "name": "SPL Transportation",
+                "url": BASE_URL,
+                "logo": `${BASE_URL}/logo.png`,
+                "sameAs": [
+                  "https://www.facebook.com/spltransportation",
+                  "https://www.instagram.com/spltransportation"
+                ]
               },
-              areaServed: [
-                "Cairns",
-                "Port Douglas",
-                "Palm Cove",
-                "Kuranda",
-                "Northern Beaches",
-                "Atherton Tablelands",
-              ],
-              priceRange: "$$",
-            }),
+              {
+                "@context": "https://schema.org",
+                "@type": "LocalBusiness",
+                "name": "SPL Transportation",
+                "url": BASE_URL,
+                "image": `${BASE_URL}/logo.png`,
+                "logo": `${BASE_URL}/logo.png`,
+                "description":
+                  "Private airport and regional transfers across Cairns, Port Douglas and Far North Queensland.",
+                "telephone": "+61 450 565 078",
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressCountry": "AU",
+                  "addressRegion": "QLD",
+                },
+                "areaServed": [
+                  "Cairns",
+                  "Port Douglas",
+                  "Palm Cove",
+                  "Kuranda",
+                  "Northern Beaches",
+                  "Atherton Tablelands",
+                ],
+                "priceRange": "$$",
+              }
+            ]),
           }}
         />
       </head>

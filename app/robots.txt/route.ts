@@ -7,8 +7,8 @@ export async function GET() {
   const body = `
 User-agent: *
 Disallow: /admin
+Disallow: /cms
 Allow: /
-Disallow: /admin/api
 Sitemap: ${BASE_URL}/sitemap.xml
 `.trim();
 
