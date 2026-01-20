@@ -146,7 +146,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
     };
 
     return (
-        <div className="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden text-gray-900">
             {/* Header */}
             <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
                 <h2 className="text-xl font-bold" style={{ color: PRIMARY_COLOR }}>
@@ -186,7 +186,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                                 <input
                                     required
-                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none"
+                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none bg-white text-gray-900"
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     placeholder="Enter blog title"
@@ -196,7 +196,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
                                 <input
                                     required
-                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none"
+                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none bg-white text-gray-900"
                                     value={formData.slug}
                                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                                     placeholder="url-friendly-slug"
@@ -206,7 +206,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Read Time (min)</label>
                                 <input
                                     type="number"
-                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none"
+                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none bg-white text-gray-900"
                                     value={formData.readMinutes}
                                     onChange={(e) => setFormData({ ...formData, readMinutes: parseInt(e.target.value) || 0 })}
                                 />
@@ -245,7 +245,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                         <textarea
                             required
                             rows={3}
-                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none resize-y"
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none resize-y bg-white text-gray-900"
                             value={formData.excerpt}
                             onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
                             placeholder="Short summary for listing cards..."
@@ -268,7 +268,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                             <textarea
                                 required
                                 rows={15}
-                                className="w-full p-4 font-mono text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none resize-y bg-gray-50"
+                                className="w-full p-4 font-mono text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none resize-y bg-gray-50 text-gray-900"
                                 value={formData.content}
                                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                                 placeholder="<p>Write your article content here...</p>"

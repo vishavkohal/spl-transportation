@@ -66,7 +66,7 @@ export default function CMSPage() {
 
     if (!isAuthed) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 text-gray-900">
                 <div className="max-w-sm w-full bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-[#18234B] mb-2 font-serif">Content Manager</h1>
@@ -80,7 +80,7 @@ export default function CMSPage() {
                             </label>
                             <input
                                 type="password"
-                                className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] transition-all"
+                                className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] transition-all bg-white text-gray-900"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
                                 required
@@ -108,7 +108,7 @@ export default function CMSPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 text-gray-900">
             <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
                 <div className="flex items-center gap-3">
                     <h1 className="text-xl font-bold text-[#18234B] font-serif">Content Manager</h1>
