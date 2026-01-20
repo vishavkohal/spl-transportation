@@ -9,6 +9,8 @@ import LeadsManager from './admin/LeadsManager';
 import type { Route } from '../types';
 import { Menu } from 'lucide-react';
 
+import pRetry from 'p-retry';
+
 // Re-export types for legacy compatibility if needed
 export type { Route } from '../types';
 export type { Booking };
@@ -58,6 +60,7 @@ export default function AdminPanel() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Dashboard Data State
+  const [loadingData, setLoadingData] = useState(false);
   const [data, setData] = useState<AdminData>({
     bookings: [],
     routes: [],
@@ -81,25 +84,44 @@ export default function AdminPanel() {
   }, []);
 
   // 2. Load all data for Dashboard Overview
+  // 2. Load all data for Dashboard Overview
   async function loadDashboardData() {
+    setLoadingData(true);
     try {
-      const [bookingsRes, routesRes, leadsRes] = await Promise.all([
-        fetch('/api/admin/bookings'),
-        fetch('/api/routes'),
-        fetch('/api/admin/leads')
-      ]);
+      const fetchData = async () => {
+        const [bookingsRes, routesRes, leadsRes] = await Promise.all([
+          fetch('/api/admin/bookings'),
+          fetch('/api/routes'),
+          fetch('/api/admin/leads')
+        ]);
 
-      const bookings = await bookingsRes.json();
-      const routes = await routesRes.json();
-      const leads = await leadsRes.json();
+        if (!bookingsRes.ok || !routesRes.ok || !leadsRes.ok) {
+          throw new Error('Failed to fetch dashboard data');
+        }
+
+        const bookings = await bookingsRes.json();
+        const routes = await routesRes.json();
+        const leads = await leadsRes.json();
+
+        return { bookings, routes, leads };
+      };
+
+      const result = await pRetry(fetchData, {
+        retries: 3,
+        onFailedAttempt: error => {
+          console.warn(`Dashboard data load failed. Attempt ${error.attemptNumber} left. ${error.retriesLeft} retries left.`);
+        },
+      });
 
       setData({
-        bookings: Array.isArray(bookings) ? bookings : [],
-        routes: Array.isArray(routes) ? routes : [],
-        leads: Array.isArray(leads) ? leads : []
+        bookings: Array.isArray(result.bookings) ? result.bookings : [],
+        routes: Array.isArray(result.routes) ? result.routes : [],
+        leads: Array.isArray(result.leads) ? result.leads : []
       });
     } catch (e) {
-      console.error("Failed to load dashboard data", e);
+      console.error("Failed to load dashboard data after retries", e);
+    } finally {
+      setLoadingData(false);
     }
   }
 
@@ -211,7 +233,37 @@ export default function AdminPanel() {
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="max-w-7xl mx-auto">
             {activeTab === 'overview' && (
-              <DashboardOverview bookings={data.bookings} routes={data.routes} leads={data.leads} />
+              loadingData ? (
+                <div className="space-y-8 animate-pulse">
+                  <div className="space-y-2">
+                    <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-start justify-between">
+                        <div className="space-y-2 w-full">
+                          <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+                          <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                        </div>
+                        <div className="w-10 h-10 bg-gray-100 rounded-xl"></div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-6 border-b border-gray-100">
+                      <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+                    </div>
+                    <div className="p-6 space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="h-12 bg-gray-100 rounded w-full"></div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <DashboardOverview bookings={data.bookings} routes={data.routes} leads={data.leads} />
+              )
             )}
             {activeTab === 'routes' && <RoutesManager />}
             {activeTab === 'bookings' && <BookingsManager />}
