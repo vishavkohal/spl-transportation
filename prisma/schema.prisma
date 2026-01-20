@@ -126,3 +126,29 @@ model BookingLead {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 }
+
+model BlogPost {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  excerpt       String
+  content       String
+  publishedAt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  readMinutes   Int      @default(5)
+  tags          String[]
+
+  // Featured Image
+  imageId       String
+  featuredImage Image    @relation(fields: [imageId], references: [id])
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  data      Bytes
+  mimeType  String   @default("image/jpeg")
+  altText   String?
+  createdAt DateTime @default(now())
+
+  blogPosts BlogPost[]
+}

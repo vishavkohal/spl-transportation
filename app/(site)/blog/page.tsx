@@ -1,7 +1,7 @@
 // app/blog/page.tsx
 import type { Metadata } from "next";
 import Link from "next/link";
-import { blogPosts } from "../../lib/blogPosts";
+import { prisma } from "@/lib/prisma";
 
 const PRIMARY_COLOR = "#18234B";
 const ACCENT_COLOR = "#A61924";
@@ -12,8 +12,21 @@ export const metadata: Metadata = {
     "Discover the best places to visit in Cairns, Port Douglas, Palm Cove, Kuranda, Mission Beach and more. Travel tips, guides and private transfer advice for Tropical North Queensland."
 };
 
-export default function BlogIndexPage() {
-  const posts = blogPosts;
+// Revalidate every hour
+export const revalidate = 3600;
+
+export default async function BlogIndexPage() {
+  const posts = await prisma.blogPost.findMany({
+    orderBy: { publishedAt: "desc" },
+    include: {
+      featuredImage: {
+        select: {
+          id: true,
+          altText: true
+        }
+      }
+    }
+  });
 
   return (
     <>

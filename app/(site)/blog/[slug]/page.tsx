@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { blogPosts } from "../../../lib/blogPosts";
+import { prisma } from "@/lib/prisma";
 
 const PRIMARY_COLOR = "#18234B";
 const ACCENT_COLOR = "#A61924";
@@ -11,7 +11,8 @@ const BASE_URL = "https://spltransportation.com.au";
 export const revalidate = 600;
 
 export async function generateStaticParams() {
-  return blogPosts.map(post => ({ slug: post.slug }));
+  const posts = await prisma.blogPost.findMany({ select: { slug: true } });
+  return posts.map(post => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({
@@ -20,7 +21,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = blogPosts.find(p => p.slug === slug);
+  const post = await prisma.blogPost.findUnique({
+    where: { slug },
+    include: { featuredImage: true }
+  });
 
   if (!post) {
     return {
@@ -30,6 +34,7 @@ export async function generateMetadata({
   }
 
   const url = `${BASE_URL}/blog/${post.slug}`;
+  const imageUrl = post.featuredImage ? `${BASE_URL}/api/images/${post.featuredImage.id}` : '';
 
   return {
     title: post.title,
@@ -40,20 +45,20 @@ export async function generateMetadata({
       description: post.excerpt,
       url,
       type: "article",
-      images: [
+      images: imageUrl ? [
         {
-          url: `${BASE_URL}${post.featuredImage.src}`,
+          url: imageUrl,
           width: 1200,
           height: 630,
-          alt: post.featuredImage.alt
+          alt: post.featuredImage?.altText || post.title
         }
-      ]
+      ] : []
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.excerpt,
-      images: [`${BASE_URL}${post.featuredImage.src}`]
+      images: imageUrl ? [imageUrl] : []
     }
   };
 }
@@ -64,7 +69,10 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = blogPosts.find(p => p.slug === slug);
+  const post = await prisma.blogPost.findUnique({
+    where: { slug },
+    include: { featuredImage: true }
+  });
 
   if (!post) notFound();
 
@@ -163,18 +171,19 @@ export default async function BlogPostPage({
           </div>
 
           {/* Featured Image */}
-          <div className="px-6 sm:px-8 pb-6 sm:pb-8">
-            <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-              <Image
-                src={post.featuredImage.src}
-                alt={post.featuredImage.alt}
-                width={1200}
-                height={630}
-                priority
-                className="w-full h-auto object-cover"
-              />
+          {post.featuredImage && (
+            <div className="px-6 sm:px-8 pb-6 sm:pb-8">
+              <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 h-[300px] sm:h-[400px]">
+                <Image
+                  src={`/api/images/${post.featuredImage.id}`}
+                  alt={post.featuredImage.altText || post.title}
+                  fill
+                  priority
+                  className="object-cover"
+                />
+              </div>
             </div>
-          </div>
+          )}
         </header>
 
         {/* Content Card */}
@@ -190,6 +199,11 @@ export default async function BlogPostPage({
                 prose-headings:tracking-tight
                 prose-headings:text-[#18234B]
                 prose-headings:font-bold
+                prose-h1:text-4xl
+                sm:prose-h1:text-5xl
+                prose-h1:font-extrabold
+                prose-h1:mb-8
+                prose-h1:!leading-tight
                 prose-h2:mt-16
                 prose-h2:mb-6
                 prose-h3:mt-12

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { LayoutDashboard, Map, CalendarCheck, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, Map, CalendarCheck, Users, LogOut, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 type AdminTab = 'overview' | 'routes' | 'bookings' | 'leads';
