@@ -45,6 +45,7 @@ export default function Navigation() {
               alt="SPL Transportation Logo"
               className="object-contain"
               priority
+              style={{ width: 'auto', height: '55px' }}
             />
           </Link>
 
