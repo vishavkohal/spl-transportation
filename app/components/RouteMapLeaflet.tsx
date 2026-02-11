@@ -61,6 +61,11 @@ export default function RouteMapLeaflet({
 
       const data = await res.json();
 
+      if (!data || !data.features || !data.features.length) {
+        console.error('OpenRouteService API error:', data);
+        return;
+      }
+
       const routeLayer = L.geoJSON(data, {
         style: { color: '#A61924', weight: 5 },
       }).addTo(map);
