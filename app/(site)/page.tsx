@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+
 import { useBooking } from '../providers/BookingProvider';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 
 import dynamic from 'next/dynamic';
 
@@ -16,25 +17,7 @@ const CustomerReviews = dynamic(() => import('../components/CustomerReviews'));
 const Faqsection = dynamic(() => import('../components/FaqSection'));
 
 export default function Home() {
-    const [isOnline, setIsOnline] = useState(true);
-
-    useEffect(() => {
-        // Initial check
-        if (typeof navigator !== 'undefined') {
-            setIsOnline(navigator.onLine);
-        }
-
-        const handleOnline = () => setIsOnline(true);
-        const handleOffline = () => setIsOnline(false);
-
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-        };
-    }, []);
+    const isOnline = useOnlineStatus();
 
     const {
         formData,
