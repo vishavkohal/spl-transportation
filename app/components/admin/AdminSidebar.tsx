@@ -1,10 +1,12 @@
 'use client';
 
 import React from 'react';
-import { LayoutDashboard, Map, CalendarCheck, Users, LogOut, FileText } from 'lucide-react';
+import { LayoutDashboard, Map, CalendarCheck, Users, LogOut, FileText, Calendar } from 'lucide-react';
+
 import { motion } from 'framer-motion';
 
-type AdminTab = 'overview' | 'routes' | 'bookings' | 'leads';
+type AdminTab = 'overview' | 'routes' | 'bookings' | 'leads' | 'upcoming';
+
 
 interface AdminSidebarProps {
     activeTab: AdminTab;
@@ -19,8 +21,9 @@ const ACCENT_COLOR = '#A61924';
 
 const menuItems = [
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'routes', label: 'Routes', icon: Map },
+    { id: 'upcoming', label: 'Upcoming Trips', icon: Calendar },
     { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
+    { id: 'routes', label: 'Routes', icon: Map },
     { id: 'leads', label: 'Leads', icon: Users },
 ] as const;
 

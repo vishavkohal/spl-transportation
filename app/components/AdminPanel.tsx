@@ -6,6 +6,7 @@ import DashboardOverview from './admin/DashboardOverview';
 import RoutesManager from './admin/RoutesManager';
 import BookingsManager, { type Booking } from './admin/BookingsManager';
 import LeadsManager from './admin/LeadsManager';
+import UpcomingTrips from './admin/UpcomingTrips';
 import type { Route } from '../types';
 import { Menu } from 'lucide-react';
 
@@ -56,7 +57,7 @@ export default function AdminPanel() {
   const [authLoading, setAuthLoading] = useState(false);
 
   // Navigation State
-  const [activeTab, setActiveTab] = useState<'overview' | 'routes' | 'bookings' | 'leads'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'routes' | 'bookings' | 'leads' | 'upcoming'>('overview');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Dashboard Data State
@@ -265,6 +266,7 @@ export default function AdminPanel() {
                 <DashboardOverview bookings={data.bookings} routes={data.routes} leads={data.leads} />
               )
             )}
+            {activeTab === 'upcoming' && <UpcomingTrips bookings={data.bookings} />}
             {activeTab === 'routes' && <RoutesManager />}
             {activeTab === 'bookings' && <BookingsManager />}
             {activeTab === 'leads' && <LeadsManager />}

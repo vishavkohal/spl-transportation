@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { DollarSign, type LucideIcon, TrendingUp, Users, Calendar, MapPin } from 'lucide-react';
+import { DollarSign, type LucideIcon, TrendingUp, Users, Calendar, MapPin, Clock } from 'lucide-react';
 import type { Booking, Route, BookingLead } from '../AdminPanel';
 
 interface DashboardOverviewProps {
@@ -108,9 +108,15 @@ export default function DashboardOverview({ bookings, routes, leads }: Dashboard
                                         ${(booking.totalPriceCents / 100).toFixed(2)}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                            Paid
-                                        </span>
+                                        {booking.status === 'PAID' ? (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Paid
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                <Clock className="w-3 h-3" /> Pending
+                                            </span>
+                                        )}
                                     </td>
                                 </tr>
                             )) : (

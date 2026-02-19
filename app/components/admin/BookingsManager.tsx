@@ -31,6 +31,7 @@ export type Booking = {
     hourlyPickupLocation?: string | null;
     hourlyHours?: number | null;
     hourlyVehicleType?: string | null;
+    dayTripVehicleType?: string | null;
     invoiceId?: string | null; // NEW
     status?: string | null; // PENDING, PAID
 };
