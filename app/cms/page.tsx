@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import BlogsManager from '../components/admin/BlogsManager';
-import { LogOut } from 'lucide-react';
+import RouteContentManager from '../components/admin/RouteContentManager';
+import { LogOut, FileText, MapPin } from 'lucide-react';
+
+type Tab = 'blogs' | 'routes';
 
 export default function CMSPage() {
     const [isAuthed, setIsAuthed] = useState(false);
@@ -10,6 +13,7 @@ export default function CMSPage() {
     const [password, setPassword] = useState('');
     const [authError, setAuthError] = useState<string | null>(null);
     const [authLoading, setAuthLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<Tab>('blogs');
 
     // 1. Check Session
     useEffect(() => {
@@ -107,6 +111,11 @@ export default function CMSPage() {
         );
     }
 
+    const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+        { key: 'blogs', label: 'Blogs', icon: <FileText className="w-4 h-4" /> },
+        { key: 'routes', label: 'Route Content', icon: <MapPin className="w-4 h-4" /> },
+    ];
+
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900">
             <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
@@ -124,8 +133,30 @@ export default function CMSPage() {
                 </button>
             </header>
 
+            {/* Tab Navigation */}
+            <div className="bg-white border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-4 md:px-8">
+                    <nav className="flex gap-1">
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
+                                    ? 'border-[#A61924] text-[#A61924]'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    }`}
+                            >
+                                {tab.icon}
+                                {tab.label}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+            </div>
+
             <main className="max-w-7xl mx-auto p-4 md:p-8">
-                <BlogsManager />
+                {activeTab === 'blogs' && <BlogsManager />}
+                {activeTab === 'routes' && <RouteContentManager />}
             </main>
         </div>
     );

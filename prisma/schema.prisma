@@ -17,6 +17,18 @@ model Route {
   distance    String
   duration    String
   pricing     RoutePricing[] // 1 -> many
+  pageContent RoutePageContent?
+}
+
+model RoutePageContent {
+  id        String   @id @default(cuid())
+  routeId   Int      @unique
+  route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  content   Json
+  imageId   String?
+  image     Image?   @relation(fields: [imageId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model RoutePricing {
@@ -150,5 +162,6 @@ model Image {
   altText   String?
   createdAt DateTime @default(now())
 
-  blogPosts BlogPost[]
+  blogPosts          BlogPost[]
+  routePageContents  RoutePageContent[]
 }

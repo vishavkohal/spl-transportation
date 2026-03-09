@@ -25,6 +25,7 @@ export type RoutePageContent = {
     question: string;
     answer: string;
   }[];
+  imageId?: string | null;
 };
 
 function key(from: string, to: string) {
@@ -533,6 +534,31 @@ export const ROUTE_PAGE_CONTENT: Record<string, RoutePageContent> = {
 
 };
 
-export function getRoutePageContent(route: Route) {
+import { prisma } from "@/lib/prisma";
+
+export async function getRoutePageContent(route: Route): Promise<RoutePageContent | null> {
+  // 1. Try DB first (CMS-managed content)
+  try {
+    const dbEntry = await prisma.routePageContent.findFirst({
+      where: {
+        route: {
+          from: route.from,
+          to: route.to,
+        },
+      },
+    });
+
+    if (dbEntry) {
+      return {
+        ...(dbEntry.content as unknown as RoutePageContent),
+        imageId: dbEntry.imageId,
+      };
+    }
+  } catch (e) {
+    // DB lookup failed — fall through to hardcoded content
+    console.error("Failed to fetch route page content from DB:", e);
+  }
+
+  // 2. Fallback to hardcoded content
   return ROUTE_PAGE_CONTENT[key(route.from, route.to)] ?? null;
 }

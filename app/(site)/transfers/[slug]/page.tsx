@@ -90,7 +90,7 @@ export default async function RoutePage({
 
   if (!route) notFound();
 
-  const pageContent = getRoutePageContent(route);
+  const pageContent = await getRoutePageContent(route);
   const landmarks = getLandmarks(route);
   const routeName = route.label ?? `${route.from} to ${route.to}`;
 
@@ -134,7 +134,7 @@ export default async function RoutePage({
 
           <div className="relative h-[360px] sm:h-[420px] rounded-3xl overflow-hidden shadow-xl">
             <Image
-              src={`/routes/${route.slug}.jpg`}
+              src={pageContent?.imageId ? `/api/images/${pageContent.imageId}` : `/routes/${route.slug}.jpg`}
               alt={`Transfer from ${route.from} to ${route.to}`}
               fill
               className="object-cover"
