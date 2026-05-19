@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@coreui/react": "^5.9.1",
-    "@prisma/adapter-pg": "^7.1.0",
-    "@prisma/client": "^7.1.0",
+    "@prisma/adapter-pg": "7.8.0",
+    "@prisma/client": "7.8.0",
     "@react-pdf/renderer": "^4.3.2",
     "@sparticuz/chromium": "^143.0.0",
     "@stripe/react-stripe-js": "^5.4.1",
@@ -48,7 +48,7 @@
     "baseline-browser-mapping": "^2.8.32",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
-    "prisma": "^7.1.0",
+    "prisma": "7.8.0",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"
