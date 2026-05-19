@@ -1,9 +1,43 @@
 import { NextResponse } from 'next/server';
 import { upsertBookingLead } from '../../../lib/bookingLead';
 
+// In-memory rate limiter (resets on server restart)
+const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 20; // 20 requests per minute max
+
 export async function POST(req: Request) {
   try {
+    // 1. Basic Rate Limiting by IP
+    const ip = req.headers.get('x-forwarded-for') || 'unknown';
+    const now = Date.now();
+    const record = rateLimitMap.get(ip);
+
+    if (record) {
+      if (now - record.lastReset > RATE_LIMIT_WINDOW_MS) {
+        rateLimitMap.set(ip, { count: 1, lastReset: now });
+      } else {
+        record.count++;
+        if (record.count > MAX_REQUESTS_PER_WINDOW) {
+          return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+        }
+      }
+    } else {
+      rateLimitMap.set(ip, { count: 1, lastReset: now });
+    }
+
+    // Clean up old entries periodically to prevent memory leaks
+    if (rateLimitMap.size > 1000) {
+      rateLimitMap.clear();
+    }
+
+    // 2. Body parsing and payload validation
     const body = await req.json();
+    
+    // Prevent excessively large payloads
+    if (JSON.stringify(body).length > 10000) {
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+    }
 
     const lead = await upsertBookingLead(body);
 

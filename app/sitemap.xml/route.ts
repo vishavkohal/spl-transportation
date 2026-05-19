@@ -12,6 +12,7 @@ export async function GET() {
   const staticPages = [
     { loc: `${BASE_URL}/`, priority: "1.0", freq: "daily" },
     { loc: `${BASE_URL}/transfers`, priority: "0.95", freq: "weekly" },
+    { loc: `${BASE_URL}/book`, priority: "0.95", freq: "daily" },
     { loc: `${BASE_URL}/about`, priority: "0.80", freq: "monthly" },
     { loc: `${BASE_URL}/contact`, priority: "0.80", freq: "monthly" },
     { loc: `${BASE_URL}/terms`, priority: "0.70", freq: "yearly" },

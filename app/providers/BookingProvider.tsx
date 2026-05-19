@@ -1,6 +1,6 @@
 'use client';
 
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
@@ -8,6 +8,8 @@ import React, {
   useState,
   useCallback
 } from 'react';
+import Cookies from 'js-cookie';
+import { COOKIE_CONSENT_KEY } from '../components/CookieConsent';
 import type { BookingFormData, Route } from '../types';
 
 type BookingContextType = {
@@ -58,6 +60,26 @@ const initialFormData: BookingFormData = {
   hourlyVehicleType: ''
 };
 
+/* ---- Routes sessionStorage cache ---- */
+const ROUTES_CACHE_KEY = 'spl_cached_routes';
+
+function readCachedRoutes(): Route[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = sessionStorage.getItem(ROUTES_CACHE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as Route[];
+  } catch {
+    return [];
+  }
+}
+
+function writeCachedRoutes(routes: Route[]) {
+  try {
+    sessionStorage.setItem(ROUTES_CACHE_KEY, JSON.stringify(routes));
+  } catch {}
+}
+
 const normalizeLocation = (v: string) => v.trim();
 
 /* ---------------- Provider ---------------- */
@@ -66,6 +88,8 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
   const [formData, setFormData] = useState<BookingFormData>(initialFormData);
   const [bookingStep, setBookingStep] = useState<1 | 2>(1);
 
+  // Always start with loading=true and empty routes for consistent SSR/CSR hydration.
+  // Routes are loaded from sessionStorage (instant) or fetched (async) in useEffect below.
   const [routes, setRoutes] = useState<Route[]>([]);
   const [routesLoading, setRoutesLoading] = useState(true);
   const [routesError, setRoutesError] = useState<string | null>(null);
@@ -94,47 +118,89 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  /* -------- Load Routes -------- */
+  /* -------- Load Routes (post-hydration) -------- */
 
   useEffect(() => {
-    let ignore = false;
-
-    async function load() {
-      setRoutesLoading(true);
-      try {
-        const res = await fetch('/api/routes', { cache: 'no-store' });
-        if (!res.ok) throw new Error();
-
-        const json = await res.json();
-        const data = Array.isArray(json) ? json : json.routes;
-
-        const sanitized = data.map((r: Route) => ({
-          ...r,
-          from: normalizeLocation(r.from),
-          to: normalizeLocation(r.to)
-        }));
-
-        if (!ignore) {
-          setRoutes(sanitized);
-          setRoutesError(null);
-        }
-      } catch {
-        if (!ignore) {
-          setRoutesError(isOnline ? 'Failed to load routes' : 'No internet');
-        }
-      } finally {
-        if (!ignore) {
-          setRoutesLoading(false);
-          setRetryFlag(false);
-        }
-      }
+    // First, try loading from sessionStorage for instant display
+    const cached = readCachedRoutes();
+    if (cached.length > 0) {
+      setRoutes(cached);
+      setRoutesLoading(false);
     }
 
-    if (isOnline) load();
+    if (!isOnline) {
+      if (cached.length === 0) {
+        setRoutesLoading(false);
+        setRoutesError('No internet connection');
+      }
+      return;
+    }
+
+    // Background fetch to get fresh data (or initial data if no cache)
+    let cancelled = false;
+
+    fetch('/api/routes')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed');
+        return res.json();
+      })
+      .then(json => {
+        if (cancelled) return;
+        const data = Array.isArray(json) ? json : json.routes ?? [];
+        const sanitized = (data as Route[]).map(r => ({
+          ...r,
+          from: normalizeLocation(r.from),
+          to: normalizeLocation(r.to),
+        }));
+        writeCachedRoutes(sanitized);
+        setRoutes(sanitized);
+        setRoutesError(null);
+        setRoutesLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        if (cached.length === 0) {
+          setRoutesError('Failed to load routes. Please refresh.');
+        }
+        setRoutesLoading(false);
+      });
+
     return () => {
-      ignore = true;
+      cancelled = true;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline, retryFlag]);
+
+  /* -------- User Data Cookie Storage -------- */
+  
+  useEffect(() => {
+    // Load initial user data from cookies if present
+    const savedData = Cookies.get('spl_user_data');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        setFormData(prev => ({
+          ...prev,
+          fullName: parsed.fullName || prev.fullName,
+          email: parsed.email || prev.email,
+          contactNumber: parsed.contactNumber || prev.contactNumber,
+        }));
+      } catch (e) {
+        // ignore parse error
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Save user data to cookies when it changes, but ONLY if they consented
+    const consent = Cookies.get(COOKIE_CONSENT_KEY);
+    if (consent === 'granted') {
+      const { fullName, email, contactNumber } = formData;
+      if (fullName || email || contactNumber) {
+        Cookies.set('spl_user_data', JSON.stringify({ fullName, email, contactNumber }), { expires: 365, path: '/' });
+      }
+    }
+  }, [formData.fullName, formData.email, formData.contactNumber]);
 
   /* -------- Derived Data -------- */
 

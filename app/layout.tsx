@@ -19,6 +19,8 @@ import { BookingProvider } from "./providers/BookingProvider";
 import Navigation from "../app/components/Navigation";
 import Footer from "../app/components/Footer";
 import UtmTracker from "@/app/components/UtmTracker";
+import CookieConsent from "@/app/components/CookieConsent";
+import { Toaster } from 'sonner';
 const BASE_URL = "https://www.spltransportation.com.au";
 const GA_ID = "G-0F1THLNR5M";
 
@@ -93,6 +95,24 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Force reload when returning from Stripe checkout (runs BEFORE React) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(){
+                try {
+                  if (sessionStorage.getItem('spl_stripe_redirect')) {
+                    sessionStorage.removeItem('spl_stripe_redirect');
+                    location.reload();
+                  }
+                } catch(e){}
+                window.addEventListener('pageshow', function(e) {
+                  if (e.persisted) location.reload();
+                });
+              })();
+            `,
+          }}
+        />
         {/* ✅ Preload brand logo */}
         <link rel="preload" as="image" href="/logo.png" />
 
@@ -164,6 +184,8 @@ export default function RootLayout({
         {/* ✅ Global App State */}
         <BookingProvider>
           <UtmTracker />
+          <CookieConsent />
+          <Toaster position="bottom-right" richColors />
           {children}
         </BookingProvider>
       </body>

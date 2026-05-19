@@ -38,14 +38,19 @@ function mapRoute(route: any): RouteDTO {
   };
 }
 
-export async function getRoutes(): Promise<RouteDTO[]> {
-  const routes = await prisma.route.findMany({
-    include: { pricing: true },
-    orderBy: { id: 'asc' },
-  });
+import { unstable_cache } from 'next/cache';
 
-  return routes.map(mapRoute);
-}
+export const getRoutes = unstable_cache(
+  async (): Promise<RouteDTO[]> => {
+    const routes = await prisma.route.findMany({
+      include: { pricing: true },
+      orderBy: { id: 'asc' },
+    });
+    return routes.map(mapRoute);
+  },
+  ['all-routes'],
+  { tags: ['routes'], revalidate: 3600 } // Cache for 1 hour, or revalidate by tag
+);
 
 // 4. UPDATED: addRoute function to include new fields
 export async function addRoute(route: Omit<RouteDTO, 'id'>): Promise<RouteDTO> {

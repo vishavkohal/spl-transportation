@@ -675,7 +675,7 @@ export default function HomePage(props: {
           <div className="grid lg:grid-cols-12 gap-8 w-full items-center">
 
             {/* Desktop Headline (Left) */}
-            <div className="hidden lg:block lg:col-span-7 text-white pl-8 xl:pl-16">
+            <div className="hidden lg:block lg:col-span-5 text-white pl-8 xl:pl-16">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -721,7 +721,7 @@ export default function HomePage(props: {
 
             {/* Booking Form Card (Right / Stacked) */}
             {/* Booking Form Card (Right / Stacked) */}
-            <div className="lg:col-span-5 -mt-4 lg:mt-0 relative z-30 mb-12 lg:mb-0">
+            <div className="lg:col-span-7 -mt-4 lg:mt-0 relative z-30 mb-12 lg:mb-0">
               <motion.div
                 ref={formTopRef}
                 id="booking-form"
@@ -1286,7 +1286,10 @@ export default function HomePage(props: {
                                         body: JSON.stringify({ booking }),
                                       });
                                       const data = await res.json();
-                                      if (data.url) window.location.href = data.url;
+                                      if (data.url) {
+                                        sessionStorage.setItem('spl_stripe_redirect', '1');
+                                        window.location.href = data.url;
+                                      }
                                       else {
                                         alert(data.error || 'Failed to create checkout session');
                                         setIsDayTripRedirecting(false);
@@ -1398,12 +1401,11 @@ function Step1StandardContent(props: {
       )}
 
       {/* Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Pickup/Dropoff */}
-        <div className="lg:col-span-5 space-y-4">
+      <div className="space-y-4">
+        {/* Row 1: Pickup & Dropoff */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Pickup */}
           <div className="group relative">
-
             <div className="flex justify-between items-center">
               <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
                 <MapPin className="w-3 h-3 text-[#18234B]" />
@@ -1480,17 +1482,14 @@ function Step1StandardContent(props: {
               {!formData.pickupLocation && !routesLoading && (
                 <option value="">Select pickup first</option>
               )}
-
               {formData.pickupLocation && routesLoading && (
                 <option value="">Loading destinations…</option>
               )}
-
               {formData.pickupLocation &&
                 !routesLoading &&
                 dropoffOptions.length === 0 && (
                   <option value="">No destinations available</option>
                 )}
-
               {formData.pickupLocation &&
                 !routesLoading &&
                 dropoffOptions.length > 0 && (
@@ -1507,134 +1506,131 @@ function Step1StandardContent(props: {
           </div>
         </div>
 
-        {/* Date / Time / Pax / Bags / Flight */}
-        <div className="lg:col-span-7">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
-            {/* Date */}
-            <div className="col-span-1 sm:col-span-2">
-              <div className="relative group">
-                <div className="flex justify-between">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3 text-[#18234B]" />
-                    Date
-                  </label>
-                  {getFieldError('pickupDate') && (
-                    <span className="text-xs font-bold text-red-500">
-                      Required
-                    </span>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={formData.pickupDate}
-                    min={minDateForInput}
-                    onChange={e => onPickupDateChange(e.target.value)}
-                    onBlur={() => markTouched('pickupDate')}
-                    className={`${getInputClass(
-                      'pickupDate', false
-                    )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Time */}
-            <div className="col-span-1 sm:col-span-2">
-              <div className="relative group">
-                <div className="flex justify-between items-center gap-2">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
-                    <Clock className="w-3 h-3 text-[#18234B]" />
-                    Time
-                  </label>
-                  {getFieldError('pickupTime') && (
-                    <span className="text-xs font-bold text-red-500">
-                      {getFieldError('pickupTime')}
-                    </span>
-                  )}
-                </div>
-                <div className="relative">
-                  <input
-                    type="time"
-                    value={formData.pickupTime}
-                    min={getMinTimeForDate(formData.pickupDate)}
-                    onChange={e => handleInputChange('pickupTime', e.target.value)}
-                    onBlur={() => markTouched('pickupTime')}
-                    className={`${getInputClass(
-                      'pickupTime', false
-                    )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Pax */}
-            <div className="col-span-1 sm:col-span-2">
-              <div className="flex justify-between">
-                <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
-                  <Users className="w-3 h-3 text-[#18234B]" />
-                  Pax
-                </label>
-                {getFieldError('passengers') && (
-                  <span className="text-xs font-bold text-red-500">
-                    {getFieldError('passengers')}
-                  </span>
-                )}
-              </div>
-              <div className="relative group">
-                <input
-                  type="number"
-                  min={1}
-                  max={MAX_PASSENGERS}
-                  value={passengerInput}
-                  onChange={e => onPassengersChange(e.target.value)}
-                  onBlur={onPassengersBlur}
-                  className={getInputClass('passengers', false)}
-                />
-              </div>
-            </div>
-
-            {/* Luggage */}
-            <div className="col-span-1 sm:col-span-2">
-              <div className="flex justify-between">
-                <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
-                  <Briefcase className="w-3 h-3 text-[#18234B]" />
-                  Bags
-                </label>
-                {getFieldError('luggage') && (
-                  <span className="text-xs font-bold text-red-500">
-                    {getFieldError('luggage')}
-                  </span>
-                )}
-              </div>
-              <div className="relative group">
-                <input
-                  type="number"
-                  min={0}
-                  max={getMaxBagsForCurrentPax(formData.passengers)}
-                  value={luggageInput}
-                  onChange={e => onLuggageChange(e.target.value)}
-                  onBlur={onLuggageBlur}
-                  className={getInputClass('luggage', false)}
-                />
-              </div>
-            </div>
-
-            {/* Flight # */}
-            <div className="col-span-2 sm:col-span-2">
+        {/* Row 2: Date & Time */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Date */}
+          <div className="relative group">
+            <div className="flex justify-between">
               <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
-                <Plane className="w-3 h-3 text-[#18234B]" />
-                Flight #
+                <Calendar className="w-3 h-3 text-[#18234B]" />
+                Date
               </label>
-              <div className="relative group">
-                <input
-                  type="text"
-                  value={formData.flightNumber}
-                  onChange={e => handleInputChange('flightNumber', e.target.value)}
-                  placeholder="Optional"
-                  className={getInputClass('flightNumber', false)}
-                />
-              </div>
+              {getFieldError('pickupDate') && (
+                <span className="text-xs font-bold text-red-500">
+                  Required
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                type="date"
+                value={formData.pickupDate}
+                min={minDateForInput}
+                onChange={e => onPickupDateChange(e.target.value)}
+                onBlur={() => markTouched('pickupDate')}
+                className={`${getInputClass(
+                  'pickupDate', false
+                )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
+              />
+            </div>
+          </div>
+
+          {/* Time */}
+          <div className="relative group">
+            <div className="flex justify-between items-center gap-2">
+              <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                <Clock className="w-3 h-3 text-[#18234B]" />
+                Time
+              </label>
+              {getFieldError('pickupTime') && (
+                <span className="text-xs font-bold text-red-500">
+                  {getFieldError('pickupTime')}
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                type="time"
+                value={formData.pickupTime}
+                min={getMinTimeForDate(formData.pickupDate)}
+                onChange={e => handleInputChange('pickupTime', e.target.value)}
+                onBlur={() => markTouched('pickupTime')}
+                className={`${getInputClass(
+                  'pickupTime', false
+                )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: Pax, Bags, Flight # */}
+        <div className="grid grid-cols-3 gap-4">
+          {/* Pax */}
+          <div>
+            <div className="flex justify-between">
+              <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                <Users className="w-3 h-3 text-[#18234B]" />
+                Passengers
+              </label>
+              {getFieldError('passengers') && (
+                <span className="text-xs font-bold text-red-500">
+                  {getFieldError('passengers')}
+                </span>
+              )}
+            </div>
+            <div className="relative group">
+              <input
+                type="number"
+                min={1}
+                max={MAX_PASSENGERS}
+                value={passengerInput}
+                onChange={e => onPassengersChange(e.target.value)}
+                onBlur={onPassengersBlur}
+                className={getInputClass('passengers', false)}
+              />
+            </div>
+          </div>
+
+          {/* Luggage */}
+          <div>
+            <div className="flex justify-between">
+              <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+                <Briefcase className="w-3 h-3 text-[#18234B]" />
+                Bags
+              </label>
+              {getFieldError('luggage') && (
+                <span className="text-xs font-bold text-red-500">
+                  {getFieldError('luggage')}
+                </span>
+              )}
+            </div>
+            <div className="relative group">
+              <input
+                type="number"
+                min={0}
+                max={getMaxBagsForCurrentPax(formData.passengers)}
+                value={luggageInput}
+                onChange={e => onLuggageChange(e.target.value)}
+                onBlur={onLuggageBlur}
+                className={getInputClass('luggage', false)}
+              />
+            </div>
+          </div>
+
+          {/* Flight # */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
+              <Plane className="w-3 h-3 text-[#18234B]" />
+              Flight #
+            </label>
+            <div className="relative group">
+              <input
+                type="text"
+                value={formData.flightNumber}
+                onChange={e => handleInputChange('flightNumber', e.target.value)}
+                placeholder="Optional"
+                className={getInputClass('flightNumber', false)}
+              />
             </div>
           </div>
         </div>
@@ -2199,6 +2195,7 @@ function Step2StandardContent(props: {
       }
 
       // Redirect to Stripe Checkout
+      sessionStorage.setItem('spl_stripe_redirect', '1');
       window.location.href = data.url;
     } catch (err) {
       console.error(err);
@@ -2502,6 +2499,7 @@ function Step2HourlyContent(props: {
       }
 
       // Redirect to Stripe Checkout
+      sessionStorage.setItem('spl_stripe_redirect', '1');
       window.location.href = data.url;
     } catch (err) {
       console.error(err);

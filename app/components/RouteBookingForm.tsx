@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, AlertCircle, Repeat, Calendar, Clock, Users, Briefcase, Plane, CheckCircle } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
+import { getStoredUtms } from '@/app/lib/utm';
 import type { Route } from '@/app/types';
+import { toast } from 'sonner';
 
 const MAX_PASSENGERS = 8;
 const MAX_LUGGAGE_LIMIT = 10; // Absolute fallback limit
@@ -147,7 +149,6 @@ export default function RouteBookingForm({ route }: { route: Route }) {
   const [step, setStep] = useState<1 | 2>(1);
   const [leadId, setLeadId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   /* ---------------- Validation ---------------- */
 
@@ -171,6 +172,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
     if (!form.email && !form.phone) return;
 
     try {
+      const utms = getStoredUtms();
       const res = await fetch('/api/leads/upsert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -196,7 +198,8 @@ export default function RouteBookingForm({ route }: { route: Route }) {
               : null,
 
           quotedPrice: (basePrice),
-          currency: 'AUD'
+          currency: 'AUD',
+          utm: utms ?? undefined,
         })
       });
 
@@ -214,10 +217,8 @@ export default function RouteBookingForm({ route }: { route: Route }) {
   /* ---------------- Payment ---------------- */
 
   async function pay() {
-    setError(null);
-
     if (!isStep2Valid) {
-      setError('Please enter valid contact details.');
+      toast.error('Please enter valid contact details.');
       return;
     }
 
@@ -243,9 +244,10 @@ export default function RouteBookingForm({ route }: { route: Route }) {
         throw new Error(data.error || 'Payment failed');
       }
 
+      sessionStorage.setItem('spl_stripe_redirect', '1');
       window.location.href = data.url;
     } catch (e: any) {
-      setError(e.message);
+      toast.error(e.message || 'Payment failed. Please try again.');
       setLoading(false);
     }
   }
@@ -446,13 +448,6 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 />
               </div>
             </div>
-
-            {error && (
-              <div className="flex gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                {error}
-              </div>
-            )}
 
             <div className="flex gap-3 pt-2">
               <button

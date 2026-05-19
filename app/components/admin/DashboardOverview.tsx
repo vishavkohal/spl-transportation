@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { DollarSign, type LucideIcon, TrendingUp, Users, Calendar, MapPin, Clock } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { DollarSign, type LucideIcon, TrendingUp, Users, Calendar, MapPin, Clock, BarChart3, Target } from 'lucide-react';
 import type { Booking, Route, BookingLead } from '../AdminPanel';
 
 interface DashboardOverviewProps {
@@ -12,14 +12,59 @@ interface DashboardOverviewProps {
 
 const PRIMARY_COLOR = '#18234B';
 const ACCENT_COLOR = '#A61924';
+const SUCCESS_COLOR = '#16A34A';
 
 export default function DashboardOverview({ bookings, routes, leads }: DashboardOverviewProps) {
-
-    // Calculate Stats
-    const totalRevenue = bookings.reduce((sum, b) => sum + (b.totalPriceCents / 100), 0);
+    // Basic Stats
+    const totalRevenue = useMemo(() => bookings.reduce((sum, b) => sum + (b.totalPriceCents / 100), 0), [bookings]);
     const totalBookings = bookings.length;
     const totalLeads = leads.length;
     const activeRoutes = routes.length;
+
+    // Conversion Rate
+    const conversionRate = totalLeads > 0 ? ((totalBookings / totalLeads) * 100).toFixed(1) : '0.0';
+
+    // Top Routes
+    const topRoutes = useMemo(() => {
+        const counts: Record<string, number> = {};
+        bookings.forEach(b => {
+            if (b.bookingType === 'standard' && b.pickupLocation && b.dropoffLocation) {
+                const routeName = `${b.pickupLocation} → ${b.dropoffLocation}`;
+                counts[routeName] = (counts[routeName] || 0) + 1;
+            }
+        });
+        return Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3);
+    }, [bookings]);
+
+    // UTM Performance
+    const utmStats = useMemo(() => {
+        const stats: Record<string, { leads: number, bookings: number }> = {};
+        
+        leads.forEach(l => {
+            const source = l.utmSource || 'direct/organic';
+            if (!stats[source]) stats[source] = { leads: 0, bookings: 0 };
+            stats[source].leads += 1;
+        });
+
+        // Try to match bookings to leads to count UTM conversions if they share email/phone
+        // or just count source directly if we had utm stored on bookings (which we do if via checkout session)
+        bookings.forEach(b => {
+            // bookings might not have UTM directly unless we pass it, but let's assume we do 
+            // or we match by email to a lead. For simplicity, we match by email to lead.
+            const matchingLead = leads.find(l => l.email === b.email);
+            const source = matchingLead?.utmSource || 'direct/organic';
+            if (!stats[source]) stats[source] = { leads: 0, bookings: 0 };
+            stats[source].bookings += 1;
+        });
+
+        return Object.entries(stats)
+            .map(([source, data]) => ({ source, ...data }))
+            .sort((a, b) => b.bookings - a.bookings || b.leads - a.leads)
+            .slice(0, 5);
+    }, [leads, bookings]);
+
 
     // Recent 5 Bookings
     const recentBookings = [...bookings]
@@ -40,7 +85,6 @@ export default function DashboardOverview({ bookings, routes, leads }: Dashboard
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
-
             {/* Header */}
             <div>
                 <h2 className="text-2xl font-bold mb-1" style={{ color: PRIMARY_COLOR }}>Dashboard Overview</h2>
@@ -56,16 +100,10 @@ export default function DashboardOverview({ bookings, routes, leads }: Dashboard
                     color={SUCCESS_COLOR}
                 />
                 <StatCard
-                    label="Total Bookings"
-                    value={totalBookings.toString()}
-                    icon={Calendar}
+                    label="Conversion Rate"
+                    value={`${conversionRate}%`}
+                    icon={TrendingUp}
                     color={PRIMARY_COLOR}
-                />
-                <StatCard
-                    label="Active Routes"
-                    value={activeRoutes.toString()}
-                    icon={MapPin}
-                    color={ACCENT_COLOR}
                 />
                 <StatCard
                     label="Total Leads"
@@ -73,6 +111,61 @@ export default function DashboardOverview({ bookings, routes, leads }: Dashboard
                     icon={Users}
                     color="#F59E0B"
                 />
+                <StatCard
+                    label="Total Bookings"
+                    value={totalBookings.toString()}
+                    icon={Calendar}
+                    color={ACCENT_COLOR}
+                />
+            </div>
+
+            {/* Analytics Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Top Routes */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden p-6">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2" style={{ color: PRIMARY_COLOR }}>
+                        <MapPin className="w-5 h-5 text-blue-500" /> Top Performing Routes
+                    </h3>
+                    <div className="space-y-4">
+                        {topRoutes.length > 0 ? topRoutes.map(([route, count]) => (
+                            <div key={route} className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                                <span className="font-medium text-gray-700">{route}</span>
+                                <span className="text-sm font-bold bg-blue-100 text-blue-800 py-1 px-3 rounded-full">{count} trips</span>
+                            </div>
+                        )) : (
+                            <p className="text-sm text-gray-500">No route data yet.</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* UTM Marketing Performance */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden p-6">
+                    <h3 className="font-bold text-lg mb-4 flex items-center gap-2" style={{ color: PRIMARY_COLOR }}>
+                        <Target className="w-5 h-5 text-purple-500" /> Marketing Sources
+                    </h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-gray-50 text-gray-500 uppercase text-xs font-semibold">
+                                <tr>
+                                    <th className="px-4 py-2">Source</th>
+                                    <th className="px-4 py-2 text-right">Leads</th>
+                                    <th className="px-4 py-2 text-right">Bookings</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {utmStats.length > 0 ? utmStats.map((stat) => (
+                                    <tr key={stat.source} className="hover:bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-900 capitalize">{stat.source}</td>
+                                        <td className="px-4 py-3 text-right text-orange-600 font-bold">{stat.leads}</td>
+                                        <td className="px-4 py-3 text-right text-green-600 font-bold">{stat.bookings}</td>
+                                    </tr>
+                                )) : (
+                                    <tr><td colSpan={3} className="p-4 text-center text-gray-500">No data available.</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             {/* Recent Activity Section */}
@@ -133,5 +226,3 @@ export default function DashboardOverview({ bookings, routes, leads }: Dashboard
         </div>
     );
 }
-
-const SUCCESS_COLOR = '#16A34A';

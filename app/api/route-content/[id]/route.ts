@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 
 // GET /api/route-content/[id]
 export async function GET(
@@ -60,6 +62,10 @@ export async function PUT(
             },
         });
 
+        // Bust caches so transfer pages reflect updated content
+        revalidateTag('route-content', { expire: 0 });
+        revalidatePath('/transfers', 'layout');
+
         return NextResponse.json(entry);
     } catch (error: any) {
         console.error("Error updating route content:", error);
@@ -81,6 +87,11 @@ export async function DELETE(
     const { id } = await params;
     try {
         await prisma.routePageContent.delete({ where: { id } });
+
+        // Bust caches so transfer pages reflect the deletion
+        revalidateTag('route-content', { expire: 0 });
+        revalidatePath('/transfers', 'layout');
+
         return NextResponse.json({ success: true });
     } catch (error: any) {
         console.error("Error deleting route content:", error);

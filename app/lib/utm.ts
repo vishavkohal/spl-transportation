@@ -1,4 +1,5 @@
 // app/lib/utm.ts
+import Cookies from 'js-cookie';
 
 export type UtmParams = {
   utm_source?: string;
@@ -17,7 +18,6 @@ const UTM_KEYS: (keyof UtmParams)[] = [
 ];
 
 const STORAGE_KEY = "utm_params";
-const TIMESTAMP_KEY = "utm_timestamp";
 
 /**
  * Capture UTMs from the current URL.
@@ -28,7 +28,7 @@ export function captureUtmParams() {
   if (typeof window === "undefined") return;
 
   // Do not overwrite existing UTMs
-  if (localStorage.getItem(STORAGE_KEY)) return;
+  if (Cookies.get(STORAGE_KEY)) return;
 
   const params = new URLSearchParams(window.location.search);
   const utms: UtmParams = {};
@@ -45,8 +45,8 @@ export function captureUtmParams() {
 
   if (!hasUtm) return;
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(utms));
-  localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
+  // Store in cookie for 30 days
+  Cookies.set(STORAGE_KEY, JSON.stringify(utms), { expires: 30, path: '/' });
 }
 
 /**
@@ -55,7 +55,7 @@ export function captureUtmParams() {
 export function getStoredUtms(): UtmParams | null {
   if (typeof window === "undefined") return null;
 
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const raw = Cookies.get(STORAGE_KEY);
   if (!raw) return null;
 
   try {
@@ -70,6 +70,5 @@ export function getStoredUtms(): UtmParams | null {
  */
 export function clearUtms() {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(TIMESTAMP_KEY);
+  Cookies.remove(STORAGE_KEY, { path: '/' });
 }
