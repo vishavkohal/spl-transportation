@@ -3,6 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 import { revalidatePath } from "next/cache";
 
+function isAdmin(request: NextRequest): boolean {
+    const cookieHeader = request.headers.get('cookie') ?? '';
+    return cookieHeader.includes('admin_auth=1');
+}
+
 // GET /api/route-content/[id]
 export async function GET(
     request: NextRequest,
@@ -41,6 +46,9 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    if (!isAdmin(request)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { id } = await params;
     try {
         const { routeId, content, imageId } = await request.json();
@@ -84,6 +92,9 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    if (!isAdmin(request)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { id } = await params;
     try {
         await prisma.routePageContent.delete({ where: { id } });

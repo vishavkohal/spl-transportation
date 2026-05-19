@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+function isAdmin(request: NextRequest): boolean {
+    const cookieHeader = request.headers.get('cookie') ?? '';
+    return cookieHeader.includes('admin_auth=1');
+}
+
 // GET /api/route-content — list all route page content entries
 export async function GET() {
     try {
@@ -28,6 +33,9 @@ export async function GET() {
 
 // POST /api/route-content — create a new entry
 export async function POST(request: NextRequest) {
+    if (!isAdmin(request)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     try {
         const { routeId, content, imageId } = await request.json();
 

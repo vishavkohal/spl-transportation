@@ -1,10 +1,15 @@
 // app/api/routes/route.ts
 export const runtime = 'nodejs';
 export const revalidate = 3600; // Cache for 1 hour
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { revalidatePath } from 'next/cache';
 import { getRoutes, addRoute, updateRoute, deleteRoute } from '../../lib/routesStore';
+
+function isAdmin(request: NextRequest): boolean {
+  const cookieHeader = request.headers.get('cookie') ?? '';
+  return cookieHeader.includes('admin_auth=1');
+}
 
 /** Bust every cache layer that depends on route data */
 function invalidateRoutesCaches() {
@@ -27,14 +32,20 @@ export async function GET() {
   });
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  if (!isAdmin(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const body = await req.json();
   const created = await addRoute(body);
   invalidateRoutesCaches();
   return NextResponse.json(created, { status: 201 });
 }
 
-export async function PUT(req: Request) {
+export async function PUT(req: NextRequest) {
+  if (!isAdmin(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const body = await req.json();
   const id = Number(body.id);
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
@@ -44,7 +55,10 @@ export async function PUT(req: Request) {
   return NextResponse.json(updated);
 }
 
-export async function DELETE(req: Request) {
+export async function DELETE(req: NextRequest) {
+  if (!isAdmin(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const body = await req.json();
   const id = Number(body.id);
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
