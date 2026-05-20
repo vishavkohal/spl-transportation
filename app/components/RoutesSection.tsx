@@ -75,6 +75,17 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
   };
 
   // Filter routes based on search and category
+  // Helper: check if any of the route's text fields contain a keyword
+  const routeTextIncludes = (route: Route, keyword: string) => {
+    const fields = [
+      route.from,
+      route.to,
+      route.label ?? '',
+      route.description ?? ''
+    ];
+    return fields.some(f => f.toLowerCase().includes(keyword));
+  };
+
   const filteredRoutes = routes.filter(route => {
     const matchesSearch =
       searchQuery === '' ||
@@ -83,26 +94,21 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
 
     const matchesFilter =
       activeFilter === 'all' ||
-      (activeFilter === 'airport' &&
-        (route.from.toLowerCase().includes('airport') ||
-          route.to.toLowerCase().includes('airport'))) ||
+      (activeFilter === 'airport' && routeTextIncludes(route, 'airport')) ||
       (activeFilter === 'city' &&
-        (route.from.toLowerCase().includes('city') ||
-          route.to.toLowerCase().includes('city') ||
-          route.from.toLowerCase().includes('cairns') ||
-          route.to.toLowerCase().includes('cairns'))) ||
+        (routeTextIncludes(route, 'city') ||
+          routeTextIncludes(route, 'cairns'))) ||
       (activeFilter === 'beach' &&
-        (route.from.toLowerCase().includes('cove') ||
-          route.to.toLowerCase().includes('cove') ||
-          route.from.toLowerCase().includes('beach') ||
-          route.to.toLowerCase().includes('beach')));
+        (routeTextIncludes(route, 'cove') ||
+          routeTextIncludes(route, 'beach')));
 
     return matchesSearch && matchesFilter;
   });
 
   // Separate day trip routes and combine their pricing
-  const dayTripRoutes = routes.filter(r => r.from === 'Day trip (8 hours)');
-  const regularRoutes = filteredRoutes.filter(r => r.from !== 'Day trip (8 hours)');
+  const isDayTrip = (r: Route) => r.from.toLowerCase().includes('day trip');
+  const dayTripRoutes = routes.filter(isDayTrip);
+  const regularRoutes = filteredRoutes.filter(r => !isDayTrip(r));
 
   // Combine all day trip pricing into one array
   const dayTripPricing = dayTripRoutes.flatMap(r => r.pricing || []);
@@ -167,7 +173,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
       );
     }
 
-    if (filteredRoutes.length === 0) {
+    if (regularRoutes.length === 0 && dayTripPricing.length === 0) {
       return (
         <p className="text-gray-600 text-center py-8">
           No routes match your search. Try a different filter.
@@ -270,8 +276,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
           variants={containerVariants}
           initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.1 }}
+          animate="visible"
         >
           {regularRoutes.map((route, index) => {
             const lowestPrice = getLowestPrice(route);
