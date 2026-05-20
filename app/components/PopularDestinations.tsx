@@ -9,27 +9,26 @@ import type { Route } from '../types';
 import { routeToSlug } from '../lib/routeSlug';
 import { useBooking } from '../providers/BookingProvider';
 
-// Minimal Motion Variants
+// Apple-style Motion Variants
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.15,
       delayChildren: 0.1
     }
   }
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 15 },
+  hidden: { opacity: 0, y: 50 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      type: 'spring',
-      stiffness: 40,
-      damping: 20
+      duration: 0.8,
+      ease: [0.16, 1, 0.3, 1]
     }
   }
 };
@@ -69,7 +68,7 @@ const popularRouteConfigs = [
     from: 'Cairns Airport',
     to: 'Palm Cove',
     label: 'Palm Cove Coastal Transfer',
-    subtitle: 'A smooth ride to one of Tropical North Queenslands most scenic beach towns.',
+    subtitle: 'A smooth ride to one of Tropical North Queensland\'s most scenic beach towns.',
     image: '/routes/cairns-airport-to-palm-cove.jpg'
   },
   {
@@ -99,9 +98,9 @@ const popularRouteConfigs = [
 ];
 
 function getFromPrice(route: Route): string {
-  if (!route.pricing || !route.pricing.length) return 'Contact for price';
+  if (!route.pricing || !route.pricing.length) return 'Contact us';
   const min = Math.min(...route.pricing.map((p) => p.price));
-  return `From $${min}`;
+  return `$${min}`;
 }
 
 export default function PopularDestinations() {
@@ -229,10 +228,10 @@ export default function PopularDestinations() {
                 group relative hover:-translate-y-1
                 flex flex-col overflow-hidden border border-gray-100
               "
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               >
                 <Link href={`/transfers/${item.slug}`} className="absolute inset-0 z-10" aria-label={`Book ${item.title}`} />
 
@@ -242,6 +241,7 @@ export default function PopularDestinations() {
                     src={item.image}
                     alt={item.title}
                     fill
+                    sizes="(max-width: 640px) 85vw, 340px"
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />

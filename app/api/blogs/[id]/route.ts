@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { isAdmin } from "@/app/lib/auth";
 
 export async function GET(
     request: NextRequest,
@@ -32,6 +35,9 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    if (!isAdmin(request)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { id } = await params;
     try {
         const json = await request.json();
@@ -60,6 +66,10 @@ export async function PUT(
             },
         });
 
+        // Bust caches so blog pages reflect the update
+        revalidateTag('blogs', { expire: 0 });
+        revalidatePath('/blog', 'layout');
+
         return NextResponse.json(blog);
     } catch (error) {
         console.error("Error updating blog:", error);
@@ -74,12 +84,19 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    if (!isAdmin(request)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { id } = await params;
     try {
         // Optional: Delete image if it's not trying to be reused, but for now just delete blog
         await prisma.blogPost.delete({
             where: { id },
         });
+
+        // Bust caches so blog pages reflect the deletion
+        revalidateTag('blogs', { expire: 0 });
+        revalidatePath('/blog', 'layout');
 
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -90,3 +107,4 @@ export async function DELETE(
         );
     }
 }
+

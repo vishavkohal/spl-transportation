@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { isAdmin } from "@/app/lib/auth";
 
 export async function GET(request: NextRequest) {
     try {
@@ -29,6 +32,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+    if (!isAdmin(request)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     try {
         const json = await request.json();
         const {
@@ -62,6 +68,10 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        // Bust caches so blog pages reflect the new post
+        revalidateTag('blogs', { expire: 0 });
+        revalidatePath('/blog', 'layout');
+
         return NextResponse.json(blog);
     } catch (error) {
         console.error("Error creating blog:", error);
@@ -77,3 +87,4 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+

@@ -537,28 +537,29 @@ export const ROUTE_PAGE_CONTENT: Record<string, RoutePageContent> = {
 import { prisma } from "@/lib/prisma";
 import { unstable_cache } from "next/cache";
 
-export async function getRoutePageContent(route: Route): Promise<RoutePageContent | null> {
-  const fetchContent = unstable_cache(
-    async (from: string, to: string) => {
-      try {
-        const dbEntry = await prisma.routePageContent.findFirst({
-          where: { route: { from, to } },
-        });
+const fetchRouteContent = unstable_cache(
+  async (from: string, to: string) => {
+    try {
+      const dbEntry = await prisma.routePageContent.findFirst({
+        where: { route: { from, to } },
+      });
 
-        if (dbEntry) {
-          return {
-            ...(dbEntry.content as unknown as RoutePageContent),
-            imageId: dbEntry.imageId,
-          };
-        }
-      } catch (e) {
-        console.error("Failed to fetch route page content from DB:", e);
+      if (dbEntry) {
+        return {
+          ...(dbEntry.content as unknown as RoutePageContent),
+          imageId: dbEntry.imageId,
+        };
       }
-      return ROUTE_PAGE_CONTENT[key(from, to)] ?? null;
-    },
-    [`route-content-${route.from}-${route.to}`],
-    { tags: ['route-content'], revalidate: 3600 }
-  );
+    } catch (e) {
+      console.error("Failed to fetch route page content from DB:", e);
+    }
+    return ROUTE_PAGE_CONTENT[key(from, to)] ?? null;
+  },
+  ['route-content'],
+  { tags: ['route-content'], revalidate: 3600 }
+);
 
-  return fetchContent(route.from, route.to);
+export async function getRoutePageContent(route: Route): Promise<RoutePageContent | null> {
+  return fetchRouteContent(route.from, route.to);
 }
+

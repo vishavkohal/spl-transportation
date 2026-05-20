@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import 'leaflet/dist/leaflet.css';
 
 type Props = {
   fromLabel: string;
@@ -25,9 +26,17 @@ export default function RouteMapLeaflet({
     if (!mapRef.current) return;
 
     let map: any;
+    let cancelled = false;
 
     async function init() {
       const L = (await import('leaflet')).default;
+
+      if (cancelled || !mapRef.current) return;
+
+      // Guard against re-initialization (React Strict Mode / HMR)
+      if ((mapRef.current as any)._leaflet_id) {
+        return;
+      }
 
       map = L.map(mapRef.current!, {
         zoomControl: false,
@@ -42,46 +51,51 @@ export default function RouteMapLeaflet({
       L.marker(fromCoords).addTo(map).bindPopup(fromLabel);
       L.marker(toCoords).addTo(map).bindPopup(toLabel);
 
-      const res = await fetch(
-        'https://api.openrouteservice.org/v2/directions/driving-car/geojson',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: process.env.NEXT_PUBLIC_ORS_KEY!,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            coordinates: [
-              [fromCoords[1], fromCoords[0]],
-              [toCoords[1], toCoords[0]],
-            ],
-          }),
+      try {
+        const res = await fetch(
+          'https://api.openrouteservice.org/v2/directions/driving-car/geojson',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: process.env.NEXT_PUBLIC_ORS_KEY!,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              coordinates: [
+                [fromCoords[1], fromCoords[0]],
+                [toCoords[1], toCoords[0]],
+              ],
+            }),
+          }
+        );
+
+        const data = await res.json();
+
+        if (cancelled || !data || !data.features || !data.features.length) {
+          if (!cancelled) console.error('OpenRouteService API error:', data);
+          return;
         }
-      );
 
-      const data = await res.json();
+        const routeLayer = L.geoJSON(data, {
+          style: { color: '#A61924', weight: 5 },
+        }).addTo(map);
 
-      if (!data || !data.features || !data.features.length) {
-        console.error('OpenRouteService API error:', data);
-        return;
+        map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+
+        const summary = data.features[0].properties.summary;
+        setInfo({
+          distanceKm: +(summary.distance / 1000).toFixed(1),
+          durationMin: Math.round(summary.duration / 60),
+        });
+      } catch (err) {
+        if (!cancelled) console.error('Route fetch failed:', err);
       }
-
-      const routeLayer = L.geoJSON(data, {
-        style: { color: '#A61924', weight: 5 },
-      }).addTo(map);
-
-      map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
-
-      const summary = data.features[0].properties.summary;
-      setInfo({
-        distanceKm: +(summary.distance / 1000).toFixed(1),
-        durationMin: Math.round(summary.duration / 60),
-      });
     }
 
     init();
 
     return () => {
+      cancelled = true;
       if (map) map.remove();
     };
   }, [fromCoords, toCoords, fromLabel, toLabel]);

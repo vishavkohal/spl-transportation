@@ -68,16 +68,16 @@ const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 },
+    transition: { staggerChildren: 0.12, delayChildren: 0.1 },
   },
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 15 },
+  hidden: { opacity: 0, y: 40 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring', stiffness: 40, damping: 20 },
+    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
   },
 };
 
@@ -143,7 +143,7 @@ const FaqSection: React.FC = () => {
                     {item.question}
                   </span>
                   <ChevronDown
-                    className={`w-5 h-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''
+                    className={`w-5 h-5 transition-transform duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${isOpen ? 'rotate-180' : ''
                       }`}
                     style={{ color: ACCENT_COLOR }}
                   />

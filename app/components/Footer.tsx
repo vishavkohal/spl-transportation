@@ -7,7 +7,6 @@ import {
   Phone,
   MapPin,
   Facebook,
-  Twitter,
   Instagram,
   ArrowUpRight
 } from 'lucide-react';
@@ -37,21 +36,29 @@ export default function Footer() {
             </Link>
             <p className="text-sm leading-relaxed max-w-sm" style={{ color: TEXT_MUTED }}>
               Professional private transfers across Queensland.
-              Elevating your journey with safety, puntuality, and premium comfort.
+              Elevating your journey with safety, punctuality, and premium comfort.
             </p>
 
             {/* Minimal Social Icons */}
             <div className="flex gap-4">
-              {[Facebook, Twitter, Instagram].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all duration-300"
-                  aria-label="Social Link"
-                >
-                  <Icon className="w-4 h-4" strokeWidth={1.5} />
-                </a>
-              ))}
+              <a
+                href="https://www.facebook.com/spltransportation"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all duration-300"
+                aria-label="Facebook"
+              >
+                <Facebook className="w-4 h-4" strokeWidth={1.5} />
+              </a>
+              <a
+                href="https://www.instagram.com/spltransportation"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white transition-all duration-300"
+                aria-label="Instagram"
+              >
+                <Instagram className="w-4 h-4" strokeWidth={1.5} />
+              </a>
             </div>
           </div>
 
@@ -64,7 +71,7 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               {[
                 { label: 'About Us', href: '/about' },
-                { label: 'Our Fleet', href: '/fleet' },
+                { label: 'Our Fleet', href: '/about' },
                 { label: 'Pricing & Routes', href: '/transfers' },
                 { label: 'Contact', href: '/contact' }
               ].map((link) => (

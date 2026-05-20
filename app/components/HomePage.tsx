@@ -127,15 +127,14 @@ function getHourlyPrice(formData: BookingFormData): number {
 }
 
 /* -----------------------------
-   Framer Motion variants
+   Framer Motion variants — Apple-style
 ------------------------------*/
 const heroContentVariants: Variants = {
-  hidden: { opacity: 0, y: 5, filter: 'blur(4px)' },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] }
+    transition: { duration: 1, ease: [0.16, 1, 0.3, 1] }
   }
 };
 
@@ -143,39 +142,37 @@ const heroDotsVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { duration: 0.5 }
+    transition: { duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }
   }
 };
 
 const bookingCardVariants: Variants = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 50 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      type: 'spring',
-      stiffness: 40,
-      damping: 20,
-      mass: 1,
-      delay: 0.1
+      duration: 1,
+      ease: [0.16, 1, 0.3, 1],
+      delay: 0.15
     }
   }
 };
 
-// NEW: Smooth step transition variants
+// Smooth step transition variants
 const stepTransitionVariants: Variants = {
-  hidden: { opacity: 0, x: 20, position: 'absolute' }, // float right
+  hidden: { opacity: 0, x: 20, position: 'absolute' },
   visible: {
     opacity: 1,
     x: 0,
     position: 'relative',
-    transition: { type: "spring", stiffness: 300, damping: 30 }
+    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
   },
   exit: {
     opacity: 0,
     x: -20,
     position: 'absolute',
-    transition: { duration: 0.2 }
+    transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }
   }
 };
 
@@ -638,7 +635,7 @@ export default function HomePage(props: {
           {/* Mobile Headline Overlay */}
           <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-4 z-20 lg:hidden pointer-events-none">
             <h1 className="text-3xl font-extrabold text-white drop-shadow-lg font-serif tracking-wide leading-tight mb-4">
-              Experience the<br /> Pinnacle of Travel
+              Private Airport<br />Transfers in Cairns
             </h1>
 
             <div className="flex flex-wrap justify-center gap-4">
@@ -677,18 +674,18 @@ export default function HomePage(props: {
             {/* Desktop Headline (Left) */}
             <div className="hidden lg:block lg:col-span-5 text-white pl-8 xl:pl-16">
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -40 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
+                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
               >
                 <h1 className="text-5xl xl:text-7xl font-bold mb-6 font-serif leading-tight">
-                  Experience the <br />
-                  Pinnacle of Travel
+                  Private Airport <br />
+                  Transfers in Cairns
                 </h1>
                 <p className="text-lg text-gray-200 max-w-xl font-light mb-8 leading-relaxed">
-                  Chauffeured luxury transfers across Cairns, Port Douglas,
-                  and Tropical North Queensland. <br />
-                  <span className="text-base font-medium text-white/90">Free quotes for all destinations.</span>
+                  Professional door-to-door transfers across Cairns, Port Douglas,
+                  Palm Cove and Tropical North Queensland. <br />
+                  <span className="text-base font-medium text-white/90">Fixed pricing from $55. No surge, no hidden fees.</span>
                 </p>
 
                 <div className="flex flex-wrap gap-6 mb-8">
@@ -725,9 +722,9 @@ export default function HomePage(props: {
               <motion.div
                 ref={formTopRef}
                 id="booking-form"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
                 className="
                          rounded-2xl lg:rounded-3xl
                          bg-white shadow-[0_20px_40px_rgba(0,0,0,0.15)]

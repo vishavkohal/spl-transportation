@@ -67,7 +67,7 @@ export default function TermsPage() {
                 <ListItem>Cancellation requests must be submitted in writing (email or SMS).</ListItem>
                 <ListItem><strong>Within 48 hours</strong> of service: No refund provided.</ListItem>
                 <ListItem><strong>Outside 48 hours</strong>: Full refund less processing fees.</ListItem>
-                <ListItem>Card processing fees (2.2%) are non-refundable.</ListItem>
+                <ListItem>Card processing fees (2.5%) are non-refundable.</ListItem>
               </ul>
             </TermsSection>
 

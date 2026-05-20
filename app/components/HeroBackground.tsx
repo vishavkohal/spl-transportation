@@ -16,28 +16,43 @@ export default function HeroBackground() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % HERO_IMAGES.length);
-    }, 6000); // 6 seconds per slide
+    }, 7000); // 7 seconds per slide — slower, more cinematic
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="absolute inset-0 bg-gray-900">
-      {HERO_IMAGES.map((src, index) => (
-        <div
-          key={src}
-          className={`absolute inset-0 transition-opacity duration-[2000ms] ease-in-out ${index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
-            }`}
-        >
-          <Image
-            src={src}
-            alt="SPL Transportation Luxury Fleet"
-            fill
-            priority={index === 0}
-            className="object-cover"
-            sizes="100vw"
-          />
-        </div>
-      ))}
+      {HERO_IMAGES.map((src, index) => {
+        const isActive = index === currentIndex;
+        return (
+          <div
+            key={src}
+            className="absolute inset-0"
+            style={{
+              opacity: isActive ? 1 : 0,
+              zIndex: isActive ? 10 : 0,
+              transition: 'opacity 2.5s cubic-bezier(0.25, 0.1, 0.25, 1)',
+            }}
+          >
+            <div
+              className="absolute inset-0"
+              style={{
+                transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                transition: 'transform 8s cubic-bezier(0.25, 0.1, 0.25, 1)',
+              }}
+            >
+              <Image
+                src={src}
+                alt="SPL Transportation Luxury Fleet"
+                fill
+                priority={index === 0}
+                className="object-cover"
+                sizes="100vw"
+              />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

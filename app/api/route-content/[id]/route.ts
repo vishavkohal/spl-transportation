@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 import { revalidatePath } from "next/cache";
-
-function isAdmin(request: NextRequest): boolean {
-    const cookieHeader = request.headers.get('cookie') ?? '';
-    return cookieHeader.includes('admin_auth=1');
-}
+import { isAdmin } from "@/app/lib/auth";
 
 // GET /api/route-content/[id]
 export async function GET(
@@ -72,6 +68,7 @@ export async function PUT(
 
         // Bust caches so transfer pages reflect updated content
         revalidateTag('route-content', { expire: 0 });
+        revalidateTag('routes', { expire: 0 });
         revalidatePath('/transfers', 'layout');
 
         return NextResponse.json(entry);
@@ -101,6 +98,7 @@ export async function DELETE(
 
         // Bust caches so transfer pages reflect the deletion
         revalidateTag('route-content', { expire: 0 });
+        revalidateTag('routes', { expire: 0 });
         revalidatePath('/transfers', 'layout');
 
         return NextResponse.json({ success: true });

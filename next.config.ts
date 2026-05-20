@@ -33,16 +33,6 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // API routes — short cache with background revalidation
-      {
-        source: "/api/routes",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, s-maxage=3600, stale-while-revalidate=86400",
-          },
-        ],
-      },
       // Transfer pages — edge cache for 5 min, serve stale for 1 day
       {
         source: "/transfers/:slug",

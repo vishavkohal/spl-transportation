@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-
-function isAdmin(request: NextRequest): boolean {
-    const cookieHeader = request.headers.get('cookie') ?? '';
-    return cookieHeader.includes('admin_auth=1');
-}
+import { revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
+import { isAdmin } from "@/app/lib/auth";
 
 // GET /api/route-content — list all route page content entries
 export async function GET() {
@@ -61,6 +59,11 @@ export async function POST(request: NextRequest) {
                 },
             },
         });
+
+        // Bust caches so transfer pages reflect the new content
+        revalidateTag('route-content', { expire: 0 });
+        revalidateTag('routes', { expire: 0 });
+        revalidatePath('/transfers', 'layout');
 
         return NextResponse.json(entry, { status: 201 });
     } catch (error: any) {

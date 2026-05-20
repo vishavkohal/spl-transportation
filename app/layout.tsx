@@ -14,7 +14,6 @@ const playfair = Playfair_Display({
   variable: "--font-playfair",
   display: "swap",
 });
-import 'leaflet/dist/leaflet.css';
 import { BookingProvider } from "./providers/BookingProvider";
 import Navigation from "../app/components/Navigation";
 import Footer from "../app/components/Footer";
@@ -93,7 +92,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <head>
         {/* Force reload when returning from Stripe checkout (runs BEFORE React) */}
         <script
@@ -113,8 +112,13 @@ export default function RootLayout({
             `,
           }}
         />
+        {/* ✅ Preload LCP hero image */}
+        <link rel="preload" as="image" href="/hero-mercedes.webp" type="image/webp" fetchPriority="high" />
         {/* ✅ Preload brand logo */}
         <link rel="preload" as="image" href="/logo.png" />
+        {/* ✅ Preconnect to external origins */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
 
         {/* ✅ Google Analytics */}
         <Script

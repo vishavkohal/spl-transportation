@@ -1,15 +1,10 @@
 // app/api/routes/route.ts
 export const runtime = 'nodejs';
-export const revalidate = 3600; // Cache for 1 hour
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { revalidatePath } from 'next/cache';
 import { getRoutes, addRoute, updateRoute, deleteRoute } from '../../lib/routesStore';
-
-function isAdmin(request: NextRequest): boolean {
-  const cookieHeader = request.headers.get('cookie') ?? '';
-  return cookieHeader.includes('admin_auth=1');
-}
+import { isAdmin } from '../../lib/auth';
 
 /** Bust every cache layer that depends on route data */
 function invalidateRoutesCaches() {
@@ -25,11 +20,7 @@ function invalidateRoutesCaches() {
 
 export async function GET() {
   const routes = await getRoutes();
-  return NextResponse.json(routes, {
-    headers: {
-      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
-    },
-  });
+  return NextResponse.json(routes);
 }
 
 export async function POST(req: NextRequest) {

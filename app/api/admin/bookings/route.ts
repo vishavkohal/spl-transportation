@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-// Simple admin check — must match your login logic
-function isAdmin(request: NextRequest): boolean {
-  const cookieHeader = request.headers.get('cookie') ?? '';
-  return cookieHeader.includes('admin_auth=1');
-}
+import { isAdmin } from '@/app/lib/auth';
 
 export async function GET(request: NextRequest) {
   if (!isAdmin(request)) {

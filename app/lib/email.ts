@@ -82,7 +82,7 @@ async function sendWithRetries(payload: {
       // If it's a 4xx client error, abort retries (bad request / validation)
       if (typeof status === 'number' && status >= 400 && status < 500) {
         // Use p-retry's AbortError so retrying stops immediately
-        // @ts-ignore - pRetry.AbortError exists at runtime
+        // @ts-expect-error - pRetry.AbortError exists at runtime
         throw new pRetry.AbortError(err);
       }
 

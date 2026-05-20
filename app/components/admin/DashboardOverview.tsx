@@ -14,6 +14,18 @@ const PRIMARY_COLOR = '#18234B';
 const ACCENT_COLOR = '#A61924';
 const SUCCESS_COLOR = '#16A34A';
 
+const StatCard = ({ label, value, icon: Icon, color }: { label: string, value: string, icon: LucideIcon, color: string }) => (
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-start justify-between">
+        <div>
+            <p className="text-sm font-medium text-gray-500 mb-1">{label}</p>
+            <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
+        </div>
+        <div className={`p-3 rounded-xl bg-opacity-10`} style={{ backgroundColor: `${color}20` }}>
+            <Icon className="w-6 h-6" style={{ color: color }} />
+        </div>
+    </div>
+);
+
 export default function DashboardOverview({ bookings, routes, leads }: DashboardOverviewProps) {
     // Basic Stats
     const totalRevenue = useMemo(() => bookings.reduce((sum, b) => sum + (b.totalPriceCents / 100), 0), [bookings]);
@@ -71,24 +83,12 @@ export default function DashboardOverview({ bookings, routes, leads }: Dashboard
         .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
         .slice(0, 5);
 
-    const StatCard = ({ label, value, icon: Icon, color }: { label: string, value: string, icon: LucideIcon, color: string }) => (
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-start justify-between">
-            <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">{label}</p>
-                <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
-            </div>
-            <div className={`p-3 rounded-xl bg-opacity-10`} style={{ backgroundColor: `${color}20` }}>
-                <Icon className="w-6 h-6" style={{ color: color }} />
-            </div>
-        </div>
-    );
-
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
             <div>
                 <h2 className="text-2xl font-bold mb-1" style={{ color: PRIMARY_COLOR }}>Dashboard Overview</h2>
-                <p className="text-gray-500 text-sm">Welcome back, Admin. Here's what's happening today.</p>
+                <p className="text-gray-500 text-sm">Welcome back, Admin. Here&apos;s what&apos;s happening today.</p>
             </div>
 
             {/* Stats Grid */}

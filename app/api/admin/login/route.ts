@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createAuthToken } from '@/app/lib/auth';
 
 export async function POST(req: Request) {
   const { password } = await req.json();
@@ -17,8 +18,8 @@ export async function POST(req: Request) {
 
   const res = NextResponse.json({ ok: true });
 
-  // Set an HttpOnly cookie so JS can't read it directly
-  res.cookies.set('admin_auth', '1', {
+  // Set an HttpOnly cookie with a signed token
+  res.cookies.set('admin_auth', createAuthToken('admin'), {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',

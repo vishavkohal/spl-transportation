@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createAuthToken } from '@/app/lib/auth';
 
 export async function POST(req: Request) {
     const { password } = await req.json();
@@ -19,8 +20,8 @@ export async function POST(req: Request) {
 
     const res = NextResponse.json({ ok: true });
 
-    // Set an HttpOnly cookie unique to CMS
-    res.cookies.set('cms_auth', '1', {
+    // Set an HttpOnly cookie with a signed token
+    res.cookies.set('cms_auth', createAuthToken('cms'), {
         httpOnly: true,
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',

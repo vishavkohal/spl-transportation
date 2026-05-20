@@ -1,8 +1,9 @@
 'use client';
 import React from 'react';
 import { Clock, Shield, Truck, Users, Car, Star, type LucideIcon } from 'lucide-react';
-import { motion, type Variants, useInView, useSpring } from 'framer-motion';
+import { motion, useInView, useSpring } from 'framer-motion';
 import { useEffect, useRef } from 'react';
+import ScrollReveal, { staggerContainer, fadeUp, scaleIn } from './ScrollReveal';
 
 // Define the custom colors
 const PRIMARY_COLOR = '#18234B'; // Dark Navy
@@ -59,30 +60,6 @@ const stats = [
   }
 ];
 
-// Variants
-const fadeUpParent: Variants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: 'spring', stiffness: 40, damping: 20 }
-  },
-};
-
-const fadeUpStaggerParent: Variants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
-};
-
-const fadeUpChild: Variants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: 'spring', stiffness: 40, damping: 20 },
-  },
-};
-
 const AnimatedCounter = ({ value }: { value: string }) => {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-10px" });
@@ -121,40 +98,38 @@ const FeaturesSection: React.FC = React.memo(() => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* TITLE SECTION */}
-        <motion.div
-          variants={fadeUpStaggerParent}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          className="text-center mb-12 lg:mb-16"
-        >
-          <motion.p variants={fadeUpChild} className="font-bold tracking-wider uppercase text-sm mb-2" style={{ color: ACCENT_COLOR }}>
-            Our Commitment
-          </motion.p>
-          <motion.h2 variants={fadeUpChild} className="text-3xl md:text-4xl font-extrabold text-[#18234B] mb-4">
-            Why Choose Us?
-          </motion.h2>
-          <motion.div variants={fadeUpChild} className="w-16 h-1 mx-auto rounded-full" style={{ backgroundColor: ACCENT_COLOR }} />
-        </motion.div>
+        <div className="text-center mb-12 lg:mb-16">
+          <ScrollReveal variant="fadeUpSubtle">
+            <p className="font-bold tracking-wider uppercase text-sm mb-2" style={{ color: ACCENT_COLOR }}>
+              Our Commitment
+            </p>
+          </ScrollReveal>
+          <ScrollReveal variant="fadeUp" delay={0.1}>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-[#18234B] mb-4">
+              Why Choose Us?
+            </h2>
+          </ScrollReveal>
+          <ScrollReveal variant="fadeUpSubtle" delay={0.2}>
+            <div className="w-16 h-1 mx-auto rounded-full" style={{ backgroundColor: ACCENT_COLOR }} />
+          </ScrollReveal>
+        </div>
 
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
 
           {/* LEFT: Content & Features List */}
           <motion.div
-            variants={fadeUpStaggerParent}
+            variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
           >
-            {/* Title Block Removed from here */}
-
             <div className="space-y-8">
               {featureData.map((feature, idx) => {
                 const Icon = feature.icon;
                 return (
                   <motion.div
                     key={idx}
-                    variants={fadeUpChild}
+                    variants={fadeUp}
                     className="flex items-start gap-4"
                   >
                     <div className="shrink-0 w-12 h-12 flex items-center justify-center rounded-xl bg-slate-100 border border-slate-200 mt-1">
@@ -173,7 +148,7 @@ const FeaturesSection: React.FC = React.memo(() => {
           {/* RIGHT: Compact Metrics Grid */}
           <motion.div
             className="grid grid-cols-2 gap-4 sm:gap-6 lg:mt-16"
-            variants={fadeUpStaggerParent}
+            variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
@@ -181,8 +156,13 @@ const FeaturesSection: React.FC = React.memo(() => {
             {stats.map((stat) => (
               <motion.div
                 key={stat.id}
-                variants={fadeUpChild}
-                className="bg-[#18234B] rounded-2xl p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-transparent"
+                variants={scaleIn}
+                whileHover={{
+                  y: -4,
+                  scale: 1.03,
+                  transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }
+                }}
+                className="bg-[#18234B] rounded-2xl p-6 text-center shadow-lg transition-all duration-500 border border-transparent"
               >
                 <div className="text-3xl sm:text-4xl font-extrabold mb-1 text-white">
                   <AnimatedCounter value={stat.value} />

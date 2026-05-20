@@ -19,10 +19,6 @@ export default function LeadsManager() {
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
 
-    useEffect(() => {
-        loadLeads();
-    }, []);
-
     function loadLeads() {
         setLoading(true);
         fetch('/api/admin/leads')
@@ -30,6 +26,10 @@ export default function LeadsManager() {
             .then(setLeads)
             .finally(() => setLoading(false));
     }
+
+    useEffect(() => {
+        loadLeads();
+    }, []);
 
     const filtered = useMemo(() => {
         let result = leads;

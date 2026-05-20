@@ -144,6 +144,7 @@ export default function TransfersPage() {
                         src={image}
                         alt={`${route.from} to ${route.to}`}
                         fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
@@ -173,13 +174,13 @@ export default function TransfersPage() {
                       {/* Pricing Tiers */}
                       <div className="space-y-2 mb-6">
                         {route.pricing.slice(0, 3).map((p, i) => (
-                          <div key={i} className="flex items-center justify-between text-sm py-1 border-b border-gray-50 last:border-0 hover:bg-slate-50 rounded px-1 -mx-1 transition-colors">
-                            <span className="font-medium text-slate-700 w-24">{p.vehicleType}</span>
-                            <span className="text-xs text-slate-500 flex items-center gap-1 mr-auto">
-                              <Users className="w-3 h-3 text-slate-400" />
+                          <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-gray-50 last:border-0 hover:bg-slate-50 rounded px-1 -mx-1 transition-colors gap-2">
+                            <span className="font-medium text-slate-700 truncate min-w-0 flex-shrink">{p.vehicleType}</span>
+                            <span className="text-xs text-slate-400 flex items-center gap-1 flex-shrink-0">
+                              <Users className="w-3 h-3" />
                               {p.passengers}
                             </span>
-                            <span className="font-bold whitespace-nowrap" style={{ color: PRIMARY_COLOR }}>${p.price}</span>
+                            <span className="font-bold whitespace-nowrap flex-shrink-0" style={{ color: PRIMARY_COLOR }}>${p.price}</span>
                           </div>
                         ))}
                       </div>
