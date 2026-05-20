@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   MapPin,
   Calendar,
@@ -13,6 +13,9 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronDown,
+  Shield,
+  CreditCard,
+  Lock,
 } from 'lucide-react';
 import { useBooking } from '../providers/BookingProvider';
 import { useDebouncedCallback } from 'use-debounce';
@@ -58,6 +61,75 @@ function isPickupAtLeast30Mins(pickupDate: string, pickupTime: string) {
 const PAYMENT_FEE_RATE = 0.025;
 function calculateProcessingFee(amount: number) {
   return Number((amount * PAYMENT_FEE_RATE).toFixed(2));
+}
+
+/* ─── Reusable sub-components ─── */
+
+
+
+function FieldError({ error }: { error: string | null }) {
+  if (!error) return null;
+  return (
+    <span className="flex items-center gap-1 text-xs font-semibold text-red-500 mt-1.5">
+      <AlertCircle className="w-3 h-3" />
+      {error}
+    </span>
+  );
+}
+
+function StepIndicator({ current }: { current: 1 | 2 }) {
+  return (
+    <div className="flex items-center gap-3 mb-6">
+      {/* Step 1 */}
+      <div className="flex items-center gap-2">
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
+          style={{
+            backgroundColor: current >= 1 ? PRIMARY_COLOR : '#e5e7eb',
+            color: current >= 1 ? '#fff' : '#9ca3af',
+          }}
+        >
+          {current > 1 ? <CheckCircle className="w-4 h-4" /> : '1'}
+        </div>
+        <span
+          className="text-xs font-semibold hidden xs:inline"
+          style={{ color: current >= 1 ? PRIMARY_COLOR : '#9ca3af' }}
+        >
+          Trip Details
+        </span>
+      </div>
+
+      {/* Connector */}
+      <div className="flex-1 h-0.5 rounded-full overflow-hidden bg-gray-200">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{
+            width: current >= 2 ? '100%' : '0%',
+            backgroundColor: PRIMARY_COLOR,
+          }}
+        />
+      </div>
+
+      {/* Step 2 */}
+      <div className="flex items-center gap-2">
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
+          style={{
+            backgroundColor: current >= 2 ? PRIMARY_COLOR : '#e5e7eb',
+            color: current >= 2 ? '#fff' : '#9ca3af',
+          }}
+        >
+          2
+        </div>
+        <span
+          className="text-xs font-semibold hidden xs:inline"
+          style={{ color: current >= 2 ? PRIMARY_COLOR : '#9ca3af' }}
+        >
+          Confirm & Pay
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export default function LandingBookingForm() {
@@ -125,9 +197,21 @@ export default function LandingBookingForm() {
 
   const inputCls = (field: string) => {
     const err = getFieldError(field);
-    const base = 'w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-black ';
-    if (err) return base + 'bg-red-50 border border-red-500 ring-1 ring-red-500 focus:ring-2 focus:ring-red-500';
-    return base + 'bg-white border border-gray-300 focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B]';
+    const base =
+      'landing-form-input w-full px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-gray-900 placeholder-gray-400 outline-none ';
+    if (err)
+      return (
+        base +
+        'bg-red-50 border-2 border-red-400 ring-0 focus:border-red-500 focus:ring-2 focus:ring-red-500/20'
+      );
+    return (
+      base +
+      'bg-gray-50/80 border-2 border-gray-200 hover:border-gray-300 focus:bg-white focus:border-[#18234B] focus:ring-2 focus:ring-[#18234B]/10'
+    );
+  };
+
+  const selectCls = (field: string, disabled: boolean) => {
+    return inputCls(field) + ' appearance-none' + (disabled ? ' cursor-not-allowed opacity-60' : '');
   };
 
   /* --- Passenger/luggage handlers --- */
@@ -258,339 +342,415 @@ export default function LandingBookingForm() {
 
   return (
     <div id="landing-booking" className="scroll-mt-24">
-      <div className="rounded-[32px] bg-white/60 backdrop-blur-xl shadow-xl p-6 sm:p-10">
+      <div className="landing-form-card rounded-2xl sm:rounded-3xl overflow-hidden bg-white shadow-2xl">
 
         {/* Progress bar */}
-        <div className="h-1.5 w-full bg-gray-100 rounded-full mb-8 overflow-hidden">
+        <div className="h-1 w-full bg-gray-100">
           <div
-            className="h-full transition-all duration-500 ease-out rounded-full"
-            style={{ width: bookingStep === 1 ? '50%' : '100%', backgroundColor: ACCENT_COLOR }}
+            className="h-full transition-all duration-500 ease-out"
+            style={{
+              width: bookingStep === 1 ? '50%' : '100%',
+              backgroundColor: ACCENT_COLOR,
+            }}
           />
         </div>
 
-        <h2 className="text-2xl sm:text-3xl font-bold mb-1 text-gray-900">
-          {bookingStep === 1 ? 'Book Your Transfer' : 'Confirm & Pay'}
-        </h2>
-        <p className="text-sm text-gray-500 mb-6">
-          {bookingStep === 1
-            ? 'Select your route, date and passengers'
-            : 'Review your trip and complete payment'}
-        </p>
+        {/* Card body */}
+        <div className="px-5 sm:px-8 py-6 sm:py-8">
 
-        {/* ============= STEP 1 ============= */}
-        {bookingStep === 1 && (
-          <div className="space-y-5">
-
-            {routesLoading && (
-              <div className="flex items-center gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2 text-xs text-blue-800">
-                <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
-                Fetching available routes…
-              </div>
-            )}
-
-            {/* Pickup & Dropoff */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                    <MapPin className="w-3 h-3" style={{ color: PRIMARY_COLOR }} /> Pickup
-                  </label>
-                  {getFieldError('pickupLocation') && <span className="text-xs font-bold text-red-500">Required</span>}
-                </div>
-                <select
-                  value={formData.pickupLocation || ''}
-                  onChange={e => handleInputChange('pickupLocation', e.target.value)}
-                  onBlur={() => markTouched('pickupLocation')}
-                  disabled={isPickupDisabled}
-                  className={inputCls('pickupLocation') + (isPickupDisabled ? ' cursor-not-allowed opacity-60' : '')}
-                >
-                  {routesLoading ? (
-                    <option value="">Loading…</option>
-                  ) : (
-                    <>
-                      <option value="">Select Location</option>
-                      {availableLocations.filter(l => !l.toLowerCase().includes('day trip')).map(loc => (
-                        <option key={loc} value={loc}>{loc}</option>
-                      ))}
-                    </>
-                  )}
-                </select>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-                    <MapPin className="w-3 h-3" style={{ color: PRIMARY_COLOR }} /> Dropoff
-                  </label>
-                  {getFieldError('dropoffLocation') && <span className="text-xs font-bold text-red-500">Required</span>}
-                </div>
-                <select
-                  value={formData.dropoffLocation || ''}
-                  onChange={e => handleInputChange('dropoffLocation', e.target.value)}
-                  onBlur={() => markTouched('dropoffLocation')}
-                  disabled={isDropoffDisabled}
-                  className={inputCls('dropoffLocation') + (isDropoffDisabled ? ' cursor-not-allowed opacity-60' : '')}
-                >
-                  {!formData.pickupLocation && !routesLoading && <option value="">Select pickup first</option>}
-                  {formData.pickupLocation && routesLoading && <option value="">Loading…</option>}
-                  {formData.pickupLocation && !routesLoading && dropoffOptions.length === 0 && <option value="">No destinations</option>}
-                  {formData.pickupLocation && !routesLoading && dropoffOptions.length > 0 && (
-                    <>
-                      <option value="">Select Destination</option>
-                      {dropoffOptions.map(loc => <option key={loc} value={loc}>{loc}</option>)}
-                    </>
-                  )}
-                </select>
-              </div>
-            </div>
-
-            {/* Date, Time, Passengers, Luggage */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" style={{ color: PRIMARY_COLOR }} /> Date
-                  </label>
-                  {getFieldError('pickupDate') && <span className="text-xs font-bold text-red-500">Required</span>}
-                </div>
-                <input
-                  type="date"
-                  value={formData.pickupDate}
-                  min={minDateForInput}
-                  onChange={e => onPickupDateChange(e.target.value)}
-                  onBlur={() => markTouched('pickupDate')}
-                  className={inputCls('pickupDate')}
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                    <Clock className="w-3 h-3" style={{ color: PRIMARY_COLOR }} /> Time
-                  </label>
-                  {getFieldError('pickupTime') && <span className="text-xs font-bold text-red-500">{getFieldError('pickupTime')}</span>}
-                </div>
-                <input
-                  type="time"
-                  value={formData.pickupTime}
-                  min={getMinTimeForDate(formData.pickupDate)}
-                  onChange={e => handleInputChange('pickupTime', e.target.value)}
-                  onBlur={() => markTouched('pickupTime')}
-                  className={inputCls('pickupTime')}
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                    <Users className="w-3 h-3" style={{ color: PRIMARY_COLOR }} /> Passengers
-                  </label>
-                  {getFieldError('passengers') && <span className="text-xs font-bold text-red-500">{getFieldError('passengers')}</span>}
-                </div>
-                <input
-                  type="number" min={1} max={MAX_PASSENGERS}
-                  value={passengerInput}
-                  onChange={e => onPassengersChange(e.target.value)}
-                  onBlur={onPassengersBlur}
-                  className={inputCls('passengers')}
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                    <Briefcase className="w-3 h-3" style={{ color: PRIMARY_COLOR }} /> Luggage
-                    <span className="text-gray-400 text-[10px] ml-auto">(Max {getMaxBagsForCurrentPax(formData.passengers)})</span>
-                  </label>
-                </div>
-                <input
-                  type="number" min={0} max={getMaxBagsForCurrentPax(formData.passengers)}
-                  value={luggageInput}
-                  onChange={e => onLuggageChange(e.target.value)}
-                  onBlur={onLuggageBlur}
-                  className={inputCls('luggage')}
-                />
-              </div>
-            </div>
-
-            {/* Flight number */}
-            <div>
-              <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5 mb-1">
-                <Plane className="w-3 h-3" style={{ color: PRIMARY_COLOR }} /> Flight Number (Optional)
-              </label>
-              <input
-                type="text"
-                value={formData.flightNumber}
-                onChange={e => handleInputChange('flightNumber', e.target.value)}
-                placeholder="e.g. JQ953"
-                className={inputCls('flightNumber')}
-              />
-            </div>
-
-            {/* Child seat */}
-            <label className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <div
-                className="w-5 h-5 rounded border flex items-center justify-center transition-colors"
-                style={{
-                  backgroundColor: formData.childSeat ? ACCENT_COLOR : 'white',
-                  borderColor: formData.childSeat ? ACCENT_COLOR : 'rgb(209 213 219)',
-                }}
-              >
-                {formData.childSeat && <CheckCircle className="w-3.5 h-3.5 text-white" />}
-              </div>
-              <input
-                type="checkbox"
-                checked={formData.childSeat}
-                onChange={e => handleInputChange('childSeat', e.target.checked)}
-                className="hidden"
-              />
-              <span className="text-sm font-medium text-gray-700">Child Seat (+$20)</span>
-            </label>
-
-            {/* Price + CTA */}
-            <div className="flex justify-between items-center border-t border-gray-200 pt-5">
-              <div>
-                <div className="text-xs font-bold text-gray-500 uppercase tracking-wide">Total Fare</div>
-                <div className="text-3xl font-extrabold" style={{ color: PRIMARY_COLOR }}>
-                  {calculatedPrice > 0 ? `$${calculatedPrice}` : '—'}
-                </div>
-                <div className="text-[10px] text-gray-400 mt-0.5">GST included · No hidden fees</div>
-              </div>
-              <button
-                onClick={goToStep2}
-                disabled={!isStep1Valid()}
-                className="px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide uppercase text-white shadow-lg transition-all flex items-center gap-2 disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed hover:opacity-90"
-                style={{ backgroundColor: isStep1Valid() ? PRIMARY_COLOR : undefined }}
-              >
-                Next Step <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+          {/* Header */}
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold tracking-tight" style={{ color: PRIMARY_COLOR }}>
+              {bookingStep === 1 ? 'Book Your Transfer' : 'Confirm & Pay'}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {bookingStep === 1
+                ? 'Enter your trip information below'
+                : 'Review your trip and complete payment'}
+            </p>
           </div>
-        )}
 
-        {/* ============= STEP 2 ============= */}
-        {bookingStep === 2 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Step indicator */}
+          <StepIndicator current={bookingStep as 1 | 2} />
 
-            {/* Contact Details */}
-            <div className="order-2 md:order-1 space-y-4">
-              <h3 className="text-base font-bold" style={{ color: PRIMARY_COLOR }}>Contact Details</h3>
+          {/* ============= STEP 1 ============= */}
+          {bookingStep === 1 && (
+            <div className="space-y-6">
 
+              {routesLoading && (
+                <div className="flex items-center gap-2.5 rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-xs text-blue-700 font-medium">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-400 border-t-transparent flex-shrink-0" />
+                  Fetching available routes…
+                </div>
+              )}
+
+              {/* ── Route Section ── */}
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
-                <input
-                  value={formData.fullName}
-                  onChange={e => handleInputChange('fullName', e.target.value)}
-                  onBlur={() => markTouched('fullName')}
-                  className={inputCls('fullName')}
-                  placeholder="e.g. John Doe"
-                />
-                {getFieldError('fullName') && <span className="text-xs text-red-500 mt-0.5 block">{getFieldError('fullName')}</span>}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Pickup */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
+                      Pickup Location
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={formData.pickupLocation || ''}
+                        onChange={e => handleInputChange('pickupLocation', e.target.value)}
+                        onBlur={() => markTouched('pickupLocation')}
+                        disabled={isPickupDisabled}
+                        className={selectCls('pickupLocation', isPickupDisabled)}
+                      >
+                        {routesLoading ? (
+                          <option value="">Loading…</option>
+                        ) : (
+                          <>
+                            <option value="">Select Location</option>
+                            {availableLocations.filter(l => !l.toLowerCase().includes('day trip')).map(loc => (
+                              <option key={loc} value={loc}>{loc}</option>
+                            ))}
+                          </>
+                        )}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                    <FieldError error={getFieldError('pickupLocation')} />
+                  </div>
+
+                  {/* Dropoff */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
+                      Dropoff Location
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={formData.dropoffLocation || ''}
+                        onChange={e => handleInputChange('dropoffLocation', e.target.value)}
+                        onBlur={() => markTouched('dropoffLocation')}
+                        disabled={isDropoffDisabled}
+                        className={selectCls('dropoffLocation', isDropoffDisabled)}
+                      >
+                        {!formData.pickupLocation && !routesLoading && <option value="">Select pickup first</option>}
+                        {formData.pickupLocation && routesLoading && <option value="">Loading…</option>}
+                        {formData.pickupLocation && !routesLoading && dropoffOptions.length === 0 && <option value="">No destinations</option>}
+                        {formData.pickupLocation && !routesLoading && dropoffOptions.length > 0 && (
+                          <>
+                            <option value="">Select Destination</option>
+                            {dropoffOptions.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+                          </>
+                        )}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                    <FieldError error={getFieldError('dropoffLocation')} />
+                  </div>
+                </div>
               </div>
 
+              {/* ── Schedule Section ── */}
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email Address</label>
-                <input
-                  value={formData.email}
-                  onChange={e => handleInputChange('email', e.target.value)}
-                  onBlur={() => markTouched('email')}
-                  className={inputCls('email')}
-                  placeholder="john@example.com"
-                />
-                {getFieldError('email') && <span className="text-xs text-red-500 mt-0.5 block">{getFieldError('email')}</span>}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Date */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
+                      Pickup Date
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.pickupDate}
+                      min={minDateForInput}
+                      onChange={e => onPickupDateChange(e.target.value)}
+                      onBlur={() => markTouched('pickupDate')}
+                      className={inputCls('pickupDate')}
+                    />
+                    <FieldError error={getFieldError('pickupDate')} />
+                  </div>
+
+                  {/* Time */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
+                      Pickup Time
+                    </label>
+                    <input
+                      type="time"
+                      value={formData.pickupTime}
+                      min={getMinTimeForDate(formData.pickupDate)}
+                      onChange={e => handleInputChange('pickupTime', e.target.value)}
+                      onBlur={() => markTouched('pickupTime')}
+                      className={inputCls('pickupTime')}
+                    />
+                    <FieldError error={getFieldError('pickupTime')} />
+                  </div>
+                </div>
               </div>
 
+              {/* ── Passengers & Luggage Section ── */}
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number</label>
-                <input
-                  value={formData.contactNumber}
-                  onChange={e => handleInputChange('contactNumber', e.target.value)}
-                  onBlur={() => markTouched('contactNumber')}
-                  className={inputCls('contactNumber')}
-                  placeholder="+61 400 000 000"
-                />
-                {getFieldError('contactNumber') && <span className="text-xs text-red-500 mt-0.5 block">{getFieldError('contactNumber')}</span>}
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Passengers */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
+                      Passengers
+                    </label>
+                    <input
+                      type="number" min={1} max={MAX_PASSENGERS}
+                      value={passengerInput}
+                      onChange={e => onPassengersChange(e.target.value)}
+                      onBlur={onPassengersBlur}
+                      className={inputCls('passengers')}
+                    />
+                    <FieldError error={getFieldError('passengers')} />
+                  </div>
+
+                  {/* Luggage */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
+                      Luggage{' '}
+                      <span className="text-gray-400 font-normal">(Max {getMaxBagsForCurrentPax(formData.passengers)})</span>
+                    </label>
+                    <input
+                      type="number" min={0} max={getMaxBagsForCurrentPax(formData.passengers)}
+                      value={luggageInput}
+                      onChange={e => onLuggageChange(e.target.value)}
+                      onBlur={onLuggageBlur}
+                      className={inputCls('luggage')}
+                    />
+                    <FieldError error={getFieldError('luggage')} />
+                  </div>
+                </div>
               </div>
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => setBookingStep(1)}
-                  className="px-5 py-3 rounded-xl font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={pay}
-                  disabled={loading}
-                  className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-sm uppercase tracking-wide transition shadow-lg shadow-green-500/20 disabled:bg-gray-400 disabled:shadow-none flex items-center justify-center gap-2"
-                >
-                  {loading ? 'Redirecting…' : 'Pay & Confirm'} <CheckCircle className="w-4 h-4" />
-                </button>
+              {/* ── Extras Section ── */}
+              <div>
+
+                {/* Flight number */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
+                    Flight Number <span className="text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.flightNumber}
+                    onChange={e => handleInputChange('flightNumber', e.target.value)}
+                    placeholder="e.g. JQ953"
+                    className={inputCls('flightNumber')}
+                  />
+                </div>
+
+                {/* Child seat */}
+                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-gray-50/50 hover:bg-gray-50 transition-all duration-200">
+                  <div
+                    className="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0"
+                    style={{
+                      backgroundColor: formData.childSeat ? ACCENT_COLOR : 'white',
+                      borderColor: formData.childSeat ? ACCENT_COLOR : 'rgb(209 213 219)',
+                    }}
+                  >
+                    {formData.childSeat && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={formData.childSeat}
+                    onChange={e => handleInputChange('childSeat', e.target.checked)}
+                    className="hidden"
+                  />
+                  <div className="flex-1">
+                    <span className="text-sm font-semibold text-gray-800">Child Seat</span>
+                    <span className="text-xs text-gray-500 ml-1.5">(+$20)</span>
+                  </div>
+                </label>
+              </div>
+
+              {/* ── Price + CTA ── */}
+              <div className="rounded-xl border-2 border-gray-100 bg-gradient-to-r from-gray-50 to-gray-50/50 p-5">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                  <div>
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Fare</div>
+                    <div className="text-3xl sm:text-4xl font-extrabold mt-1" style={{ color: PRIMARY_COLOR }}>
+                      {calculatedPrice > 0 ? `$${calculatedPrice}` : '—'}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                      <Shield className="w-3 h-3" /> GST included · No hidden fees
+                    </div>
+                  </div>
+                  <button
+                    onClick={goToStep2}
+                    disabled={!isStep1Valid()}
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide uppercase text-white shadow-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed hover:opacity-90 hover:shadow-xl active:scale-[0.98]"
+                    style={{ backgroundColor: isStep1Valid() ? PRIMARY_COLOR : undefined }}
+                  >
+                    Next Step <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
+          )}
 
-            {/* Trip Summary */}
-            <div className="order-1 md:order-2">
-              <div className="bg-gray-50 rounded-xl border border-dashed border-gray-300 p-5 relative">
-                <div className="absolute -left-3 top-1/2 -mt-3 w-6 h-6 bg-white rounded-full" />
-                <div className="absolute -right-3 top-1/2 -mt-3 w-6 h-6 bg-white rounded-full" />
+          {/* ============= STEP 2 ============= */}
+          {bookingStep === 2 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-                <h3 className="text-base font-bold mb-4 flex items-center gap-2" style={{ color: PRIMARY_COLOR }}>
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ACCENT_COLOR }} />
-                  Trip Summary
-                </h3>
+              {/* Contact Details */}
+              <div className="order-2 md:order-1 space-y-5">
 
-                <div className="space-y-4 text-sm">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="text-xs text-gray-500 mb-0.5">Pickup</div>
-                      <div className="font-bold" style={{ color: PRIMARY_COLOR }}>{formData.pickupLocation}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs text-gray-500 mb-0.5">Date</div>
-                      <div className="font-semibold text-gray-900">{formData.pickupDate}</div>
-                      <div className="text-xs font-mono px-1 rounded inline-block mt-0.5" style={{ color: ACCENT_COLOR, backgroundColor: `${ACCENT_COLOR}15` }}>
-                        {formData.pickupTime}
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">Full Name</label>
+                  <input
+                    value={formData.fullName}
+                    onChange={e => handleInputChange('fullName', e.target.value)}
+                    onBlur={() => markTouched('fullName')}
+                    className={inputCls('fullName')}
+                    placeholder="e.g. John Doe"
+                  />
+                  <FieldError error={getFieldError('fullName')} />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">Email Address</label>
+                  <input
+                    value={formData.email}
+                    onChange={e => handleInputChange('email', e.target.value)}
+                    onBlur={() => markTouched('email')}
+                    className={inputCls('email')}
+                    placeholder="john@example.com"
+                  />
+                  <FieldError error={getFieldError('email')} />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">Phone Number</label>
+                  <input
+                    value={formData.contactNumber}
+                    onChange={e => handleInputChange('contactNumber', e.target.value)}
+                    onBlur={() => markTouched('contactNumber')}
+                    className={inputCls('contactNumber')}
+                    placeholder="+61 400 000 000"
+                  />
+                  <FieldError error={getFieldError('contactNumber')} />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setBookingStep(1)}
+                    className="px-5 py-3.5 rounded-xl font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-200 active:scale-[0.98]"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={pay}
+                    disabled={loading}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3.5 rounded-xl font-bold text-sm uppercase tracking-wide transition-all duration-200 shadow-lg shadow-green-600/20 disabled:bg-gray-400 disabled:shadow-none flex items-center justify-center gap-2 active:scale-[0.98]"
+                  >
+                    {loading ? (
+                      <>
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        Redirecting…
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-4 h-4" /> Pay & Confirm
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Trust signals */}
+                <div className="flex items-center justify-center gap-4 pt-2 opacity-60">
+                  <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium">
+                    <Shield className="w-3 h-3" /> SSL Secured
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[10px] text-gray-500 font-medium">
+                    <CreditCard className="w-3 h-3" /> Stripe Payments
+                  </div>
+                </div>
+              </div>
+
+              {/* Trip Summary */}
+              <div className="order-1 md:order-2">
+                <div className="bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden">
+                  {/* Summary header */}
+                  <div className="px-5 py-4 border-b border-gray-200" style={{ backgroundColor: `${PRIMARY_COLOR}08` }}>
+                    <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: PRIMARY_COLOR }}>
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: ACCENT_COLOR }} />
+                      Trip Summary
+                    </h3>
+                  </div>
+
+                  <div className="p-5 space-y-4">
+                    {/* Route */}
+                    <div className="flex gap-3">
+                      <div className="flex flex-col items-center pt-1">
+                        <div className="w-2.5 h-2.5 rounded-full border-2" style={{ borderColor: PRIMARY_COLOR }} />
+                        <div className="w-0.5 flex-1 my-1" style={{ backgroundColor: `${PRIMARY_COLOR}30` }} />
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: ACCENT_COLOR }} />
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <div className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Pickup</div>
+                          <div className="text-sm font-bold" style={{ color: PRIMARY_COLOR }}>{formData.pickupLocation}</div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Dropoff</div>
+                          <div className="text-sm font-bold" style={{ color: PRIMARY_COLOR }}>{formData.dropoffLocation}</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="w-full h-[1px] bg-gray-200" />
+                    <div className="w-full h-px bg-gray-200" />
 
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="text-xs text-gray-500 mb-0.5">Dropoff</div>
-                      <div className="font-bold" style={{ color: PRIMARY_COLOR }}>{formData.dropoffLocation}</div>
+                    {/* Details grid */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-white rounded-lg p-3 border border-gray-100">
+                        <div className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-0.5">Date</div>
+                        <div className="text-sm font-semibold text-gray-900">{formData.pickupDate}</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-gray-100">
+                        <div className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-0.5">Time</div>
+                        <div className="text-sm font-semibold" style={{ color: ACCENT_COLOR }}>{formData.pickupTime}</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-gray-100">
+                        <div className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-0.5">Passengers</div>
+                        <div className="text-sm font-semibold text-gray-900">{formData.passengers} Pax</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-gray-100">
+                        <div className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-0.5">Luggage</div>
+                        <div className="text-sm font-semibold text-gray-900">{formData.luggage} Bags</div>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-xs text-gray-500 mb-0.5">Details</div>
-                      <div className="font-medium text-gray-900">{formData.passengers} Pax, {formData.luggage} Bags</div>
-                      {formData.childSeat && <div className="text-xs text-green-600 font-medium">+ Child Seat</div>}
-                    </div>
+                    {formData.childSeat && (
+                      <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2 font-medium border border-green-100">
+                        <CheckCircle className="w-3.5 h-3.5" /> Child Seat Included
+                      </div>
+                    )}
                   </div>
-                </div>
 
-                <div className="mt-5 pt-4 border-t border-gray-200 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Trip fare</span>
-                    <span className="font-medium text-gray-900">${baseTotal}</span>
+                  {/* Price breakdown */}
+                  <div className="border-t border-gray-200 px-5 py-4 space-y-2.5">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Trip fare</span>
+                      <span className="font-semibold text-gray-900">${baseTotal}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Payment processing (2.5%)</span>
+                      <span className="font-semibold text-gray-900">${processingFee}</span>
+                    </div>
+                    <div className="h-px bg-gray-200 my-1" />
+                    <div className="flex justify-between font-bold text-lg" style={{ color: PRIMARY_COLOR }}>
+                      <span>Total</span>
+                      <span>${finalTotal}</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 text-center pt-1 flex items-center justify-center gap-1">
+                      <Lock className="w-2.5 h-2.5" /> Secure 256-bit SSL encrypted payment
+                    </p>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Payment processing (2.5%)</span>
-                    <span className="font-medium text-gray-900">${processingFee}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-lg pt-2 border-t border-gray-200 mt-2" style={{ color: PRIMARY_COLOR }}>
-                    <span>Total Amount</span>
-                    <span>${finalTotal}</span>
-                  </div>
-                  <p className="text-[10px] text-gray-400 pt-1 text-center">
-                    Secure 256-bit SSL encrypted payment
-                  </p>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

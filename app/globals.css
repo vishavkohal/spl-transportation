@@ -117,3 +117,32 @@ body {
     transform: translateX(100%);
   }
 }
+
+/* ===== Landing Booking Form Styles ===== */
+
+/* Card container */
+.landing-form-card {
+  box-shadow:
+    0 25px 50px -12px rgba(24, 35, 75, 0.15),
+    0 0 0 1px rgba(24, 35, 75, 0.05);
+}
+
+/* Ensure date/time inputs have proper min-width on mobile */
+.landing-form-input[type="date"],
+.landing-form-input[type="time"] {
+  min-height: 48px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+/* Fix select dropdowns – hide native arrow, our custom ChevronDown is used */
+select.landing-form-input {
+  padding-right: 2.5rem;
+  min-height: 48px;
+}
+
+/* Number inputs: remove spinners for cleaner look */
+.landing-form-input[type="number"]::-webkit-inner-spin-button,
+.landing-form-input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+}

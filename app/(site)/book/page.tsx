@@ -87,6 +87,7 @@ export default function BookLandingPage() {
             src="/hero-mercedes.webp"
             alt="Premium private transfer vehicle — SPL Transportation"
             fill
+            sizes="100vw"
             className="object-cover"
             priority
           />
@@ -242,6 +243,7 @@ export default function BookLandingPage() {
                     src={route.img}
                     alt={route.name}
                     fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
