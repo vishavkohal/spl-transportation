@@ -5,7 +5,7 @@ import { createPendingBooking, BookingPayload } from '@/app/lib/booking';
 
 export const runtime = 'nodejs';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
   apiVersion: '2025-11-17.clover',
 });
 
@@ -14,12 +14,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 -------------------------------------------------- */
 
 const PAYMENT_FEE_RATE = 0.025; // 2.5% processing fee (GST inclusive)
+export const AFTER_HOURS_SURCHARGE = 30; // $30 surcharge for pickups after 9 PM
+export const AFTER_HOURS_CUTOFF = '21:00'; // 9:00 PM
+
+export function isAfterHours(pickupTime: string | undefined): boolean {
+  if (!pickupTime || typeof pickupTime !== 'string') return false;
+  const time = pickupTime.trim();
+  if (!/^\d{2}:\d{2}$/.test(time)) return false;
+  return time >= AFTER_HOURS_CUTOFF;
+}
 
 /* -------------------------------------------------
    HOURLY PRICING (SERVER AUTHORITY)
 -------------------------------------------------- */
 
-const HOURLY_RATES: Record<
+export const HOURLY_RATES: Record<
   string,
   { hourly: number; fullDay: number }
 > = {
@@ -28,7 +37,7 @@ const HOURLY_RATES: Record<
   Van: { hourly: 150, fullDay: 1050 },
 };
 
-function calculateHourlyBaseAmount(booking: any): number {
+export function calculateHourlyBaseAmount(booking: any): number {
   const { hourlyVehicleType, hourlyHours } = booking;
 
   if (!hourlyVehicleType || !HOURLY_RATES[hourlyVehicleType]) {
@@ -52,7 +61,7 @@ function calculateHourlyBaseAmount(booking: any): number {
   return billableHours * rate.hourly;
 }
 
-function priceForPassengers(
+export function priceForPassengers(
   pricing: { passengers: string; price: number }[],
   pax: number
 ): number {
@@ -84,12 +93,12 @@ function getPassengerRanges(
    PAYMENT FEE HELPERS
 -------------------------------------------------- */
 
-function calculateProcessingFee(amount: number): number {
+export function calculateProcessingFee(amount: number): number {
   return Number((amount * PAYMENT_FEE_RATE).toFixed(2));
 }
 
 
-function calculateFinalAmount(amount: number): number {
+export function calculateFinalAmount(amount: number): number {
   const processingFee = calculateProcessingFee(amount);
   return Number((amount + processingFee).toFixed(2));
 }
@@ -225,6 +234,10 @@ export async function POST(req: NextRequest) {
       baseAmount += 20;
     }
 
+    // After-hours surcharge (pickups at or after 9 PM)
+    const afterHoursSurcharge = isAfterHours(pickupTime) ? AFTER_HOURS_SURCHARGE : 0;
+    baseAmount += afterHoursSurcharge;
+
     /* -------------------------------------------------
        💳 PROCESSING FEE + FINAL AMOUNT
     -------------------------------------------------- */
@@ -243,6 +256,7 @@ export async function POST(req: NextRequest) {
           `Pickup: ${booking.hourlyPickupLocation}`,
           `Vehicle: ${booking.hourlyVehicleType}`,
           `Hours: ${booking.hourlyHours}`,
+          ...(afterHoursSurcharge > 0 ? [`After-hours surcharge: $${afterHoursSurcharge}`] : []),
           `Processing fee: 2.5% (GST inclusive)`,
           `Name: ${fullName}`,
           `Email: ${email}`,
@@ -255,6 +269,7 @@ export async function POST(req: NextRequest) {
             `Destination: ${booking.dayTripDestination}`,
             `Vehicle: ${booking.dayTripVehicleType}`,
             `Date & time: ${pickupDate} at ${pickupTime}`,
+            ...(afterHoursSurcharge > 0 ? [`After-hours surcharge: $${afterHoursSurcharge}`] : []),
             `Processing fee: 2.5% (GST inclusive)`,
             `Name: ${fullName}`,
             `Email: ${email}`,
@@ -266,6 +281,7 @@ export async function POST(req: NextRequest) {
             `Date & time: ${pickupDate} at ${pickupTime}`,
             `Passengers: ${passengers}, Bags: ${luggage}${childSeat ? ', Child seat: Yes' : ''
             }`,
+            ...(afterHoursSurcharge > 0 ? [`After-hours surcharge: $${afterHoursSurcharge}`] : []),
             `Processing fee: 2.5% (GST inclusive)`,
             `Name: ${fullName}`,
             `Email: ${email}`,
@@ -304,6 +320,7 @@ export async function POST(req: NextRequest) {
         baseAmount: baseAmount.toString(),
         processingFee: processingFee.toString(),
         finalAmount: finalAmount.toString(),
+        afterHoursSurcharge: afterHoursSurcharge.toString(),
         booking: JSON.stringify(booking),
       },
     });

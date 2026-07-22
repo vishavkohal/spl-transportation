@@ -69,7 +69,7 @@ const WHY_CHOOSE = [
   },
   {
     title: 'Modern, Air-Conditioned Fleet',
-    desc: 'Travel in clean, comfortable vehicles. Sedans, SUVs, and vans available for groups of up to 8 passengers.',
+    desc: 'Travel in clean, comfortable vehicles. Sedans, SUVs, and vans available for groups of up to 7 passengers.',
   },
 ];
 

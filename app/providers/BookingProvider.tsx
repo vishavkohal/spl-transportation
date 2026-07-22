@@ -246,8 +246,13 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
         return pax >= min && pax <= max;
       }) || tiers[tiers.length - 1];
 
-    return (tier?.price || 0) + (formData.childSeat ? 20 : 0);
-  }, [currentRoute, formData.passengers, formData.childSeat]);
+    let price = tier?.price || 0;
+    if (formData.childSeat) price += 20;
+    if (formData.pickupTime && /^\d{2}:\d{2}$/.test(formData.pickupTime.trim()) && formData.pickupTime.trim() >= '21:00') {
+      price += 30;
+    }
+    return price;
+  }, [currentRoute, formData.passengers, formData.childSeat, formData.pickupTime]);
 
   /* -------- Handlers -------- */
 

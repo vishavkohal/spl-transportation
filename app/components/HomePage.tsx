@@ -31,7 +31,7 @@ const ACCENT_COLOR = '#A61924';
 const COMPANY_PHONE = '+61470032460';
 
 // Business rules
-const MAX_PASSENGERS = 8;
+const MAX_PASSENGERS = 7;
 const MAX_LUGGAGE = 4;
 
 const VEHICLE_CONSTRAINTS: { maxPax: number; maxBags: number }[] = [
@@ -57,10 +57,10 @@ const HOURLY_RATES: Record<
 
 // Helper: max bags for pax
 function getMaxBagsForCurrentPax(pax: number): number {
-  if (pax >= 1 && pax <= 4) return 3;
-  if (pax >= 5 && pax < 6) return 3;
-  if (pax > 5 && pax <= 6) return 2;
-  if (pax > 6 && pax <= MAX_PASSENGERS) return 4;
+  const count = pax || 1;
+  if (count <= 5) return 3;
+  if (count === 6) return 2;
+  if (count <= MAX_PASSENGERS) return 4;
   return MAX_LUGGAGE;
 }
 
@@ -81,6 +81,16 @@ function calculateProcessingFee(amount: number) {
 
 function calculateFinalAmount(amount: number) {
   return amount + calculateProcessingFee(amount);
+}
+
+const AFTER_HOURS_SURCHARGE = 30;
+const AFTER_HOURS_CUTOFF = '21:00';
+
+function isAfterHours(pickupTime: string): boolean {
+  if (!pickupTime || typeof pickupTime !== 'string') return false;
+  const time = pickupTime.trim();
+  if (!/^\d{2}:\d{2}$/.test(time)) return false;
+  return time >= AFTER_HOURS_CUTOFF;
 }
 
 function formatTime(date: Date) {
@@ -1076,6 +1086,12 @@ export default function HomePage(props: {
                                 onChange={e => handleInputChange('pickupTime', e.target.value)}
                                 className="w-[92%] mx-auto px-3 py-2.5 rounded-lg border border-gray-300 text-sm text-black focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B]"
                               />
+                              {isAfterHours(formData.pickupTime) && (
+                                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-1.5">
+                                  <Clock className="w-3 h-3 flex-shrink-0" />
+                                  After-hours surcharge of ${AFTER_HOURS_SURCHARGE} applies for pickups after 9:00 PM
+                                </span>
+                              )}
                             </div>
                             <div className="space-y-1">
                               <label className="text-xs font-semibold text-gray-700 flex items-center gap-1">
@@ -1097,7 +1113,7 @@ export default function HomePage(props: {
                               <div className="flex justify-between items-center mb-3">
                                 <span className="text-sm text-gray-600">Estimated Total</span>
                                 <span className="text-2xl font-bold" style={{ color: PRIMARY_COLOR }}>
-                                  ${selectedDayTripVehicle.price}
+                                  ${selectedDayTripVehicle.price + (isAfterHours(formData.pickupTime) ? AFTER_HOURS_SURCHARGE : 0)}
                                 </span>
                               </div>
                               <button
@@ -1231,23 +1247,38 @@ export default function HomePage(props: {
                               </div>
 
                               {/* Payment Summary */}
-                              {selectedDayTripVehicle && (
-                                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm space-y-2">
-                                  <h4 className="font-semibold text-gray-800 text-xs uppercase tracking-wide">Payment Summary</h4>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-600">Trip fare</span>
-                                    <span className="font-medium text-gray-900">${selectedDayTripVehicle.price}</span>
+                              {selectedDayTripVehicle && (() => {
+                                const dtAfterHours = isAfterHours(formData.pickupTime) ? AFTER_HOURS_SURCHARGE : 0;
+                                const dtBase = selectedDayTripVehicle.price + dtAfterHours;
+                                const dtFee = calculateProcessingFee(dtBase);
+                                const dtTotal = calculateFinalAmount(dtBase);
+                                return (
+                                  <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm space-y-2">
+                                    <h4 className="font-semibold text-gray-800 text-xs uppercase tracking-wide">Payment Summary</h4>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-600">Trip fare</span>
+                                      <span className="font-medium text-gray-900">${selectedDayTripVehicle.price}</span>
+                                    </div>
+                                    {dtAfterHours > 0 && (
+                                      <div className="flex justify-between">
+                                        <span className="text-amber-600 flex items-center gap-1">
+                                          <Clock className="w-3 h-3" />
+                                          After-hours surcharge
+                                        </span>
+                                        <span className="font-medium text-amber-600">${AFTER_HOURS_SURCHARGE}</span>
+                                      </div>
+                                    )}
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-600">Processing fee (2.5%)</span>
+                                      <span className="font-medium text-gray-900">${dtFee.toFixed(2)}</span>
+                                    </div>
+                                    <div className="border-t border-gray-200 pt-2 flex justify-between">
+                                      <span className="font-semibold text-gray-900">Total</span>
+                                      <span className="font-bold text-gray-900">${dtTotal.toFixed(2)}</span>
+                                    </div>
                                   </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-600">Processing fee (2.5%)</span>
-                                    <span className="font-medium text-gray-900">${(selectedDayTripVehicle.price * 0.025).toFixed(2)}</span>
-                                  </div>
-                                  <div className="border-t border-gray-200 pt-2 flex justify-between">
-                                    <span className="font-semibold text-gray-900">Total</span>
-                                    <span className="font-bold text-gray-900">${(selectedDayTripVehicle.price * 1.025).toFixed(2)}</span>
-                                  </div>
-                                </div>
-                              )}
+                                );
+                              })()}
 
                               {/* Buttons */}
                               <div className="flex gap-3 mt-4">
@@ -1557,6 +1588,12 @@ function Step1StandardContent(props: {
                 )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
               />
             </div>
+            {isAfterHours(formData.pickupTime) && (
+              <span className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-1.5">
+                <Clock className="w-3 h-3 flex-shrink-0" />
+                After-hours surcharge of ${AFTER_HOURS_SURCHARGE} applies for pickups after 9:00 PM
+              </span>
+            )}
           </div>
         </div>
 
@@ -1960,6 +1997,12 @@ function Step1HourlyContent(props: {
                     )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
                   />
                 </div>
+                {isAfterHours(formData.pickupTime) && (
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-1.5">
+                    <Clock className="w-3 h-3 flex-shrink-0" />
+                    After-hours surcharge of ${AFTER_HOURS_SURCHARGE} applies for pickups after 9:00 PM
+                  </span>
+                )}
               </div>
             </div>
 
@@ -2376,6 +2419,16 @@ function Step2StandardContent(props: {
               <span className="font-medium text-gray-900">${calculatedPrice}</span>
             </div>
 
+            {isAfterHours(formData.pickupTime) && (
+              <div className="flex justify-between">
+                <span className="text-amber-600 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  After-hours surcharge
+                </span>
+                <span className="font-medium text-amber-600">${AFTER_HOURS_SURCHARGE}</span>
+              </div>
+            )}
+
             <div className="flex justify-between">
               <span className="text-gray-900">
                 Payment processing fee (2.5%)
@@ -2452,8 +2505,10 @@ function Step2HourlyContent(props: {
     handleInputChange
   } = props;
 
-  const processingFee = calculateProcessingFee(hourlyPrice);
-  const finalAmount = calculateFinalAmount(hourlyPrice);
+  const afterHoursFee = isAfterHours(formData.pickupTime) ? AFTER_HOURS_SURCHARGE : 0;
+  const hourlyPriceWithSurcharge = hourlyPrice + afterHoursFee;
+  const processingFee = calculateProcessingFee(hourlyPriceWithSurcharge);
+  const finalAmount = calculateFinalAmount(hourlyPriceWithSurcharge);
 
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -2662,6 +2717,16 @@ function Step2HourlyContent(props: {
               <span className="text-gray-600">Hourly hire quote</span>
               <span className="font-medium text-gray-900">${hourlyPrice}</span>
             </div>
+
+            {afterHoursFee > 0 && (
+              <div className="flex justify-between">
+                <span className="text-amber-600 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  After-hours surcharge
+                </span>
+                <span className="font-medium text-amber-600">${AFTER_HOURS_SURCHARGE}</span>
+              </div>
+            )}
 
             <div className="flex justify-between">
               <span className="text-gray-600">Processing fee (2.5%)</span>

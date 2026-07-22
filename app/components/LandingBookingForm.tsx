@@ -25,12 +25,13 @@ import { toast } from 'sonner';
 
 const PRIMARY_COLOR = '#18234B';
 const ACCENT_COLOR = '#A61924';
-const MAX_PASSENGERS = 8;
+const MAX_PASSENGERS = 7;
 
 function getMaxBagsForCurrentPax(pax: number): number {
-  if (pax <= 5) return 3;
-  if (pax === 6) return 2;
-  if (pax <= MAX_PASSENGERS) return 4;
+  const count = pax || 1;
+  if (count <= 5) return 3;
+  if (count === 6) return 2;
+  if (count <= MAX_PASSENGERS) return 4;
   return 4;
 }
 
@@ -59,6 +60,16 @@ function isPickupAtLeast30Mins(pickupDate: string, pickupTime: string) {
 }
 
 const PAYMENT_FEE_RATE = 0.025;
+const AFTER_HOURS_SURCHARGE = 30;
+const AFTER_HOURS_CUTOFF = '21:00';
+
+function isAfterHours(pickupTime: string): boolean {
+  if (!pickupTime || typeof pickupTime !== 'string') return false;
+  const time = pickupTime.trim();
+  if (!/^\d{2}:\d{2}$/.test(time)) return false;
+  return time >= AFTER_HOURS_CUTOFF;
+}
+
 function calculateProcessingFee(amount: number) {
   return Number((amount * PAYMENT_FEE_RATE).toFixed(2));
 }
@@ -481,6 +492,12 @@ export default function LandingBookingForm() {
                       className={inputCls('pickupTime')}
                     />
                     <FieldError error={getFieldError('pickupTime')} />
+                    {isAfterHours(formData.pickupTime) && (
+                      <span className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-1.5">
+                        <Clock className="w-3 h-3 flex-shrink-0" />
+                        After-hours surcharge of ${AFTER_HOURS_SURCHARGE} applies for pickups after 9:00 PM
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -733,6 +750,15 @@ export default function LandingBookingForm() {
                       <span className="text-gray-500">Trip fare</span>
                       <span className="font-semibold text-gray-900">${baseTotal}</span>
                     </div>
+                    {isAfterHours(formData.pickupTime) && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-amber-600 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          After-hours surcharge
+                        </span>
+                        <span className="font-semibold text-amber-600">${AFTER_HOURS_SURCHARGE}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Payment processing (2.5%)</span>
                       <span className="font-semibold text-gray-900">${processingFee}</span>

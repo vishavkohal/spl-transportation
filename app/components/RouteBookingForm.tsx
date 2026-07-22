@@ -7,8 +7,8 @@ import { getStoredUtms } from '@/app/lib/utm';
 import type { Route } from '@/app/types';
 import { toast } from 'sonner';
 
-const MAX_PASSENGERS = 8;
-const MAX_LUGGAGE_LIMIT = 10; // Absolute fallback limit
+const MAX_PASSENGERS = 7;
+const MAX_LUGGAGE_LIMIT = 4; // Absolute fallback limit
 
 /* ---------------- Utils ---------------- */
 
@@ -47,7 +47,7 @@ function minTimeForDate(date: string) {
 // RULES:
 // 1-5 pax: 3 bags
 // 6 pax:   2 bags
-// 7-8 pax: 4 bags
+// 7 pax:   4 bags
 function getMaxBagsForCurrentPax(pax: number): number {
   const count = pax || 1; // Treat 0 input as 1 for validation purposes
 
@@ -61,6 +61,15 @@ function getMaxBagsForCurrentPax(pax: number): number {
 /* ---------------- Payment Fee ---------------- */
 
 const PAYMENT_FEE_RATE = 0.025; // 2.5%
+const AFTER_HOURS_SURCHARGE = 30;
+const AFTER_HOURS_CUTOFF = '21:00';
+
+function isAfterHours(pickupTime: string): boolean {
+  if (!pickupTime || typeof pickupTime !== 'string') return false;
+  const time = pickupTime.trim();
+  if (!/^\d{2}:\d{2}$/.test(time)) return false;
+  return time >= AFTER_HOURS_CUTOFF;
+}
 
 function calculateProcessingFee(amount: number): number {
   return Number((amount * PAYMENT_FEE_RATE).toFixed(2));
@@ -140,7 +149,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
     [route.pricing, form.passengers]
   );
 
-  const baseTotal = basePrice + (form.childSeat ? 20 : 0);
+  const baseTotal = basePrice + (form.childSeat ? 20 : 0) + (isAfterHours(form.pickupTime) ? AFTER_HOURS_SURCHARGE : 0);
   const processingFee = calculateProcessingFee(baseTotal);
   const finalTotal = calculateFinalAmount(baseTotal);
 
@@ -307,6 +316,12 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 onChange={e => update('pickupTime', e.target.value)}
                 className="w-full min-w-0 rounded-lg border border-gray-200 px-1 py-2 text-sm focus:ring-2 focus:ring-[#18234B]/10 focus:border-[#18234B] text-gray-900 bg-white"
               />
+              {isAfterHours(form.pickupTime) && (
+                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-1.5">
+                  <Clock className="w-3 h-3 flex-shrink-0" />
+                  After-hours surcharge of ${AFTER_HOURS_SURCHARGE} applies for pickups after 9:00 PM
+                </span>
+              )}
             </div>
 
             <div className="col-span-1 md:col-span-2 space-y-1">
@@ -512,6 +527,15 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                   <span className="text-gray-600">Trip fare</span>
                   <span className="font-medium text-gray-900">${baseTotal}</span>
                 </div>
+                {isAfterHours(form.pickupTime) && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-amber-600 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      After-hours surcharge
+                    </span>
+                    <span className="font-medium text-amber-600">${AFTER_HOURS_SURCHARGE}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Payment processing (2.5%)</span>
                   <span className="font-medium text-gray-900">${processingFee}</span>

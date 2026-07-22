@@ -19,6 +19,7 @@ import Navigation from "../app/components/Navigation";
 import Footer from "../app/components/Footer";
 import UtmTracker from "@/app/components/UtmTracker";
 import CookieConsent from "@/app/components/CookieConsent";
+import WhatsAppButton from "@/app/components/WhatsAppButton";
 import { Toaster } from 'sonner';
 const BASE_URL = "https://www.spltransportation.com.au";
 const GA_ID = "G-0F1THLNR5M";
@@ -189,6 +190,7 @@ export default function RootLayout({
         <BookingProvider>
           <UtmTracker />
           <CookieConsent />
+          <WhatsAppButton />
           <Toaster position="bottom-right" richColors />
           {children}
         </BookingProvider>
