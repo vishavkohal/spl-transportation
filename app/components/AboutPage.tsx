@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { Check, ArrowRight, Shield, Clock, Star, Users, MapPin, Phone } from 'lucide-react';
 
 // Define the custom colors for readability
-const PRIMARY_COLOR = '#18234B'; // Dark Navy
-const ACCENT_COLOR = '#A61924'; // Deep Red
+import { COLORS } from '../lib/colors';
+
+const PRIMARY_COLOR = COLORS.primary;
+const ACCENT_COLOR = COLORS.primary;
 
 const FEATURES: string[] = [
   'Licensed, professional local drivers',
@@ -87,26 +89,23 @@ export default function AboutPage() {
             {/* Content Column */}
             <div>
               <p
-                className="font-bold tracking-wider uppercase text-sm mb-2"
-                style={{ color: PRIMARY_COLOR }}
+                className="font-bold tracking-wider uppercase text-sm mb-2 text-[#102A43]"
               >
                 About Us
               </p>
 
               <h1
                 id="about-heading"
-                className="text-4xl font-extrabold mb-6 leading-tight"
-                style={{ color: PRIMARY_COLOR }}
+                className="text-4xl font-extrabold mb-6 leading-tight text-[#102A43]"
               >
                 Trusted Private Transfers
                 <br />
                 <span
-                  className="relative"
-                  style={{ color: PRIMARY_COLOR }}
+                  className="relative text-[#102A43]"
                 >
-                  Across Cairns & Tropical North Queensland
+                  Across Cairns &amp; Tropical North Queensland
                   <svg
-                    className="absolute w-full h-2 -bottom-1 left-0 text-gray-200 -z-10"
+                    className="absolute w-full h-2 -bottom-1 left-0 text-teal-200/50 -z-10"
                     viewBox="0 0 100 10"
                     preserveAspectRatio="none"
                   >
@@ -168,18 +167,18 @@ export default function AboutPage() {
       </section>
 
       {/* Stats Bar */}
-      <section className="py-16" style={{ backgroundColor: PRIMARY_COLOR }}>
+      <section className="py-16 bg-[#102A43] text-white border-y border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {STATS.map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/10 mb-4">
-                  <stat.icon className="w-6 h-6 text-white/80" />
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/10 mb-4 text-[#2DD4BF]">
+                  <stat.icon className="w-6 h-6" />
                 </div>
                 <p className="text-3xl md:text-4xl font-extrabold text-white mb-1">
                   {stat.value}
                 </p>
-                <p className="text-sm text-white/60 font-medium uppercase tracking-wider">
+                <p className="text-xs sm:text-sm text-slate-300 font-semibold uppercase tracking-wider">
                   {stat.label}
                 </p>
               </div>
@@ -199,8 +198,7 @@ export default function AboutPage() {
               Why Choose Us
             </p>
             <h2
-              className="text-3xl md:text-4xl font-extrabold"
-              style={{ color: PRIMARY_COLOR }}
+              className="text-3xl md:text-4xl font-extrabold text-[#102A43]"
             >
               Our Promise to You
             </h2>
@@ -213,14 +211,13 @@ export default function AboutPage() {
                 className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 group hover:-translate-y-1"
               >
                 <div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
-                  style={{ backgroundColor: `${PRIMARY_COLOR}10`, color: PRIMARY_COLOR }}
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 text-[#0F766E]"
+                  style={{ backgroundColor: `${ACCENT_COLOR}10` }}
                 >
                   <value.icon className="w-7 h-7" />
                 </div>
                 <h3
-                  className="text-xl font-bold mb-3"
-                  style={{ color: PRIMARY_COLOR }}
+                  className="text-xl font-bold mb-3 text-[#102A43]"
                 >
                   {value.title}
                 </h3>
@@ -244,8 +241,7 @@ export default function AboutPage() {
               Our Fleet
             </p>
             <h2
-              className="text-3xl md:text-4xl font-extrabold mb-4"
-              style={{ color: PRIMARY_COLOR }}
+              className="text-3xl md:text-4xl font-extrabold mb-4 text-[#102A43]"
             >
               Modern, Comfortable Vehicles
             </h2>
@@ -256,9 +252,9 @@ export default function AboutPage() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { name: 'Sedan', pax: '1-3 passengers', desc: 'Perfect for couples and small groups. Comfortable leather seating with climate control.', image: '/hero-mercedes.webp' },
-              { name: 'Van', pax: '4-7 passengers', desc: 'Ideal for families and mid-size groups. Spacious with plenty of luggage room.', image: '/hero-2.webp' },
-              { name: 'Minibus', pax: '8-13 passengers', desc: 'Great for large groups and tour parties. Everyone travels together in comfort.', image: '/home.webp' },
+              { name: 'Executive Sedan', pax: '1-3 passengers', desc: 'Perfect for couples and small groups. Premium comfort with climate control.', image: '/vehicles/sedan.png' },
+              { name: 'Spacious SUV / Van', pax: '4-7 passengers', desc: 'Ideal for families and mid-size groups with extra luggage capacity.', image: '/vehicles/suv.png' },
+              { name: 'Mercedes Chauffeured Fleet', pax: 'Executive & VIP Transfers', desc: 'Travel in luxury with our chauffeured Mercedes-Benz fleet across Far North Queensland.', image: '/vehicles/mercedes-v-class.png' },
             ].map((vehicle, i) => (
               <div
                 key={i}
@@ -280,7 +276,7 @@ export default function AboutPage() {
                   </div>
                 </div>
                 <div className="p-6">
-                  <h3 className="text-lg font-bold mb-2" style={{ color: PRIMARY_COLOR }}>
+                  <h3 className="text-lg font-bold mb-2 text-[#102A43]">
                     {vehicle.name}
                   </h3>
                   <p className="text-sm text-gray-500 leading-relaxed">
@@ -294,32 +290,25 @@ export default function AboutPage() {
       </section>
 
       {/* CTA Banner */}
-      <section className="py-16 mx-4 md:mx-8 mb-16 rounded-3xl relative overflow-hidden" style={{ backgroundColor: PRIMARY_COLOR }}>
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 30% 50%, rgba(166,25,36,0.4) 0%, transparent 50%),
-                             radial-gradient(circle at 70% 50%, rgba(255,255,255,0.15) 0%, transparent 50%)`
-          }} />
-        </div>
+      <section className="py-16 bg-[#102A43] text-white relative overflow-hidden border-t border-white/10">
         <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">
             Ready to Book Your Transfer?
           </h2>
-          <p className="text-white/70 text-lg mb-8 max-w-xl mx-auto">
+          <p className="text-white/80 text-lg mb-8 max-w-xl mx-auto font-light">
             Fixed pricing, professional drivers, and door-to-door service across Tropical North Queensland.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/book"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-bold text-white shadow-lg hover:brightness-110 transition-all"
-              style={{ backgroundColor: ACCENT_COLOR }}
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-white bg-[#0F766E] hover:bg-[#0C5D59] shadow-lg transition-all"
             >
               Book Now
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               href="/transfers"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full font-bold text-white border-2 border-white/30 hover:bg-white/10 transition-all"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-white border-2 border-white/30 hover:bg-white/10 transition-all"
             >
               View All Routes
             </Link>

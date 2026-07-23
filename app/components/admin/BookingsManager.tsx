@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { RefreshCw, Trash2, Search, Filter, Calendar, Mail, MapPin, User, DollarSign, Clock } from 'lucide-react';
 
-const PRIMARY_COLOR = '#18234B';
-const ACCENT_COLOR = '#A61924';
+const PRIMARY_COLOR = '#102A43';
+const ACCENT_COLOR = '#0F766E';
 
 // Types (copied/adapted from AdminPanel/Booking structure)
 export type Booking = {
@@ -40,6 +40,7 @@ export default function BookingsManager() {
     const [bookings, setBookings] = useState<Booking[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [resendingId, setResendingId] = useState<string | null>(null);
 
     // Filters
     const [search, setSearch] = useState('');
@@ -79,6 +80,27 @@ export default function BookingsManager() {
             await loadBookings();
         } catch (error: any) {
             alert(error.message || 'Delete failed');
+        }
+    }
+
+    async function handleResendEmail(booking: Booking) {
+        if (!confirm(`Resend booking confirmation email & invoice to ${booking.email}?`)) return;
+
+        setResendingId(booking.id);
+        try {
+            const res = await fetch(`/api/admin/bookings/${booking.id}/resend-email`, {
+                method: 'POST',
+            });
+            const json = await res.json();
+            if (!res.ok || !json.success) {
+                throw new Error(json.error || 'Failed to resend confirmation email');
+            }
+            alert(`✅ ${json.message || 'Email resent successfully!'}`);
+            await loadBookings();
+        } catch (err: any) {
+            alert(`❌ Error: ${err.message || 'Failed to resend email'}`);
+        } finally {
+            setResendingId(null);
         }
     }
 
@@ -185,7 +207,7 @@ export default function BookingsManager() {
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                         <input
-                            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#18234B]/10 focus:border-[#18234B] transition-all text-gray-900 placeholder:text-gray-500"
+                            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#102A43]/10 focus:border-[#102A43] transition-all text-gray-900 placeholder:text-gray-500"
                             placeholder="Search by name, email, or ID..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
@@ -332,15 +354,23 @@ export default function BookingsManager() {
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4 align-top text-right">
-                                        <button
-                                            onClick={() => handleDeleteBooking(b.id)}
-                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                            title="Delete Booking"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </td>
+                                     <td className="px-6 py-4 align-top text-right flex justify-end gap-1">
+                                         <button
+                                             onClick={() => handleResendEmail(b)}
+                                             disabled={resendingId === b.id}
+                                             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50"
+                                             title="Resend Confirmation Email & Invoice"
+                                         >
+                                             <Mail className={`w-4 h-4 ${resendingId === b.id ? 'animate-pulse text-blue-600' : ''}`} />
+                                         </button>
+                                         <button
+                                             onClick={() => handleDeleteBooking(b.id)}
+                                             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                             title="Delete Booking"
+                                         >
+                                             <Trash2 className="w-4 h-4" />
+                                         </button>
+                                     </td>
                                 </tr>
                             ))
                         )}

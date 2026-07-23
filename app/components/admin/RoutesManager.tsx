@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Edit2, Trash2, Plus, RefreshCw, X, Save, AlertCircle } from 'lucide-react';
 import type { Route, PricingTier } from '../../types';
 
-const PRIMARY_COLOR = '#18234B';
-const ACCENT_COLOR = '#A61924';
+const PRIMARY_COLOR = '#102A43';
+const ACCENT_COLOR = '#0F766E';
 const SUCCESS_COLOR = '#16A34A';
 const DISTANCE_UNIT = 'km';
 const DURATION_UNIT = 'min';
@@ -37,7 +37,7 @@ const getInputClass = (hasError: boolean): string => {
     const base =
         'p-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-offset-0 transition-all duration-200 text-sm text-gray-900 placeholder:text-gray-500 bg-white';
     const errorStyle = 'border-red-500 bg-red-50';
-    const normalStyle = 'border-gray-200 focus:border-[#A61924] focus:ring-[#A61924]/20';
+    const normalStyle = 'border-gray-200 focus:border-[#0F766E] focus:ring-[#0F766E]/20';
     return `${base} ${hasError ? errorStyle : normalStyle}`;
 };
 
@@ -299,7 +299,7 @@ export default function RoutesManager() {
                 <div className="flex gap-3">
                     <button
                         onClick={() => startEdit(undefined)}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#A61924] text-white rounded-lg text-sm font-medium hover:bg-[#8B151F] transition-colors shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#0F766E] text-white rounded-lg text-sm font-medium hover:bg-[#0C5D59] transition-colors shadow-sm"
                     >
                         <Plus className="w-4 h-4" /> Add Route
                     </button>
@@ -357,7 +357,7 @@ export default function RoutesManager() {
                                             <span className="text-gray-300">|</span>
                                             <span>{p.passengers} pax</span>
                                             <span className="text-gray-300">|</span>
-                                            <span className="font-bold text-[#18234B]">${Number(p.price).toFixed(2)}</span>
+                                            <span className="font-bold text-[#102A43]">${Number(p.price).toFixed(2)}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -523,7 +523,7 @@ export default function RoutesManager() {
                                     <button
                                         type="submit"
                                         disabled={saving}
-                                        className="px-4 py-2 bg-[#A61924] text-white rounded-lg text-sm font-medium hover:bg-[#8B151F] transition-colors shadow-sm flex items-center gap-2"
+                                        className="px-4 py-2 bg-[#0F766E] text-white rounded-lg text-sm font-medium hover:bg-[#0C5D59] transition-colors shadow-sm flex items-center gap-2"
                                     >
                                         {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                         Save Route

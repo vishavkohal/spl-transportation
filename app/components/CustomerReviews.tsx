@@ -5,9 +5,11 @@ import { Star, Quote } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ScrollReveal, { staggerContainerSlow, fadeUp } from './ScrollReveal';
 
+import { COLORS } from '../lib/colors';
+
 // Custom colors
-const PRIMARY_COLOR = '#18234B'; // Dark Navy (now card background)
-const ACCENT_COLOR = '#A61924'; // Deep Red (stars + highlights)
+const HEADING_COLOR = COLORS.heading;
+const ACCENT_COLOR = COLORS.primary;
 
 // Types
 type Review = {
@@ -44,35 +46,22 @@ const CUSTOMER_REVIEWS: Review[] = [
 
 const CustomerReviews: React.FC = () => {
   return (
-    <section className="py-6 md:py-12 bg-[#F8F9FA] transition-colors duration-300 mx-3 md:mx-6 mb-6 md:mb-12 rounded-[2.5rem] shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] overflow-hidden">
+    <section className="w-full bg-[#F8FAFC] py-16 md:py-24 border-b border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Section Title */}
-        <div className="text-center mb-16">
-          <ScrollReveal variant="fadeUpSubtle">
-            <p
-              className="font-bold tracking-wider uppercase text-sm mb-2"
-              style={{ color: ACCENT_COLOR }}
-            >
-              Testimonials
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
+          <div>
+            <p className="text-xs font-bold tracking-widest uppercase text-[#0F766E] mb-1">
+              Customer Reviews
             </p>
-          </ScrollReveal>
-
-          <ScrollReveal variant="fadeUp" delay={0.1}>
-            <h2
-              className="text-3xl md:text-4xl font-bold"
-              style={{ color: PRIMARY_COLOR }}
-            >
-              What Our Customers Say
+            <h2 className="text-3xl md:text-4xl font-extrabold text-[#102A43] tracking-tight">
+              Trusted by thousands
             </h2>
-          </ScrollReveal>
-
-          <ScrollReveal variant="fadeUpSubtle" delay={0.2}>
-            <div
-              className="w-24 h-1.5 mt-4 rounded-full mx-auto"
-              style={{ backgroundColor: ACCENT_COLOR }}
-            />
-          </ScrollReveal>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-500">
+            <span>Rated 4.9/5 from 250+ Google reviews</span>
+          </div>
         </div>
 
         {/* Review Cards */}
@@ -99,7 +88,7 @@ const CustomerReviews: React.FC = () => {
               <div className="absolute top-6 right-8 opacity-10">
                 <Quote
                   className="w-12 h-12"
-                  style={{ color: PRIMARY_COLOR }}
+                  style={{ color: HEADING_COLOR }}
                 />
               </div>
 
@@ -130,7 +119,7 @@ const CustomerReviews: React.FC = () => {
               {/* User Info */}
               <div className="flex justify-between items-end">
                 <div>
-                  <p className="font-bold text-lg" style={{ color: PRIMARY_COLOR }}>{review.name}</p>
+                  <p className="font-bold text-lg" style={{ color: HEADING_COLOR }}>{review.name}</p>
                   <p
                     className="text-sm font-medium"
                     style={{ color: ACCENT_COLOR }}

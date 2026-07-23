@@ -5,9 +5,11 @@ import { ChevronDown } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 import Link from 'next/link';
 
+import { COLORS } from '../lib/colors';
+
 // Brand colors
-const PRIMARY_COLOR = '#18234B'; // Dark Navy
-const ACCENT_COLOR = '#A61924';  // Deep Red;
+const HEADING_COLOR = COLORS.heading;
+const ACCENT_COLOR = COLORS.primary;
 
 // Types
 type FaqItem = {
@@ -20,7 +22,7 @@ const FAQ_ITEMS: FaqItem[] = [
     question: 'How do I book a transfer?',
     answer: (
       <>
-        You can book directly through our <button onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })} className="text-blue-700 hover:underline font-medium">online booking form</button> or <Link href="/contact" className="text-blue-700 hover:underline font-medium">contact our team</Link> by phone or email. Once your booking is confirmed, you will receive a confirmation email with all the details.
+        You can book directly through our <button onClick={() => document.getElementById('booking-form')?.scrollIntoView({ behavior: 'smooth' })} className="text-[#0F766E] hover:underline font-medium">online booking form</button> or <Link href="/contact" className="text-[#0F766E] hover:underline font-medium">contact our team</Link> by phone or email. Once your booking is confirmed, you will receive a confirmation email with all the details.
       </>
     ) as any,
   },
@@ -58,7 +60,7 @@ const FAQ_ITEMS: FaqItem[] = [
     question: 'What is your cancellation policy?',
     answer: (
       <>
-        Cancellations made with reasonable notice before the scheduled pickup time can usually be refunded or credited, subject to our <Link href="/terms" className="text-blue-700 hover:underline font-medium">booking terms</Link>. Late cancellations or no-shows may incur a fee. Full details are provided in your booking confirmation.
+        Cancellations made with reasonable notice before the scheduled pickup time can usually be refunded or credited, subject to our <Link href="/terms" className="text-[#0F766E] hover:underline font-medium">booking terms</Link>. Late cancellations or no-shows may incur a fee. Full details are provided in your booking confirmation.
       </>
     ) as any,
   },
@@ -89,7 +91,7 @@ const FaqSection: React.FC = () => {
   };
 
   return (
-    <section className="py-6 md:py-12 bg-[#F8F9FA] mx-3 md:mx-6 rounded-[2.5rem] shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] overflow-hidden">
+    <section className="w-full bg-slate-50 py-16 md:py-24 border-b border-slate-200/80">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -102,7 +104,7 @@ const FaqSection: React.FC = () => {
 
           <h2
             className="text-3xl md:text-4xl font-extrabold tracking-tight mb-3"
-            style={{ color: PRIMARY_COLOR }}
+            style={{ color: HEADING_COLOR }}
           >
             Frequently Asked Questions
             <div
@@ -139,7 +141,7 @@ const FaqSection: React.FC = () => {
                   onClick={() => toggleIndex(index)}
                   className="w-full flex items-center justify-between px-5 md:px-6 py-4 md:py-5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                 >
-                  <span className="text-sm md:text-base font-semibold" style={{ color: PRIMARY_COLOR }}>
+                  <span className="text-sm md:text-base font-semibold" style={{ color: HEADING_COLOR }}>
                     {item.question}
                   </span>
                   <ChevronDown

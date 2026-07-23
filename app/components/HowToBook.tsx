@@ -4,11 +4,12 @@ import { BookOpen, UserCheck, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ScrollReveal, { staggerContainerSlow, fadeUp, scaleIn } from './ScrollReveal';
 
+import { COLORS } from '../lib/colors';
+
 // Theme Colors
-const PRIMARY_COLOR = '#18234B';
-const ACCENT_COLOR = '#A61924';
-const TEXT_COLOR_DARK = '#18234B';
-const MUTED_TEXT_COLOR = '#5F6368';
+const HEADING_COLOR = COLORS.heading;
+const ACCENT_COLOR = COLORS.primary;
+const MUTED_TEXT_COLOR = COLORS.muted;
 
 // Data
 const steps = [
@@ -34,8 +35,8 @@ const steps = [
 
 export default function HowToBookModern() {
   return (
-    <div className="py-6 md:py-12 px-4 md:px-6 mx-3 md:mx-6 mb-6 md:mb-12 rounded-[2.5rem] shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)] overflow-hidden bg-[#F8F9FA]">
-      <div className="max-w-6xl mx-auto">
+    <section className="w-full bg-white py-16 md:py-24 border-b border-slate-200/80">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Tag */}
         <ScrollReveal variant="fadeUpSubtle">
           <p
@@ -50,7 +51,7 @@ export default function HowToBookModern() {
         <ScrollReveal variant="fadeUp" delay={0.1}>
           <h2
             className="text-4xl md:text-5xl font-extrabold text-center tracking-tight"
-            style={{ color: PRIMARY_COLOR }}
+            style={{ color: HEADING_COLOR }}
           >
             How to Book Your Transfer
             <div
@@ -92,7 +93,7 @@ export default function HowToBookModern() {
               <div className="flex items-center mb-3 space-x-3">
                 <span
                   className="text-3xl font-black"
-                  style={{ color: PRIMARY_COLOR }}
+                  style={{ color: HEADING_COLOR }}
                 >
                   {step.id}
                 </span>
@@ -104,14 +105,14 @@ export default function HowToBookModern() {
                 </span>
                 <step.icon
                   className="w-6 h-6"
-                  style={{ color: PRIMARY_COLOR }}
+                  style={{ color: HEADING_COLOR }}
                 />
               </div>
 
               {/* Title */}
               <h3
                 className="text-xl font-bold mb-2"
-                style={{ color: TEXT_COLOR_DARK }}
+                style={{ color: HEADING_COLOR }}
               >
                 {step.title}
               </h3>
@@ -127,6 +128,6 @@ export default function HowToBookModern() {
           ))}
         </motion.div>
       </div>
-    </div>
+    </section>
   );
 }

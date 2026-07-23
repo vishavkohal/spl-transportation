@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { XCircle, ArrowLeft } from 'lucide-react';
 
-const PRIMARY_COLOR = '#18234B';
+const PRIMARY_COLOR = '#102A43';
 
 export default function BookingCancelledPage() {
   const router = useRouter();

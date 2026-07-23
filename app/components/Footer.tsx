@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Mail,
   Phone,
@@ -11,10 +12,12 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 
+import { COLORS } from '../lib/colors';
+
 // Brand colors
-const PRIMARY_COLOR = '#18234B';
-const ACCENT_COLOR = '#A61924';
-const TEXT_MUTED = '#94a3b8'; // Slate-400 for better readability on dark-blue
+const BG_COLOR = COLORS.heroOverlay;
+const ACCENT_COLOR = COLORS.primary;
+const TEXT_MUTED = '#94a3b8'; // Slate-400 for better readability on dark bg
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -22,7 +25,7 @@ export default function Footer() {
   return (
     <footer
       className="pt-20 pb-10 text-slate-200 border-t border-white/5"
-      style={{ backgroundColor: PRIMARY_COLOR }}
+      style={{ backgroundColor: BG_COLOR }}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
@@ -30,9 +33,13 @@ export default function Footer() {
           {/* Brand Column (Span 4) */}
           <div className="lg:col-span-4 space-y-6">
             <Link href="/" className="inline-block">
-              <h3 className="text-2xl font-bold tracking-tight text-white">
-                SPL <span style={{ color: ACCENT_COLOR }}>Transportation</span>
-              </h3>
+              <Image
+                src="/logo.png"
+                alt="SPL Transportation"
+                width={200}
+                height={70}
+                className="h-14 w-auto object-contain"
+              />
             </Link>
             <p className="text-sm leading-relaxed max-w-sm" style={{ color: TEXT_MUTED }}>
               Professional private transfers across Queensland.

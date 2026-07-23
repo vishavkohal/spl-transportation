@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     companyName: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#18234B',
+        color: '#102A43',
         marginBottom: 4,
     },
     companyDetails: {
@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     invoiceTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#A61924',
+        color: '#0F766E',
         marginBottom: 10,
     },
     invoiceMeta: {
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 12,
         fontWeight: 'bold',
-        color: '#18234B',
+        color: '#102A43',
         borderBottomWidth: 1,
         borderBottomColor: '#EEEEEE',
         paddingBottom: 5,
@@ -298,8 +298,8 @@ export const InvoicePDF = ({ booking }: InvoicePDFProps) => {
                             <Text style={styles.totalValue}>{formatCurrency(processingFee, booking.currency)}</Text>
                         </View>
                         <View style={[styles.totalRow, { marginTop: 10, borderTopWidth: 1, borderTopColor: '#EEEEEE', paddingTop: 5 }]}>
-                            <Text style={[styles.totalLabel, { fontSize: 14, color: '#A61924' }]}>Total Paid:</Text>
-                            <Text style={[styles.totalValue, { fontSize: 14, color: '#A61924' }]}>{formatCurrency(totalPaid, booking.currency)}</Text>
+                            <Text style={[styles.totalLabel, { fontSize: 14, color: '#0F766E' }]}>Total Paid:</Text>
+                            <Text style={[styles.totalValue, { fontSize: 14, color: '#0F766E' }]}>{formatCurrency(totalPaid, booking.currency)}</Text>
                         </View>
                     </View>
                 </View>

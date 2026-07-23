@@ -8,12 +8,15 @@ import dynamic from 'next/dynamic';
 import HomePage from '../components/HomePage';
 const FeatureSection = dynamic(() => import('../components/FeatureSection'));
 const PlaceCarousel = dynamic(() => import('../components/PlaceCarousal'));
+const AwardBanner = dynamic(() => import('../components/AwardBanner'));
 const PopularDestinations = dynamic(() => import('../components/PopularDestinations'));
 const HowToBookModern = dynamic(() => import('../components/HowToBook'));
 const RoutesSection = dynamic(() => import('../components/RoutesSection').then(mod => mod.default));
 const Services = dynamic(() => import('../components/Services').then(mod => mod.Services));
+const ComparisonSection = dynamic(() => import('../components/ComparisonSection'));
 const CustomerReviews = dynamic(() => import('../components/CustomerReviews'));
 const Faqsection = dynamic(() => import('../components/FaqSection'));
+const CtaBanner = dynamic(() => import('../components/CtaBanner'));
 
 export default function HomePageClient() {
     const isOnline = useOnlineStatus();
@@ -55,22 +58,23 @@ export default function HomePageClient() {
                 routesLoading={routesLoading}
             />
 
-            {/* CONTENT SECTIONS */}
+            {/* CONTINUOUS CONTENT SECTIONS */}
             <PlaceCarousel />
-            <FeatureSection />
+            <AwardBanner />
             <PopularDestinations />
-            <HowToBookModern />
-
+            <FeatureSection />
             <RoutesSection
                 routes={routes}
                 loading={routesLoading}
                 error={routesError}
                 onSelectRoute={handleRouteSelect}
             />
-
-            <Services />
+            <HowToBookModern />
+            <ComparisonSection />
             <CustomerReviews />
+            <Services />
             <Faqsection />
+            <CtaBanner />
         </>
     );
 }

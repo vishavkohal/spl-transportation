@@ -185,7 +185,7 @@ export default function RootLayout({
         />
       </head>
 
-      <body className={`${inter.variable} ${playfair.variable} bg-gray-50 text-gray-900 antialiased`}>
+      <body className={`${inter.variable} ${playfair.variable} bg-[#F8FAFC] text-[#475569] antialiased`}>
         {/* ✅ Global App State */}
         <BookingProvider>
           <UtmTracker />

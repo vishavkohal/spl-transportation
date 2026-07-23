@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 import { revalidatePath } from "next/cache";
 import { isAdmin } from "@/app/lib/auth";
+// Trigger dev server reload after Prisma Client regeneration
+
 
 // GET /api/route-content — list all route page content entries
 export async function GET() {
@@ -13,6 +15,9 @@ export async function GET() {
                     select: { id: true, from: true, to: true },
                 },
                 image: {
+                    select: { id: true, altText: true },
+                },
+                reverseImage: {
                     select: { id: true, altText: true },
                 },
             },
@@ -35,7 +40,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     try {
-        const { routeId, content, imageId } = await request.json();
+        const { routeId, content, imageId, reverseImageId } = await request.json();
 
         if (!routeId || !content) {
             return NextResponse.json(
@@ -48,13 +53,17 @@ export async function POST(request: NextRequest) {
             data: {
                 routeId,
                 content,
-                ...(imageId && { imageId }),
+                ...(imageId !== undefined && { imageId }),
+                ...(reverseImageId !== undefined && { reverseImageId }),
             },
             include: {
                 route: {
                     select: { id: true, from: true, to: true },
                 },
                 image: {
+                    select: { id: true, altText: true },
+                },
+                reverseImage: {
                     select: { id: true, altText: true },
                 },
             },

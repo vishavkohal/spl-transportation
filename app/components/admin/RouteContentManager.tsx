@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, RefreshCw, AlertCircle, ArrowRight, ChevronDown, ChevronUp, X, Upload } from 'lucide-react';
 
-const PRIMARY_COLOR = '#18234B';
+const PRIMARY_COLOR = '#102A43';
 
 type RouteInfo = { id: number; from: string; to: string };
 
@@ -15,6 +15,8 @@ type RouteContentEntry = {
     updatedAt: string;
     imageId?: string | null;
     image?: { id: string; altText: string | null } | null;
+    reverseImageId?: string | null;
+    reverseImage?: { id: string; altText: string | null } | null;
 };
 
 type ContentData = {
@@ -122,7 +124,7 @@ export default function RouteContentManager() {
                     <button
                         onClick={handleCreate}
                         disabled={availableRoutes.length === 0}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#A61924] text-white rounded-lg text-sm font-medium hover:bg-[#8B151F] transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#0F766E] text-white rounded-lg text-sm font-medium hover:bg-[#0C5D59] transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
                         <Plus className="w-4 h-4" /> New Content
                     </button>
@@ -212,9 +214,13 @@ function RouteContentEditor({
             : JSON.parse(JSON.stringify(emptyContent))
     );
     const [imageId, setImageId] = useState<string | null>(initialData?.imageId ?? null);
+    const [reverseImageId, setReverseImageId] = useState<string | null>(initialData?.reverseImageId ?? null);
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [uploadingReverseImage, setUploadingReverseImage] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const selectedRoute = routes.find(r => r.id === routeId) || initialData?.route;
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -240,6 +246,33 @@ function RouteContentEditor({
             setError(err.message);
         } finally {
             setUploadingImage(false);
+        }
+    };
+
+    const handleReverseImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingReverseImage(true);
+        setError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const res = await fetch('/api/images', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!res.ok) throw new Error('Failed to upload reverse image');
+
+            const data = await res.json();
+            setReverseImageId(data.id);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setUploadingReverseImage(false);
         }
     };
 
@@ -271,7 +304,7 @@ function RouteContentEditor({
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ routeId, content, imageId }),
+                body: JSON.stringify({ routeId, content, imageId, reverseImageId }),
             });
 
             if (!res.ok) {
@@ -323,7 +356,7 @@ function RouteContentEditor({
                         value={routeId}
                         onChange={e => setRouteId(Number(e.target.value))}
                         disabled={isEditing}
-                        className="w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] transition-all disabled:bg-gray-50 disabled:text-gray-500"
+                        className="w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] transition-all disabled:bg-gray-50 disabled:text-gray-500"
                     >
                         {routes.map(r => (
                             <option key={r.id} value={r.id}>
@@ -333,47 +366,102 @@ function RouteContentEditor({
                     </select>
                 </div>
 
-                {/* IMAGE UPLOAD */}
-                <div>
-                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">
-                        Hero Image
-                    </label>
-                    <div className="flex items-center gap-4">
-                        {imageId ? (
-                            <div className="relative w-40 h-24 rounded-lg overflow-hidden border border-gray-200">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={`/api/images/${imageId}`} alt="Hero Preview" className="w-full h-full object-cover" />
-                                <button
-                                    onClick={() => setImageId(null)}
-                                    className="absolute top-1 right-1 p-1 bg-white/90 rounded text-red-600 hover:bg-white"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="w-40 h-24 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
-                                <span className="text-xs mt-1">No custom image</span>
-                            </div>
-                        )}
-                        <div className="flex-1">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                disabled={uploadingImage}
-                                id="hero-image-upload"
-                                className="hidden"
-                            />
-                            <label
-                                htmlFor="hero-image-upload"
-                                className={`inline-flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium transition-colors cursor-pointer ${uploadingImage ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                            >
-                                <Upload className="w-4 h-4" />
-                                {uploadingImage ? 'Uploading...' : imageId ? 'Replace Image' : 'Upload Image'}
+                {/* IMAGE UPLOAD (TO & FRO) */}
+                <div className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 space-y-4">
+                    <div>
+                        <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                            Route Images (To & Fro)
+                        </h3>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            Upload separate hero images for the forward route and the reverse (return) route.
+                        </p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4 pt-2">
+                        {/* FORWARD IMAGE (TO) */}
+                        <div className="p-3 bg-white border border-gray-200 rounded-lg">
+                            <label className="block text-xs font-bold text-gray-800 mb-2">
+                                📤 Forward Route ("To"): <span className="text-[#0F766E]">{selectedRoute ? `${selectedRoute.from} → ${selectedRoute.to}` : 'To Route'}</span>
                             </label>
-                            <p className="text-xs text-gray-500 mt-2">
-                                Optional. If not provided, the default image from <code className="bg-gray-100 px-1 rounded">public/routes/</code> will be used.
-                            </p>
+                            <div className="flex flex-col gap-3">
+                                {imageId ? (
+                                    <div className="relative w-full h-32 rounded-lg overflow-hidden border border-gray-200">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={`/api/images/${imageId}`} alt="Forward Route Preview" className="w-full h-full object-cover" />
+                                        <button
+                                            type="button"
+                                            onClick={() => setImageId(null)}
+                                            className="absolute top-1 right-1 p-1 bg-white/90 rounded text-red-600 hover:bg-white shadow"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="w-full h-32 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                        <span className="text-xs">No "To" custom image</span>
+                                    </div>
+                                )}
+                                <div>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        disabled={uploadingImage}
+                                        id="hero-image-upload"
+                                        className="hidden"
+                                    />
+                                    <label
+                                        htmlFor="hero-image-upload"
+                                        className={`inline-flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium transition-colors cursor-pointer w-full justify-center ${uploadingImage ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                    >
+                                        <Upload className="w-3.5 h-3.5" />
+                                        {uploadingImage ? 'Uploading...' : imageId ? 'Replace "To" Image' : 'Upload "To" Image'}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* REVERSE IMAGE (FRO) */}
+                        <div className="p-3 bg-white border border-gray-200 rounded-lg">
+                            <label className="block text-xs font-bold text-gray-800 mb-2">
+                                📥 Reverse Route ("Fro"): <span className="text-[#0F766E]">{selectedRoute ? `${selectedRoute.to} → ${selectedRoute.from}` : 'Fro Route'}</span>
+                            </label>
+                            <div className="flex flex-col gap-3">
+                                {reverseImageId ? (
+                                    <div className="relative w-full h-32 rounded-lg overflow-hidden border border-gray-200">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={`/api/images/${reverseImageId}`} alt="Reverse Route Preview" className="w-full h-full object-cover" />
+                                        <button
+                                            type="button"
+                                            onClick={() => setReverseImageId(null)}
+                                            className="absolute top-1 right-1 p-1 bg-white/90 rounded text-red-600 hover:bg-white shadow"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="w-full h-32 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                        <span className="text-xs">No "Fro" custom image</span>
+                                    </div>
+                                )}
+                                <div>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleReverseImageUpload}
+                                        disabled={uploadingReverseImage}
+                                        id="reverse-image-upload"
+                                        className="hidden"
+                                    />
+                                    <label
+                                        htmlFor="reverse-image-upload"
+                                        className={`inline-flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-medium transition-colors cursor-pointer w-full justify-center ${uploadingReverseImage ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                    >
+                                        <Upload className="w-3.5 h-3.5" />
+                                        {uploadingReverseImage ? 'Uploading...' : reverseImageId ? 'Replace "Fro" Image' : 'Upload "Fro" Image'}
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -426,7 +514,7 @@ function RouteContentEditor({
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className={`px-6 py-3 text-white font-bold rounded-xl shadow-lg transition-all ${saving ? 'bg-gray-400' : 'bg-[#18234B] hover:shadow-xl'}`}
+                        className={`px-6 py-3 text-white font-bold rounded-xl shadow-lg transition-all ${saving ? 'bg-gray-400' : 'bg-[#102A43] hover:shadow-xl'}`}
                     >
                         {saving ? 'Saving...' : isEditing ? 'Update Content' : 'Create Content'}
                     </button>
@@ -481,7 +569,7 @@ function FieldInput({
     onChange: (v: string) => void;
     multiline?: boolean;
 }) {
-    const cls = "w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] transition-all text-sm";
+    const cls = "w-full p-3 border border-gray-200 rounded-xl bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] transition-all text-sm";
     return (
         <div>
             <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">{label}</label>
@@ -516,7 +604,7 @@ function DynamicTextList({
         onChange(items.filter((_, i) => i !== idx));
     };
 
-    const cls = "flex-1 p-2.5 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] transition-all text-sm";
+    const cls = "flex-1 p-2.5 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] transition-all text-sm";
 
     return (
         <div>
@@ -543,7 +631,7 @@ function DynamicTextList({
             <button
                 type="button"
                 onClick={add}
-                className="mt-2 text-xs font-medium text-[#A61924] hover:underline flex items-center gap-1"
+                className="mt-2 text-xs font-medium text-[#0F766E] hover:underline flex items-center gap-1"
             >
                 <Plus className="w-3 h-3" /> Add {label.toLowerCase().replace(/s$/, '')}
             </button>
@@ -588,7 +676,7 @@ function FAQEditor({
                         <label className="block text-xs text-gray-600 mb-1">Question</label>
                         <input
                             type="text"
-                            className="w-full p-2.5 border border-gray-200 rounded-lg bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924]"
+                            className="w-full p-2.5 border border-gray-200 rounded-lg bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E]"
                             value={faq.question}
                             onChange={e => update(i, 'question', e.target.value)}
                         />
@@ -597,7 +685,7 @@ function FAQEditor({
                         <label className="block text-xs text-gray-600 mb-1">Answer</label>
                         <textarea
                             rows={2}
-                            className="w-full p-2.5 border border-gray-200 rounded-lg bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924]"
+                            className="w-full p-2.5 border border-gray-200 rounded-lg bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E]"
                             value={faq.answer}
                             onChange={e => update(i, 'answer', e.target.value)}
                         />
@@ -607,7 +695,7 @@ function FAQEditor({
             <button
                 type="button"
                 onClick={add}
-                className="text-xs font-medium text-[#A61924] hover:underline flex items-center gap-1"
+                className="text-xs font-medium text-[#0F766E] hover:underline flex items-center gap-1"
             >
                 <Plus className="w-3 h-3" /> Add FAQ
             </button>

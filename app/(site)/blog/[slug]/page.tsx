@@ -4,8 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
-const PRIMARY_COLOR = "#18234B";
-const ACCENT_COLOR = "#A61924";
+const PRIMARY_COLOR = "#102A43";
+const ACCENT_COLOR = "#0F766E";
 const BASE_URL = "https://spltransportation.com.au";
 
 export const revalidate = 600;
@@ -107,7 +107,7 @@ export default async function BlogPostPage({
             className="h-1.5 w-full"
             style={{
               background:
-                "linear-gradient(90deg, #18234B 0%, #A61924 65%, #18234B 100%)"
+                "linear-gradient(90deg, #102A43 0%, #0F766E 65%, #102A43 100%)"
             }}
           />
 
@@ -197,7 +197,7 @@ export default async function BlogPostPage({
 
                 /* Headings */
                 prose-headings:tracking-tight
-                prose-headings:text-[#18234B]
+                prose-headings:text-[#102A43]
                 prose-headings:font-bold
                 prose-h1:text-4xl
                 sm:prose-h1:text-5xl
@@ -225,11 +225,11 @@ export default async function BlogPostPage({
                 prose-li:leading-[1.75]
                 prose-li:text-black
                 prose-li:font-medium
-                prose-li:marker:text-[#A61924] /* Red bullets */
+                prose-li:marker:text-[#0F766E] /* Red bullets */
 
                 /* Blockquotes */
                 prose-blockquote:border-l-4
-                prose-blockquote:border-[#A61924]
+                prose-blockquote:border-[#0F766E]
                 prose-blockquote:bg-slate-50
                 prose-blockquote:px-6
                 prose-blockquote:py-4
@@ -249,16 +249,16 @@ export default async function BlogPostPage({
 
                 /* Strong */
                 prose-strong:font-bold
-                prose-strong:text-[#18234B]
+                prose-strong:text-[#102A43]
 
                 /* Links - High Visibility */
-                prose-a:text-[#A61924]
+                prose-a:text-[#0F766E]
                 prose-a:font-bold
                 prose-a:underline
                 prose-a:underline-offset-4
-                prose-a:decoration-[#A61924]/40
+                prose-a:decoration-[#0F766E]/40
                 prose-a:transition-all
-                hover:prose-a:decoration-[#A61924]
+                hover:prose-a:decoration-[#0F766E]
                 hover:prose-a:text-[#8a141d]
               "
               dangerouslySetInnerHTML={{ __html: post.content }}

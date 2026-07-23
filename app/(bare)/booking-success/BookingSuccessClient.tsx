@@ -11,7 +11,7 @@ const PDFDownloadLink = dynamic(
   { ssr: false }
 );
 
-const PRIMARY_COLOR = '#18234B';
+const PRIMARY_COLOR = '#102A43';
 const ACCENT_COLOR = '#16a34a';
 const REDIRECT_SECONDS = 60;
 
@@ -433,7 +433,7 @@ export default function BookingSuccessClient() {
           <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
             <div className="flex items-center gap-4">
               <div
-                className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50"
+                className="w-20 h-16 rounded-xl flex items-center justify-center overflow-hidden bg-gray-50 p-1"
                 style={{ border: `2px solid ${ACCENT_COLOR}22` }}
               >
                 <img
@@ -633,7 +633,7 @@ export default function BookingSuccessClient() {
         <div className="max-w-2xl w-full bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
           <div className="flex items-center gap-3 mb-4">
             <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden bg-gray-50"
+              className="w-20 h-16 rounded-xl flex items-center justify-center overflow-hidden bg-gray-50 p-1"
               style={{ border: `2px solid ${ACCENT_COLOR}22` }}
             >
               <img

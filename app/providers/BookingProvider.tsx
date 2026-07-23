@@ -10,6 +10,7 @@ import {
 } from 'react';
 import Cookies from 'js-cookie';
 import { COOKIE_CONSENT_KEY } from '../components/CookieConsent';
+import { AFTER_HOURS_SURCHARGE, isAfterHours } from '../lib/afterHours';
 import type { BookingFormData, Route } from '../types';
 
 type BookingContextType = {
@@ -248,9 +249,7 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
 
     let price = tier?.price || 0;
     if (formData.childSeat) price += 20;
-    if (formData.pickupTime && /^\d{2}:\d{2}$/.test(formData.pickupTime.trim()) && formData.pickupTime.trim() >= '21:00') {
-      price += 30;
-    }
+    if (isAfterHours(formData.pickupTime)) price += AFTER_HOURS_SURCHARGE;
     return price;
   }, [currentRoute, formData.passengers, formData.childSeat, formData.pickupTime]);
 

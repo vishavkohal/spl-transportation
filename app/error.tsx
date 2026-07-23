@@ -22,7 +22,7 @@ export default function Error({
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 mb-6">
           <AlertTriangle className="h-8 w-8 text-red-600" aria-hidden="true" />
         </div>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-[#18234B] sm:text-4xl">
+        <h1 className="mt-4 text-3xl font-bold tracking-tight text-[#102A43] sm:text-4xl">
           Something went wrong
         </h1>
         <p className="mt-4 text-base leading-7 text-gray-600">
@@ -31,7 +31,7 @@ export default function Error({
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
             onClick={() => reset()}
-            className="w-full sm:w-auto rounded-full bg-[#18234B] px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#121a38] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#18234B] flex items-center justify-center gap-2 transition-all"
+            className="w-full sm:w-auto rounded-full bg-[#102A43] px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#0C5D59] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#102A43] flex items-center justify-center gap-2 transition-all"
           >
             <RefreshCcw className="w-4 h-4" />
             Try again

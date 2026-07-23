@@ -10,8 +10,8 @@ interface DashboardOverviewProps {
     leads: BookingLead[];
 }
 
-const PRIMARY_COLOR = '#18234B';
-const ACCENT_COLOR = '#A61924';
+const PRIMARY_COLOR = '#102A43';
+const ACCENT_COLOR = '#0F766E';
 const SUCCESS_COLOR = '#16A34A';
 
 const StatCard = ({ label, value, icon: Icon, color }: { label: string, value: string, icon: LucideIcon, color: string }) => (

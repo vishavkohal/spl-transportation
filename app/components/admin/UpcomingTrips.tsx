@@ -8,7 +8,7 @@ interface UpcomingTripsProps {
     bookings: Booking[];
 }
 
-const PRIMARY_COLOR = '#18234B';
+const PRIMARY_COLOR = '#102A43';
 
 export default function UpcomingTrips({ bookings }: UpcomingTripsProps) {
     // Filter and Sort Bookings

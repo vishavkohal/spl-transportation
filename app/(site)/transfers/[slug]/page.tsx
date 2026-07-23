@@ -4,6 +4,16 @@ import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import {
+  MapPin,
+  Clock,
+  CheckCircle,
+  Shield,
+  Car,
+  Compass,
+  ArrowRight,
+  HelpCircle,
+} from "lucide-react";
 
 // Types & Stores
 import type { Route } from "../../../types";
@@ -20,9 +30,11 @@ import CustomerReviews from "@/app/components/CustomerReviews";
 const BASE_URL = "https://www.spltransportation.com.au";
 export const revalidate = 300;
 
+import { COLORS } from "@/app/lib/colors";
+
 // Brand colors
-const PRIMARY_COLOR = "#18234B";
-const ACCENT_COLOR = "#A61924";
+const PRIMARY_COLOR = COLORS.heroOverlay; // #19324D / #102A43
+const ACCENT_COLOR = COLORS.primary; // #0F766E
 
 /* ----------------------------------------
    Helpers
@@ -76,7 +88,7 @@ export async function generateMetadata({
 }
 
 /* ----------------------------------------
-   Page
+   Page Component
 ---------------------------------------- */
 
 export default async function RoutePage({
@@ -94,215 +106,339 @@ export default async function RoutePage({
   const landmarks = getLandmarks(route);
   const routeName = route.label ?? `${route.from} to ${route.to}`;
 
+  const minPrice = route.pricing?.length
+    ? Math.min(...route.pricing.map((p) => p.price))
+    : null;
+
   return (
-    <main className="bg-neutral-50">
-      {/* ================= HERO ================= */}
-      <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 py-14 lg:py-20 grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <h1
-              className="text-4xl sm:text-5xl xl:text-6xl font-extrabold leading-tight"
-              style={{ color: PRIMARY_COLOR }}
-            >
-              {routeName} Transfers
-            </h1>
+    <main className="bg-[#F8FAFC]">
+      {/* ================= HERO BANNER (HOMEPAGE STYLED) ================= */}
+      <section className="relative bg-[#102A43] text-white pt-16 pb-32 md:pt-20 md:pb-44 overflow-hidden">
+        {/* Dynamic Background Image with Gradient Overlay */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={
+              pageContent?.imageId
+                ? `/api/images/${pageContent.imageId}`
+                : `/routes/${route.slug}.jpg`
+            }
+            alt={`Private Transfer: ${routeName}`}
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/68 via-[#102A43]/72 to-[#102A43] z-10" />
+        </div>
 
-            <p className="mt-5 text-lg sm:text-xl text-gray-600 max-w-xl">
-              Premium private transfers with fixed pricing, professional local
-              drivers, and modern air-conditioned vehicles.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              {["Fixed Price", "Private Vehicle", "No Hidden Fees"].map((t) => (
-                <span
-                  key={t}
-                  className="px-4 py-2 text-sm text-black font-medium rounded-full bg-white/70 backdrop-blur shadow-sm"
-                >
-                  ✓ {t}
-                </span>
-              ))}
+        {/* Hero Content */}
+        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-white">
+          <div className="max-w-3xl">
+            {/* Pill Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold uppercase tracking-wider mb-5 shadow-sm">
+              <MapPin className="w-3.5 h-3.5 text-[#2DD4BF]" />
+              <span>PRIVATE TRANSFER ROUTE</span>
             </div>
 
-            <a
-              href="#booking"
-              className="inline-flex items-center justify-center mt-10 rounded-full px-8 py-4 text-lg font-semibold text-white shadow-lg hover:opacity-90 transition"
-              style={{ backgroundColor: PRIMARY_COLOR }}
-            >
-              Book Your Transfer →
-            </a>
-          </div>
+            {/* Headline */}
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white drop-shadow-md tracking-tight leading-tight mb-4">
+              {routeName}<br />
+              <span className="text-[#2DD4BF]">Private Transfers</span>
+            </h1>
 
-          <div className="relative h-[360px] sm:h-[420px] rounded-3xl overflow-hidden shadow-xl">
-            <Image
-              src={pageContent?.imageId ? `/api/images/${pageContent.imageId}` : `/routes/${route.slug}.jpg`}
-              alt={`Transfer from ${route.from} to ${route.to}`}
-              fill
-              className="object-cover"
-              priority
-            />
+            {/* Subheading */}
+            <p className="text-base sm:text-lg text-gray-200 font-light mb-6 max-w-2xl leading-relaxed drop-shadow">
+              Door-to-door private transfers with fixed pricing, professional local
+              drivers, and premium air-conditioned vehicles across Queensland.
+            </p>
+
+            {/* Feature Badges & Fare Chip */}
+            <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm font-semibold text-white mb-6 sm:mb-8">
+              <div className="flex items-center gap-2 drop-shadow bg-white/10 backdrop-blur-md px-3.5 py-2 rounded-full border border-white/15">
+                <CheckCircle className="w-4 h-4 text-[#2DD4BF]" />
+                <span>Fixed, All-Inclusive Fares</span>
+              </div>
+              <div className="flex items-center gap-2 drop-shadow bg-white/10 backdrop-blur-md px-3.5 py-2 rounded-full border border-white/15">
+                <MapPin className="w-4 h-4 text-[#2DD4BF]" />
+                <span>Meet &amp; Greet</span>
+              </div>
+              <div className="flex items-center gap-2 drop-shadow bg-white/10 backdrop-blur-md px-3.5 py-2 rounded-full border border-white/15">
+                <Clock className="w-4 h-4 text-[#2DD4BF]" />
+                <span>Flight Tracking</span>
+              </div>
+              {minPrice && (
+                <div className="flex items-center gap-1.5 bg-[#0F766E] text-white px-4 py-2 rounded-full font-bold shadow-lg shadow-teal-900/30 border border-teal-400/30">
+                  <span>From ${minPrice} AUD</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ================= BOOKING ================= */}
-      <section id="booking" className="relative scroll-mt-24 py-24">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-white to-slate-200" />
-        <div className="relative max-w-4xl mx-auto px-4">
-          <div className="rounded-[32px] bg-white/60 backdrop-blur-xl shadow-xl p-6 sm:p-10">
-            <h2 className="text-3xl font-bold mb-6 text-gray-900">
-              Book your transfer
-            </h2>
-            <RouteBookingForm route={route} />
-          </div>
-        </div>
-      </section>
-
-      {/* ================= SEO CONTENT ================= */}
-      {pageContent && (
-        <section className="max-w-7xl mx-auto px-4 py-20 space-y-24">
-          {/* INTRO */}
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+      {/* ================= OVERLAPPING BOOKING FORM ================= */}
+      <section className="relative z-30 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 md:-mt-16 mb-16">
+        <div
+          id="booking"
+          className="scroll-mt-24 rounded-3xl bg-white shadow-2xl border border-slate-200/80 p-6 sm:p-10"
+        >
+          <div className="flex items-center justify-between border-b border-slate-100 pb-5 mb-6">
             <div>
-              <h2 className="text-3xl font-bold mb-6 text-black">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-[#102A43]">
+                Book Your {routeName} Transfer
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Instant confirmation • Fixed fares • 256-bit SSL encrypted checkout
+              </p>
+            </div>
+          </div>
+          <RouteBookingForm route={route} />
+        </div>
+      </section>
+
+      {/* ================= QUICK SPECS STRIP ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-xs text-center">
+            <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E]">
+              <Compass className="w-5 h-5" />
+            </div>
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Route</div>
+            <div className="text-sm font-bold text-slate-800 mt-0.5 truncate">{route.from} → {route.to}</div>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-xs text-center">
+            <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E]">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Est. Duration</div>
+            <div className="text-sm font-bold text-slate-800 mt-0.5">{route.duration ? `${route.duration} Mins` : "Direct Transfer"}</div>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-xs text-center">
+            <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E]">
+              <Car className="w-5 h-5" />
+            </div>
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Fleet Options</div>
+            <div className="text-sm font-bold text-slate-800 mt-0.5">Sedan, SUV, Van (Up to 7)</div>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200/70 shadow-xs text-center">
+            <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E]">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pricing</div>
+            <div className="text-sm font-bold text-[#0F766E] mt-0.5">100% Fixed &amp; All-Inclusive</div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= INTERACTIVE ROUTE MAP & LANDMARKS ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
+        <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-lg border border-slate-200/80">
+          <div className="max-w-2xl mb-8">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#0F766E] mb-2">
+              Interactive Map &amp; Stops
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+              Route Highlights &amp; Landmarks
+            </h2>
+            <p className="text-sm text-slate-600 mt-2">
+              Explore the journey path and key scenic stops along {routeName}.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-12 gap-8 items-start">
+            {/* Landmarks List */}
+            <div className="lg:col-span-5 space-y-3">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-[#0F766E]" />
+                Key Landmarks &amp; Waypoints
+              </h3>
+              <ul className="space-y-2.5">
+                {landmarks.map((l) => (
+                  <li
+                    key={l}
+                    className="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-[#0F766E]/30 transition-all duration-200"
+                  >
+                    <span className="w-7 h-7 rounded-full bg-[#0F766E]/10 text-[#0F766E] text-xs font-bold flex items-center justify-center shrink-0">
+                      📍
+                    </span>
+                    <span className="text-sm font-semibold text-slate-800">{l}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Leaflet Route Map */}
+            <div className="lg:col-span-7 h-[380px] sm:h-[440px] rounded-2xl overflow-hidden shadow-inner border border-slate-200">
+              <RouteMapClient from={route.from} to={route.to} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= SEO CONTENT & TRAVEL GUIDE ================= */}
+      {pageContent && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20 space-y-16">
+          {/* Intro Section */}
+          <div className="grid lg:grid-cols-12 gap-8 items-center bg-white rounded-3xl p-8 sm:p-10 shadow-lg border border-slate-200/80">
+            <div className="lg:col-span-7">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-5">
                 {pageContent.intro.h2}
               </h2>
               {pageContent.intro.paragraphs.map((p, i) => (
-                <p key={i} className="text-gray-600 mb-4 text-lg">
+                <p key={i} className="text-slate-600 mb-4 text-base leading-relaxed">
                   {p}
                 </p>
               ))}
             </div>
 
-            <div className="rounded-3xl bg-white p-8 shadow">
-              <ul className="space-y-4">
+            <div className="lg:col-span-5 bg-slate-50/90 rounded-2xl p-6 border border-slate-200">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#102A43] mb-4 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-[#0F766E]" />
+                What’s Included
+              </h3>
+              <ul className="space-y-3">
                 {pageContent.intro.bullets.map((b, i) => (
-                  <li key={i} className="flex gap-3">
-                    <span
-                      className="w-6 h-6 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: ACCENT_COLOR }}
-                    >
+                  <li key={i} className="flex items-start gap-3 text-sm text-slate-700 font-medium">
+                    <span className="w-5 h-5 rounded-full bg-[#0F766E] text-white text-xs flex items-center justify-center shrink-0 mt-0.5">
                       ✓
                     </span>
-                    <span className="font-medium text-black">{b}</span>
+                    <span>{b}</span>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
 
-          {/* DESTINATION */}
-          <div>
-            <h3 className="text-3xl font-bold mb-6 text-black">
+          {/* Destination Highlights */}
+          <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-lg border border-slate-200/80">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-5">
               {pageContent.destination.h3}
             </h3>
             {pageContent.destination.paragraphs.map((p, i) => (
-              <p key={i} className="text-lg text-gray-600 mb-4">
+              <p key={i} className="text-slate-600 mb-4 text-base leading-relaxed">
                 {p}
               </p>
             ))}
           </div>
 
-          {/* TRAVEL OPTIONS */}
-          <div>
-            <h4 className="text-2xl font-bold mb-6 text-black">
+          {/* Travel Options */}
+          <div className="bg-white rounded-3xl p-8 sm:p-10 shadow-lg border border-slate-200/80">
+            <h4 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-5">
               {pageContent.travelOptions.h4}
             </h4>
             {pageContent.travelOptions.paragraphs.map((p, i) => (
-              <p key={i} className="text-lg text-gray-600 mb-4">
+              <p key={i} className="text-slate-600 mb-4 text-base leading-relaxed">
                 {p}
               </p>
             ))}
           </div>
 
-          {/* WHY US */}
-          <div className="bg-white rounded-3xl p-10 shadow">
-            <h2 className="text-3xl font-bold mb-6 text-black">
-              {pageContent.whyUs.h2}
-            </h2>
+          {/* Why Choose SPL */}
+          <div className="bg-gradient-to-br from-[#102A43] to-[#19324D] text-white rounded-3xl p-8 sm:p-12 shadow-xl relative overflow-hidden">
+            <div className="relative z-10">
+              <h2 className="text-2xl sm:text-4xl font-extrabold mb-6">
+                {pageContent.whyUs.h2}
+              </h2>
 
-            {pageContent.whyUs.paragraphs.map((p, i) => (
-              <p key={i} className="text-lg text-gray-600 mb-4">
-                {p}
-              </p>
-            ))}
-
-            <ul className="grid sm:grid-cols-2 gap-4 mt-6">
-              {pageContent.whyUs.bullets.map((b, i) => (
-                <li key={i} className="flex gap-3">
-                  <span
-                    className="w-6 h-6 rounded-full text-white flex items-center justify-center"
-                    style={{ backgroundColor: ACCENT_COLOR }}
-                  >
-                    ✓
-                  </span>
-                  <span className="text-black">{b}</span>
-                </li>
+              {pageContent.whyUs.paragraphs.map((p, i) => (
+                <p key={i} className="text-slate-200 mb-4 text-base sm:text-lg leading-relaxed max-w-3xl">
+                  {p}
+                </p>
               ))}
-            </ul>
 
-            <a
-              href="#booking"
-              className="inline-block mt-8 font-semibold underline"
-              style={{ color: PRIMARY_COLOR }}
-            >
-              {pageContent.whyUs.cta}
-            </a>
-          </div>
+              <ul className="grid sm:grid-cols-2 gap-4 mt-8">
+                {pageContent.whyUs.bullets.map((b, i) => (
+                  <li key={i} className="flex items-center gap-3 bg-white/10 backdrop-blur-md p-3.5 rounded-xl border border-white/15 text-sm font-semibold">
+                    <span className="w-6 h-6 rounded-full bg-[#2DD4BF] text-[#102A43] text-xs font-bold flex items-center justify-center shrink-0">
+                      ✓
+                    </span>
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
 
-          {/* FAQ */}
-          <div>
-            <h2 className="text-3xl font-bold mb-8 text-black">
-              Frequently Asked Questions
-            </h2>
-            <div className="space-y-6">
-              {pageContent.faqs.map((f, i) => (
-                <div key={i} className="bg-white rounded-xl p-6 shadow">
-                  <h3 className="font-semibold mb-2 text-black">{f.question}</h3>
-                  <p className="text-gray-600">{f.answer}</p>
-                </div>
-              ))}
+              <a
+                href="#booking"
+                className="inline-flex items-center gap-2 mt-10 px-8 py-4 rounded-full font-bold text-sm text-[#102A43] bg-white hover:bg-slate-100 shadow-lg transition-all duration-200"
+              >
+                {pageContent.whyUs.cta} <ArrowRight className="w-4 h-4" />
+              </a>
             </div>
           </div>
         </section>
       )}
 
-      {/* ================= MAP ================= */}
-      <section className="bg-neutral-100 py-20">
-        <div className="max-w-7xl mx-auto px-4 grid lg:grid-cols-2 gap-12">
-          <div>
-            <h2 className="text-3xl font-bold mb-6 text-black">
-              Landmarks along the route
-            </h2>
-            <ul className="grid sm:grid-cols-2 gap-3">
-              {landmarks.map((l) => (
-                <li key={l} className="bg-white rounded-lg px-4 py-3 shadow text-gray-700">
-                  📍 {l}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="h-[420px] rounded-3xl overflow-hidden shadow-xl">
-            <RouteMapClient from={route.from} to={route.to} />
-          </div>
-        </div>
-      </section>
-
-      {/* ================= REVIEWS ================= */}
-      <section className="max-w-7xl mx-auto px-4 py-20">
+      {/* ================= CUSTOMER REVIEWS ================= */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
         <CustomerReviews />
       </section>
 
-      {/* ================= MOBILE CTA ================= */}
-      <div className="fixed bottom-0 inset-x-0 z-50 lg:hidden">
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-xl" />
-        <div className="relative p-4">
+      {/* ================= FREQUENTLY ASKED QUESTIONS ================= */}
+      {pageContent?.faqs?.length && (
+        <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
+          <div className="text-center mb-10">
+            <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-[#0F766E]/10 flex items-center justify-center text-[#0F766E]">
+              <HelpCircle className="w-5 h-5" />
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-sm text-slate-500 mt-2">
+              Everything you need to know about transfer from {route.from} to {route.to}
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {pageContent.faqs.map((f, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 hover:border-[#0F766E]/40 transition-all duration-200"
+              >
+                <h3 className="font-bold text-base text-slate-900 mb-2 flex items-center gap-2">
+                  <span className="text-[#0F766E] font-extrabold">Q.</span> {f.question}
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed pl-5">
+                  {f.answer}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ================= BOTTOM CTA BANNER ================= */}
+      <section className="py-16 bg-[#102A43] text-white">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
+            Ready to Book Your {routeName} Transfer?
+          </h2>
+          <p className="text-base text-slate-300 mb-8 max-w-xl mx-auto">
+            Enjoy fixed fares, zero surge pricing, and professional meet &amp; greet service.
+          </p>
           <a
             href="#booking"
-            className="block w-full rounded-full py-4 text-center text-lg font-semibold text-white shadow"
-            style={{ backgroundColor: PRIMARY_COLOR }}
+            className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-bold text-white bg-[#0F766E] hover:bg-[#0C5D59] shadow-lg shadow-teal-900/30 transition-all duration-200 hover:-translate-y-0.5"
           >
-            Book Transfer Now
+            Book Transfer Now <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+      </section>
+
+      {/* ================= MOBILE STICKY CTA ================= */}
+      <div className="fixed bottom-0 inset-x-0 z-50 lg:hidden">
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-xl border-t border-slate-200" />
+        <div className="relative p-3.5 px-4 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-[10px] text-slate-400 font-bold uppercase">Private Transfer</div>
+            <div className="text-xs font-bold text-slate-900 truncate max-w-[160px]">{routeName}</div>
+          </div>
+          <a
+            href="#booking"
+            className="flex-1 rounded-xl py-3 text-center text-xs font-bold text-white shadow-md bg-[#102A43] hover:bg-[#0C5D59]"
+          >
+            Book Now {minPrice ? `from $${minPrice}` : ""}
           </a>
         </div>
       </div>
@@ -350,27 +486,24 @@ const CAIRNS_CITY_REVIEWS = [
 import { RoutePageContent } from "../../../lib/routePageContent";
 
 function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | null) {
-  // 1. Basic Info
   const minPrice = route.pricing?.length
     ? Math.min(...route.pricing.map((p) => p.price))
     : 0;
 
-  const validUntil = "2026-12-31"; // Or dynamic: new Date(new Date().getFullYear() + 1, 11, 31).toISOString().split('T')[0];
+  const validUntil = "2026-12-31";
   const url = `${BASE_URL}/transfers/${route.slug}`;
   const routeName = `${route.from} to ${route.to}`;
   const description =
     pageContent?.intro?.paragraphs?.[0] ||
     `Premium private transfers from ${route.from} to ${route.to} with fixed pricing.`;
 
-  // 2. Reviews Logic
   const isCairnsCity = route.slug === "cairns-airport-to-cairns-city";
   const reviewsData = isCairnsCity ? CAIRNS_CITY_REVIEWS : [];
 
-  // Aggregate Rating: Use specific if exists, otherwise generic high rating
   const aggregateRating = {
     "@type": "AggregateRating",
     ratingValue: "4.9",
-    reviewCount: isCairnsCity ? "3" : "324", // 3 specific reviews, or simulated total
+    reviewCount: isCairnsCity ? "3" : "324",
     bestRating: "5",
     worstRating: "1",
   };
@@ -390,9 +523,7 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
     datePublished: r.datePublished,
   }));
 
-  // 3. Construct Graph
   const graph = [
-    // --- LocalBusiness ---
     {
       "@type": "LocalBusiness",
       "@id": `${BASE_URL}/#organization`,
@@ -422,10 +553,8 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
         { "@type": "City", name: "Palm Cove" },
         { "@type": "State", name: "Queensland" },
       ],
-      aggregateRating: aggregateRating, // Use the same rating logic
+      aggregateRating: aggregateRating,
     },
-
-    // --- Service ---
     {
       "@type": "Service",
       "@id": `${url}#service`,
@@ -433,7 +562,7 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
       name: `${routeName} Transfers`,
       description: description,
       provider: { "@id": `${BASE_URL}/#organization` },
-      areaServed: { "@type": "City", name: route.to }, // The destination city
+      areaServed: { "@type": "City", name: route.to },
       offers: {
         "@type": "Offer",
         price: minPrice.toString(),
@@ -441,7 +570,7 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
         priceValidUntil: validUntil,
         availability: "https://schema.org/InStock",
         url: url,
-        validFrom: "2025-01-01", // Approximate valid from
+        validFrom: "2025-01-01",
         itemOffered: {
           "@type": "Service",
           name: `Private Transfer - ${routeName}`,
@@ -449,15 +578,13 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
       },
       aggregateRating: aggregateRating,
     },
-
-    // --- TravelAction ---
     {
       "@type": "TravelAction",
       "@id": `${url}#travel`,
       name: `${routeName} Transfer`,
       description: route.duration ? `Estimated duration: ${route.duration} mins` : undefined,
       fromLocation: {
-        "@type": "Place", // Generic Place or Airport if known
+        "@type": "Place",
         name: route.from,
         address: { "@type": "PostalAddress", addressLocality: "Cairns", addressCountry: "AU" }
       },
@@ -468,8 +595,6 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
       },
       distance: route.distance || undefined,
     },
-
-    // --- Product (Wrapper) ---
     {
       "@type": "Product",
       "@id": `${url}#product`,
@@ -486,8 +611,6 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
       },
       aggregateRating: aggregateRating,
     },
-
-    // --- BreadcrumbList ---
     {
       "@type": "BreadcrumbList",
       "@id": `${url}#breadcrumb`,
@@ -512,8 +635,6 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
         },
       ],
     },
-
-    // --- WebPage ---
     {
       "@type": "WebPage",
       "@id": `${url}#webpage`,
@@ -529,14 +650,13 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
         url: `${BASE_URL}/routes/${route.slug}.jpg`,
       },
     },
-
-    // --- Place (Destination) ---
     {
       "@type": "Place",
       "@id": `${url}#destination`,
       name: route.to,
-      description: pageContent?.destination?.paragraphs?.[0] || // Try to get destination description
-        pageContent?.intro?.paragraphs?.[0] || // Fallback to intro
+      description:
+        pageContent?.destination?.paragraphs?.[0] ||
+        pageContent?.intro?.paragraphs?.[0] ||
         `Beautiful destination of ${route.to} in Queensland.`,
       address: {
         "@type": "PostalAddress",
@@ -547,12 +667,10 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
     },
   ];
 
-  // --- Reviews (Append if exist) ---
   if (reviewsSchema.length > 0) {
-    graph.push(...reviewsSchema as any);
+    graph.push(...(reviewsSchema as any));
   }
 
-  // --- FAQPage ---
   if (pageContent?.faqs?.length) {
     graph.push({
       "@type": "FAQPage",

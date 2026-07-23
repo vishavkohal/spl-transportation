@@ -7,9 +7,9 @@ export default function Loading() {
         {/* Spinner */}
         <div className="relative w-16 h-16">
           <div className="absolute inset-0 rounded-full border-4 border-gray-100"></div>
-          <div className="absolute inset-0 rounded-full border-4 border-[#18234B] border-t-transparent animate-spin"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-[#102A43] border-t-transparent animate-spin"></div>
         </div>
-        <p className="text-sm font-semibold text-[#18234B] tracking-widest uppercase animate-pulse">
+        <p className="text-sm font-semibold text-[#102A43] tracking-widest uppercase animate-pulse">
           Loading...
         </p>
       </div>

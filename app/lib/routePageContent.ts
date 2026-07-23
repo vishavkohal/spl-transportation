@@ -26,6 +26,7 @@ export type RoutePageContent = {
     answer: string;
   }[];
   imageId?: string | null;
+  reverseImageId?: string | null;
 };
 
 function key(from: string, to: string) {
@@ -540,6 +541,7 @@ import { unstable_cache } from "next/cache";
 const fetchRouteContent = unstable_cache(
   async (from: string, to: string) => {
     try {
+      // 1. Direct route match
       const dbEntry = await prisma.routePageContent.findFirst({
         where: { route: { from, to } },
       });
@@ -548,6 +550,19 @@ const fetchRouteContent = unstable_cache(
         return {
           ...(dbEntry.content as unknown as RoutePageContent),
           imageId: dbEntry.imageId,
+          reverseImageId: dbEntry.reverseImageId,
+        };
+      }
+
+      // 2. Reverse route match (if direct route content doesn't exist, check reverse direction for reverseImageId)
+      const reverseDbEntry = await prisma.routePageContent.findFirst({
+        where: { route: { from: to, to: from } },
+      });
+
+      if (reverseDbEntry && reverseDbEntry.reverseImageId) {
+        return {
+          ...(reverseDbEntry.content as unknown as RoutePageContent),
+          imageId: reverseDbEntry.reverseImageId,
         };
       }
     } catch (e) {

@@ -8,9 +8,11 @@ import LandingBookingForm from '../../components/LandingBookingForm';
 import CustomerReviews from '../../components/CustomerReviews';
 import FaqSection from '../../components/FaqSection';
 
+import { COLORS } from '@/app/lib/colors';
+
 const BASE_URL = 'https://www.spltransportation.com.au';
-const PRIMARY_COLOR = '#18234B';
-const ACCENT_COLOR = '#A61924';
+const PRIMARY_COLOR = COLORS.primary;
+const ACCENT_COLOR = COLORS.primary;
 
 /* ─── Metadata (server-rendered for SEO) ─── */
 
@@ -252,7 +254,7 @@ export default function BookLandingPage() {
                   </div>
                 </div>
                 <div className="p-4">
-                  <h3 className="font-bold text-base group-hover:text-[#A61924] transition-colors" style={{ color: PRIMARY_COLOR }}>
+                  <h3 className="font-bold text-base group-hover:text-[#0F766E] transition-colors" style={{ color: PRIMARY_COLOR }}>
                     {route.name}
                   </h3>
                 </div>
@@ -285,8 +287,7 @@ export default function BookLandingPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="#booking"
-              className="inline-flex items-center justify-center rounded-full px-8 py-4 text-lg font-semibold shadow-lg hover:opacity-90 transition text-white"
-              style={{ backgroundColor: ACCENT_COLOR }}
+              className="inline-flex items-center justify-center rounded-full px-8 py-4 text-lg font-semibold shadow-lg transition text-white bg-[#102A43] hover:bg-[#0C5D59]"
             >
               Book Now →
             </a>

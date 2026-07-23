@@ -151,7 +151,7 @@ export function buildBookingReceiptHtml(
     body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial; color:#111827; }
     .wrap { max-width:700px; margin:0 auto; padding:18px; }
     .brand { font-weight:800; font-size:22px; }
-    .brand .blue { color:#18234B } .brand .red { color:#E11D48 }
+    .brand .blue { color:#102A43 } .brand .red { color:#E11D48 }
     h2 { color:#111827; margin: 12px 0 6px; font-size:16px; }
     table { width:100%; border-collapse:collapse; font-size:14px; }
     td, th { padding:8px; border:1px solid #E5E7EB; vertical-align:top; }
@@ -216,8 +216,8 @@ export function buildBookingReceiptHtml(
           <div>
             <div style="width:200px; height:auto;">
 <span style="font-family:Segoe UI, Arial, sans-serif; font-weight:700; font-size:22px">
-  <span style="color:#A61924;">SPL</span>
-  <span style="color:#18234B;">Transportation</span>
+  <span style="color:#0F766E;">SPL</span>
+  <span style="color:#102A43;">Transportation</span>
 </span>
 </div>
           </div>
@@ -322,7 +322,7 @@ export function buildBookingSummaryHtml(
   const html = `
     <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial; color:#111827;">
       <div style="max-width:700px; margin:0 auto; padding:18px;">
-        <h2 style="color:#18234B; margin-bottom:6px;">${COMPANY_NAME} – Booking Confirmation</h2>
+        <h2 style="color:#102A43; margin-bottom:6px;">${COMPANY_NAME} – Booking Confirmation</h2>
         <p style="margin:0 0 12px 0;">Thank you for booking with us — your booking is confirmed. Please find your receipt below.</p>
         ${receiptHtml}
         <p style="font-size:13px; color:#4B5563; margin-top:12px;">If you need to change your booking, reply to this email or contact us at ${COMPANY_EMAIL}.</p>
@@ -440,3 +440,79 @@ export async function sendAdminEmail(
     throw err;
   }
 }
+
+export type QuoteNotificationData = {
+  id?: string;
+  travelDate: string;
+  travelTime: string;
+  passengers: number;
+  pickupAddress: string;
+  dropoffAddress: string;
+  checkInBags?: number;
+  carryOnBags?: number;
+  childSeats?: string;
+  flightArrivalType?: string | null;
+  flightArrivalNumber?: string | null;
+  flightArrivalTime?: string | null;
+  flightDepartureType?: string | null;
+  flightDepartureNumber?: string | null;
+  flightDepartureTime?: string | null;
+  fullName: string;
+  email: string;
+  phone: string;
+  message?: string | null;
+};
+
+/**
+ * Send admin email notification when a new Quote Request is submitted
+ */
+export async function sendAdminQuoteNotification(quote: QuoteNotificationData): Promise<void> {
+  const subject = `New Quote Request from ${quote.fullName} – ${quote.pickupAddress} to ${quote.dropoffAddress}`;
+
+  const html = `
+    <div style="font-family: system-ui, -apple-system, sans-serif; color:#111827; max-width:650px; margin:0 auto; padding:20px; border:1px solid #E5E7EB; rounded-xl;">
+      <h2 style="color:#102A43; margin-top:0;">SPL Transportation – New Quote Request</h2>
+      <p style="font-size:14px; color:#4B5563;">A customer has requested a custom price quote on the website.</p>
+      
+      <table style="width:100%; border-collapse:collapse; margin:20px 0; font-size:14px;">
+        <tbody>
+          <tr style="background:#F9FAFB;"><td style="padding:8px; font-weight:bold; width:35%;">Customer Name:</td><td style="padding:8px;">${quote.fullName}</td></tr>
+          <tr><td style="padding:8px; font-weight:bold;">Email:</td><td style="padding:8px;"><a href="mailto:${quote.email}">${quote.email}</a></td></tr>
+          <tr style="background:#F9FAFB;"><td style="padding:8px; font-weight:bold;">Phone:</td><td style="padding:8px;"><a href="tel:${quote.phone}">${quote.phone}</a></td></tr>
+          <tr><td style="padding:8px; font-weight:bold;">Travel Date & Time:</td><td style="padding:8px;">${quote.travelDate} at ${quote.travelTime}</td></tr>
+          <tr style="background:#F9FAFB;"><td style="padding:8px; font-weight:bold;">Pickup Address:</td><td style="padding:8px;">${quote.pickupAddress}</td></tr>
+          <tr><td style="padding:8px; font-weight:bold;">Dropoff Address:</td><td style="padding:8px;">${quote.dropoffAddress}</td></tr>
+          <tr style="background:#F9FAFB;"><td style="padding:8px; font-weight:bold;">Passengers:</td><td style="padding:8px;">${quote.passengers}</td></tr>
+          <tr><td style="padding:8px; font-weight:bold;">Baggage:</td><td style="padding:8px;">${quote.checkInBags ?? 0} Check-in, ${quote.carryOnBags ?? 0} Carry-on</td></tr>
+          <tr style="background:#F9FAFB;"><td style="padding:8px; font-weight:bold;">Child Seats:</td><td style="padding:8px;">${quote.childSeats || 'No'}</td></tr>
+          ${quote.flightArrivalNumber ? `<tr><td style="padding:8px; font-weight:bold;">Flight Arrival:</td><td style="padding:8px;">${quote.flightArrivalType || 'Arrival'} - Flight #${quote.flightArrivalNumber} (${quote.flightArrivalTime || 'N/A'})</td></tr>` : ''}
+          ${quote.flightDepartureNumber ? `<tr style="background:#F9FAFB;"><td style="padding:8px; font-weight:bold;">Flight Departure:</td><td style="padding:8px;">${quote.flightDepartureType || 'Departure'} - Flight #${quote.flightDepartureNumber} (${quote.flightDepartureTime || 'N/A'})</td></tr>` : ''}
+          ${quote.message ? `<tr><td style="padding:8px; font-weight:bold;">Message / Notes:</td><td style="padding:8px;">${quote.message}</td></tr>` : ''}
+        </tbody>
+      </table>
+
+      <div style="margin-top:20px; padding:12px; bg-color:#F3F4F6; border-left:4px solid #0F766E; font-size:13px; color:#374151;">
+        Log into the SPL Admin Panel to set the quote amount, calculate fees, and generate the quote PDF.
+      </div>
+    </div>
+  `;
+
+  if (!resend) {
+    console.log('sendAdminQuoteNotification – RESEND_API_KEY not set, logging instead.');
+    console.log('To (admin):', ADMIN_EMAIL);
+    console.log(html.replace(/<[^>]+>/g, ' ').slice(0, 500));
+    return;
+  }
+
+  try {
+    await sendWithRetries({
+      from: FROM_EMAIL,
+      to: ADMIN_EMAIL,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error('Failed to send admin quote notification email:', err);
+  }
+}
+

@@ -20,6 +20,9 @@ export async function GET(
                 image: {
                     select: { id: true, altText: true },
                 },
+                reverseImage: {
+                    select: { id: true, altText: true },
+                },
             },
         });
 
@@ -47,7 +50,7 @@ export async function PUT(
     }
     const { id } = await params;
     try {
-        const { routeId, content, imageId } = await request.json();
+        const { routeId, content, imageId, reverseImageId } = await request.json();
 
         const entry = await prisma.routePageContent.update({
             where: { id },
@@ -55,12 +58,16 @@ export async function PUT(
                 ...(routeId !== undefined && { routeId }),
                 ...(content !== undefined && { content }),
                 ...(imageId !== undefined && { imageId }),
+                ...(reverseImageId !== undefined && { reverseImageId }),
             },
             include: {
                 route: {
                     select: { id: true, from: true, to: true },
                 },
                 image: {
+                    select: { id: true, altText: true },
+                },
+                reverseImage: {
                     select: { id: true, altText: true },
                 },
             },

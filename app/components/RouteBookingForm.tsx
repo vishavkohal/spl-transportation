@@ -1,8 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, AlertCircle, Repeat, Calendar, Clock, Users, Briefcase, Plane, CheckCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, AlertTriangle, Repeat, Calendar, Clock, Users, Briefcase, Plane, CheckCircle } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
+import {
+  AFTER_HOURS_SURCHARGE,
+  AFTER_HOURS_SURCHARGE_NOTICE,
+  isAfterHours,
+} from '@/app/lib/afterHours';
 import { getStoredUtms } from '@/app/lib/utm';
 import type { Route } from '@/app/types';
 import { toast } from 'sonner';
@@ -61,15 +66,6 @@ function getMaxBagsForCurrentPax(pax: number): number {
 /* ---------------- Payment Fee ---------------- */
 
 const PAYMENT_FEE_RATE = 0.025; // 2.5%
-const AFTER_HOURS_SURCHARGE = 30;
-const AFTER_HOURS_CUTOFF = '21:00';
-
-function isAfterHours(pickupTime: string): boolean {
-  if (!pickupTime || typeof pickupTime !== 'string') return false;
-  const time = pickupTime.trim();
-  if (!/^\d{2}:\d{2}$/.test(time)) return false;
-  return time >= AFTER_HOURS_CUTOFF;
-}
 
 function calculateProcessingFee(amount: number): number {
   return Number((amount * PAYMENT_FEE_RATE).toFixed(2));
@@ -264,7 +260,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
   /* ---------------- UI ---------------- */
 
   const inputBase =
-    'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-1 focus:ring-[#18234B] focus:border-[#18234B] text-black';
+    'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-1 focus:ring-[#0F766E] focus:border-[#0F766E] text-black';
 
   const label =
     'text-xs font-medium text-gray-600';
@@ -289,10 +285,9 @@ export default function RouteBookingForm({ route }: { route: Route }) {
         <div className="space-y-6">
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pr-1">
-
             <div className="col-span-1 md:col-span-2 space-y-1">
               <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
-                <Calendar className="w-3 h-3 text-[#18234B]" />
+                <Calendar className="w-3 h-3 text-[#102A43]" />
                 Pickup Date
               </label>
               <input
@@ -300,50 +295,56 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 min={minDate()}
                 value={form.pickupDate}
                 onChange={e => update('pickupDate', e.target.value)}
-                className="w-full min-w-0 rounded-lg border border-gray-200 px-0.5 py-2 text-sm focus:ring-2 focus:ring-[#18234B]/10 focus:border-[#18234B] text-gray-900 bg-white"
+                className="w-full min-w-0 rounded-lg border border-gray-200 px-0.5 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] text-gray-900 bg-white"
               />
             </div>
 
             <div className="col-span-1 md:col-span-2 space-y-1">
-              <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
-                <Clock className="w-3 h-3 text-[#18234B]" />
-                Time
-              </label>
+              <div className="flex items-center justify-between mb-1 ml-1">
+                <label className="block text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                  <Clock className="w-3 h-3 text-[#102A43]" />
+                  Time
+                </label>
+                {isAfterHours(form.pickupTime) && (
+                  <div className="relative group/tooltip inline-flex items-center">
+                    <AlertTriangle
+                      className="w-4 h-4 text-amber-500 cursor-help"
+                    />
+                    <div className="absolute right-0 bottom-full mb-1.5 hidden group-hover/tooltip:block w-56 p-2.5 bg-slate-900 text-white text-[11px] font-medium leading-tight rounded-lg shadow-xl z-50 pointer-events-none">
+                      {AFTER_HOURS_SURCHARGE_NOTICE}
+                      <div className="absolute top-full right-1.5 border-4 border-transparent border-t-slate-900" />
+                    </div>
+                  </div>
+                )}
+              </div>
               <input
                 type="time"
                 min={minTimeForDate(form.pickupDate)}
                 value={form.pickupTime}
                 onChange={e => update('pickupTime', e.target.value)}
-                className="w-full min-w-0 rounded-lg border border-gray-200 px-1 py-2 text-sm focus:ring-2 focus:ring-[#18234B]/10 focus:border-[#18234B] text-gray-900 bg-white"
+                className="w-full min-w-0 rounded-lg border border-gray-200 px-1 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] text-gray-900 bg-white"
               />
-              {isAfterHours(form.pickupTime) && (
-                <span className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-1.5">
-                  <Clock className="w-3 h-3 flex-shrink-0" />
-                  After-hours surcharge of ${AFTER_HOURS_SURCHARGE} applies for pickups after 9:00 PM
-                </span>
-              )}
             </div>
 
             <div className="col-span-1 md:col-span-2 space-y-1">
               <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
-                <Users className="w-3 h-3 text-[#18234B]" />
+                <Users className="w-3 h-3 text-[#102A43]" />
                 Passengers
               </label>
               <input
                 type="number"
                 min={1}
                 max={MAX_PASSENGERS}
-                // Use '' if 0 so user sees empty field instead of '0'
                 value={form.passengers === 0 ? '' : form.passengers}
                 onChange={handlePassengerChange}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#18234B]/10 focus:border-[#18234B] text-gray-900 bg-white"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] text-gray-900 bg-white"
                 placeholder="1"
               />
             </div>
 
             <div className="col-span-1 md:col-span-2 space-y-1">
               <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
-                <Briefcase className="w-3 h-3 text-[#18234B]" />
+                <Briefcase className="w-3 h-3 text-[#102A43]" />
                 Luggage
                 <span className="text-gray-400 text-[10px] ml-auto font-normal">(Max {getMaxBagsForCurrentPax(form.passengers)})</span>
               </label>
@@ -354,33 +355,33 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 // Use '' if 0 so user sees empty field instead of '0'
                 value={form.luggage === 0 ? '' : form.luggage}
                 onChange={handleLuggageChange}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#18234B]/10 focus:border-[#18234B] text-gray-900 bg-white"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] text-gray-900 bg-white"
                 placeholder="0"
               />
             </div>
 
             <div className="col-span-2 md:col-span-4 space-y-1">
               <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
-                <Plane className="w-3 h-3 text-[#18234B]" />
+                <Plane className="w-3 h-3 text-[#102A43]" />
                 Flight Number (Optional)
               </label>
               <input
                 type="text"
                 value={form.flightNumber}
                 onChange={e => update('flightNumber', e.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#18234B]/10 focus:border-[#18234B] text-gray-900 bg-white"
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] text-gray-900 bg-white"
                 placeholder="e.g. JQ953"
               />
             </div>
 
           </div>
 
-          <label className="flex items-center space-x-2 cursor-pointer group p-2 rounded-lg hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+          <label className="flex items-center space-x-2 cursor-pointer group py-1">
             <div
-              className="w-5 h-5 rounded border flex items-center justify-center transition-colors"
+              className="w-5 h-5 rounded border flex items-center justify-center transition-colors shrink-0"
               style={{
-                backgroundColor: form.childSeat ? '#A61924' : 'white',
-                borderColor: form.childSeat ? '#A61924' : 'rgb(209 213 219)'
+                backgroundColor: form.childSeat ? '#0F766E' : 'transparent',
+                borderColor: form.childSeat ? '#0F766E' : 'rgb(209 213 219)'
               }}
             >
               {form.childSeat && (
@@ -393,7 +394,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
               onChange={e => update('childSeat', e.target.checked)}
               className="hidden"
             />
-            <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+            <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900">
               Child Seat Required (+$20)
             </span>
           </label>
@@ -401,7 +402,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
           <div className="flex justify-between items-center border-t border-gray-100 pt-4 mt-4">
             <div>
               <div className="text-xs font-bold text-gray-500 uppercase tracking-wide">Total Fare</div>
-              <div className="text-3xl font-extrabold text-[#18234B]">${baseTotal}</div>
+              <div className="text-3xl font-extrabold text-[#102A43]">${baseTotal}</div>
               <div className="text-[10px] text-gray-400 mt-1">
                 GST included · No hidden fees
               </div>
@@ -409,7 +410,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
             <button
               disabled={!isStep1Valid}
               onClick={() => setStep(2)}
-              className="bg-[#18234B] hover:bg-[#1f2d5c] text-white px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide uppercase transition-all shadow-lg flex items-center gap-2 disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed"
+              className="bg-[#102A43] hover:bg-[#0C5D59] text-white px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide uppercase transition-all shadow-lg flex items-center gap-2 disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed"
             >
               Next Step →
             </button>
@@ -423,14 +424,14 @@ export default function RouteBookingForm({ route }: { route: Route }) {
 
           {/* Contact Details (Left Side) - Updated to match HomePage design */}
           <div className="order-2 md:order-1 space-y-4">
-            <h3 className="text-base font-bold text-[#18234B] mb-2">Contact Details</h3>
+            <h3 className="text-base font-bold text-[#102A43] mb-2">Contact Details</h3>
 
             <div className="space-y-1">
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
               <input
                 value={form.fullName}
                 onChange={e => update('fullName', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B] text-gray-900 placeholder:text-gray-400"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] text-gray-900 placeholder:text-gray-400"
                 placeholder="e.g. John Doe"
               />
             </div>
@@ -440,7 +441,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
               <input
                 value={form.email}
                 onChange={e => update('email', e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B] text-gray-900 placeholder:text-gray-400"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] text-gray-900 placeholder:text-gray-400"
                 placeholder="john@example.com"
               />
             </div>
@@ -451,14 +452,14 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 <input
                   value={form.countryCode}
                   onChange={e => update('countryCode', e.target.value)}
-                  className="w-20 text-center rounded-lg border border-gray-300 px-2 py-2 text-sm focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B] text-gray-900 font-medium"
+                  className="w-20 text-center rounded-lg border border-gray-300 px-2 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] text-gray-900 font-medium"
                 />
                 <input
                   value={form.phone}
                   onChange={e =>
                     update('phone', e.target.value.replace(/\D/g, ''))
                   }
-                  className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#18234B]/20 focus:border-[#18234B] text-gray-900 placeholder:text-gray-400 font-medium"
+                  className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] text-gray-900 placeholder:text-gray-400 font-medium"
                   placeholder="400000000"
                 />
               </div>
@@ -488,8 +489,8 @@ export default function RouteBookingForm({ route }: { route: Route }) {
               <div className="absolute -left-3 top-1/2 -mt-3 w-6 h-6 bg-white rounded-full"></div>
               <div className="absolute -right-3 top-1/2 -mt-3 w-6 h-6 bg-white rounded-full"></div>
 
-              <h3 className="text-base font-bold text-[#18234B] mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#A61924]"></span>
+              <h3 className="text-base font-bold text-[#102A43] mb-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#0F766E]"></span>
                 Trip Summary
               </h3>
 
@@ -497,12 +498,12 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="text-xs text-gray-500 mb-0.5">Pickup</div>
-                    <div className="font-bold text-[#18234B]">{pickupLocation}</div>
+                    <div className="font-bold text-[#102A43]">{pickupLocation}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-xs text-gray-500 mb-0.5">Date</div>
                     <div className="font-semibold text-gray-900">{form.pickupDate}</div>
-                    <div className="text-xs text-[#A61924] bg-[#A61924]/10 px-1 rounded inline-block font-mono mt-0.5">{form.pickupTime}</div>
+                    <div className="text-xs text-[#0F766E] bg-[#0F766E]/10 px-1 rounded inline-block font-mono mt-0.5">{form.pickupTime}</div>
                   </div>
                 </div>
 
@@ -511,7 +512,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="text-xs text-gray-500 mb-0.5">Dropoff</div>
-                    <div className="font-bold text-[#18234B]">{dropoffLocation}</div>
+                    <div className="font-bold text-[#102A43]">{dropoffLocation}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-xs text-gray-500 mb-0.5">Details</div>
@@ -540,7 +541,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                   <span className="text-gray-600">Payment processing (2.5%)</span>
                   <span className="font-medium text-gray-900">${processingFee}</span>
                 </div>
-                <div className="flex justify-between font-bold text-lg pt-2 text-[#18234B] border-t border-gray-200 mt-2">
+                <div className="flex justify-between font-bold text-lg pt-2 text-[#102A43] border-t border-gray-200 mt-2">
                   <span>Total Amount</span>
                   <span>${finalTotal}</span>
                 </div>

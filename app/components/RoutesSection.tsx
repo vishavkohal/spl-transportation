@@ -1,21 +1,38 @@
 'use client';
 
-import React, { useState } from 'react';
-import { MapPin, Clock, Users, ChevronRight, Plane, Building2, Palmtree } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, Clock, Users, ChevronRight, Plane, Building2, Palmtree, ChevronLeft } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 import Image from 'next/image';
 import type { Route } from '../types';
 
-// Brand colors
-const PRIMARY_COLOR = '#18234B';
-const ACCENT_COLOR = '#A61924';
+import { COLORS } from '../lib/colors';
 
-// Vehicle images
-const VEHICLE_IMAGES: Record<string, string> = {
-  Sedan: '/vehicles/sedan.svg',
-  SUV: '/vehicles/suv.svg',
-  Van: '/vehicles/van.svg'
-};
+// Brand colors
+const HEADING_COLOR = COLORS.heading;
+const ACCENT_COLOR = COLORS.primary;
+const PRIMARY_COLOR = COLORS.primary;
+
+const ROUTES_PER_PAGE = 6;
+
+// Vehicle images helper
+function getVehicleImage(vehicleType: string): string {
+  const typeLower = (vehicleType || '').toLowerCase();
+  if (typeLower.includes('suv')) {
+    return '/vehicles/suv.png';
+  }
+  if (
+    typeLower.includes('van') ||
+    typeLower.includes('8-seater') ||
+    typeLower.includes('seater') ||
+    typeLower.includes('mercedes') ||
+    typeLower.includes('minibus') ||
+    typeLower.includes('bus')
+  ) {
+    return '/vehicles/mercedes-v-class.png';
+  }
+  return '/vehicles/sedan.png';
+}
 
 type RoutesSectionProps = {
   routes: Route[];
@@ -60,6 +77,12 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
 }) => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPageNum, setCurrentPageNum] = useState(1);
+
+  // Reset to page 1 on filter/search change
+  useEffect(() => {
+    setCurrentPageNum(1);
+  }, [activeFilter, searchQuery]);
 
   const handleBooking = (route: Route) => {
     try {
@@ -74,7 +97,6 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
     }
   };
 
-  // Filter routes based on search and category
   // Helper: check if any of the route's text fields contain a keyword
   const routeTextIncludes = (route: Route, keyword: string) => {
     const fields = [
@@ -110,6 +132,13 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
   const dayTripRoutes = routes.filter(isDayTrip);
   const regularRoutes = filteredRoutes.filter(r => !isDayTrip(r));
 
+  // Pagination calculation
+  const totalPages = Math.ceil(regularRoutes.length / ROUTES_PER_PAGE);
+  const paginatedRoutes = regularRoutes.slice(
+    (currentPageNum - 1) * ROUTES_PER_PAGE,
+    currentPageNum * ROUTES_PER_PAGE
+  );
+
   // Combine all day trip pricing into one array
   const dayTripPricing = dayTripRoutes.flatMap(r => r.pricing || []);
 
@@ -121,7 +150,6 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
 
   // Handler for day trip booking - scrolls to form with special flag
   const handleDayTripBooking = () => {
-    // Dispatch custom event for day trip mode
     window.dispatchEvent(new CustomEvent('selectDayTrip', {
       detail: { pricing: dayTripPricing }
     }));
@@ -184,7 +212,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
     return (
       <>
         {/* Day Trip Featured Card */}
-        {dayTripPricing.length > 0 && activeFilter === 'all' && searchQuery === '' && (
+        {dayTripPricing.length > 0 && activeFilter === 'all' && searchQuery === '' && currentPageNum === 1 && (
           <motion.div
             className="mb-8"
             initial={{ opacity: 0, y: 20 }}
@@ -194,8 +222,8 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
             <div
               className="
                 relative overflow-hidden rounded-2xl
-                bg-gradient-to-r from-[#18234B] to-[#2a3a6b]
-                border-2 border-[#18234B]
+                bg-gradient-to-r from-[#102A43] to-[#1a3a5c]
+                border-2 border-[#102A43]
                 p-8
                 shadow-[0_8px_30px_rgba(0,0,0,0.2)]
               "
@@ -217,30 +245,34 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                   </h3>
                   <p className="text-white/80 text-sm lg:text-base max-w-md">
                     Explore Tropical North Queensland at your own pace.
-                    Custom pickup & destination with professional chauffeur.
+                    Custom pickup &amp; destination with professional chauffeur.
                   </p>
 
                   {/* Vehicle Options */}
                   <div className="flex flex-wrap gap-3 mt-5">
-                    {dayTripPricing.map((p, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20"
-                      >
-                        <div className="relative w-8 h-6">
-                          <Image
-                            src={VEHICLE_IMAGES[p.vehicleType] ?? '/vehicles/suv.svg'}
-                            alt={p.vehicleType}
-                            fill
-                            className="object-contain brightness-0 invert"
-                          />
+                    {dayTripPricing.map((p, idx) => {
+                      const imageSrc = getVehicleImage(p.vehicleType);
+                      const isSedan = imageSrc.includes('sedan');
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20"
+                        >
+                          <div className="relative w-12 h-8 flex items-center justify-center shrink-0">
+                            <Image
+                              src={imageSrc}
+                              alt={p.vehicleType}
+                              fill
+                              className={`object-contain ${isSedan ? 'scale-135' : 'scale-110'}`}
+                            />
+                          </div>
+                          <div className="text-white">
+                            <p className="text-xs font-medium">{p.vehicleType}</p>
+                            <p className="text-lg font-bold">${Number(p.price)}</p>
+                          </div>
                         </div>
-                        <div className="text-white">
-                          <p className="text-xs font-medium">{p.vehicleType}</p>
-                          <p className="text-lg font-bold">${Number(p.price)}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -254,7 +286,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                     onClick={handleDayTripBooking}
                     className="
                       mt-2 px-8 py-3.5 rounded-xl
-                      bg-white text-[#18234B]
+                      bg-white text-[#102A43]
                       font-bold text-sm
                       shadow-lg hover:shadow-xl
                       transform hover:scale-[1.03]
@@ -273,14 +305,15 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
 
         {/* Regular Routes Grid */}
         <motion.div
+          key={currentPageNum}
           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          {regularRoutes.map((route, index) => {
+          {paginatedRoutes.map((route, index) => {
             const lowestPrice = getLowestPrice(route);
-            const isPopular = index === 0;
+            const isPopular = currentPageNum === 1 && index === 0;
 
             return (
               <motion.article
@@ -289,7 +322,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                 className={`
                 group relative flex flex-col
                 rounded-2xl bg-white
-                border-2 ${isPopular ? 'border-[#18234B]' : 'border-gray-200'}
+                border-2 ${isPopular ? 'border-[#102A43]' : 'border-gray-200'}
                 p-6
                 shadow-[0_8px_30px_rgba(0,0,0,0.12)]
                 hover:shadow-[0_12px_40px_rgba(0,0,0,0.18)]
@@ -301,7 +334,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                 {isPopular && (
                   <div
                     className="absolute -top-3 left-6 px-3 py-1 rounded-full text-xs font-bold text-white shadow-md"
-                    style={{ backgroundColor: PRIMARY_COLOR }}
+                    style={{ backgroundColor: ACCENT_COLOR }}
                   >
                     Most Popular
                   </div>
@@ -312,13 +345,13 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                   <div className="flex items-center gap-3 mb-3">
                     <div
                       className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: `${PRIMARY_COLOR}10` }}
+                      style={{ backgroundColor: `${HEADING_COLOR}10` }}
                     >
-                      <MapPin className="w-5 h-5" style={{ color: PRIMARY_COLOR }} />
+                      <MapPin className="w-5 h-5" style={{ color: HEADING_COLOR }} />
                     </div>
                     <h3
                       className="flex-1 text-base sm:text-lg font-bold leading-tight"
-                      style={{ color: PRIMARY_COLOR }}
+                      style={{ color: HEADING_COLOR }}
                     >
                       {route.from}
                       <span className="mx-2 text-gray-400">→</span>
@@ -346,18 +379,19 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {route.pricing.slice(0, 3).map((p, idx) => {
-                      const imageSrc = VEHICLE_IMAGES[p.vehicleType] ?? '/vehicles/sedan.svg';
+                      const imageSrc = getVehicleImage(p.vehicleType);
+                      const isSedan = imageSrc.includes('sedan');
                       return (
                         <div
                           key={idx}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-gray-50 border border-gray-100"
                         >
-                          <div className="relative w-8 h-6">
+                          <div className="relative w-12 h-8 flex items-center justify-center shrink-0">
                             <Image
                               src={imageSrc}
                               alt={p.vehicleType}
                               fill
-                              className="object-contain opacity-70"
+                              className={`object-contain ${isSedan ? 'scale-135' : 'scale-110'}`}
                             />
                           </div>
                           <div className="text-xs">
@@ -379,7 +413,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                       <p className="text-xs text-gray-500 mb-0.5">Starting from</p>
                       <p
                         className="text-2xl font-extrabold"
-                        style={{ color: PRIMARY_COLOR }}
+                        style={{ color: HEADING_COLOR }}
                       >
                         ${lowestPrice.toFixed(0)}
                         <span className="text-sm font-normal text-gray-500 ml-1">
@@ -400,14 +434,14 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                     className="
                     w-full py-3.5 rounded-xl
                     font-bold text-sm text-white
+                    bg-[#0F766E] hover:bg-[#0C5D59]
                     shadow-md hover:shadow-lg
                     transform hover:scale-[1.02]
                     transition-all duration-200
                     flex items-center justify-center gap-2
                   "
-                    style={{ backgroundColor: PRIMARY_COLOR }}
                   >
-                    Select & Continue
+                    Select &amp; Continue
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -415,38 +449,71 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
             );
           })}
         </motion.div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-10 pt-6 border-t border-slate-200/80">
+            <div className="text-xs font-semibold text-slate-500">
+              Showing <span className="text-slate-800 font-bold">{(currentPageNum - 1) * ROUTES_PER_PAGE + 1}</span> to{' '}
+              <span className="text-slate-800 font-bold">{Math.min(currentPageNum * ROUTES_PER_PAGE, regularRoutes.length)}</span> of{' '}
+              <span className="text-slate-800 font-bold">{regularRoutes.length}</span> routes
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                disabled={currentPageNum === 1}
+                onClick={() => setCurrentPageNum(p => Math.max(1, p - 1))}
+                className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs"
+              >
+                <ChevronLeft className="w-4 h-4" /> Prev
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPageNum(pageNum)}
+                  className={`w-9 h-9 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                    currentPageNum === pageNum
+                      ? 'bg-[#0F766E] text-white shadow-md'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              ))}
+
+              <button
+                disabled={currentPageNum === totalPages}
+                onClick={() => setCurrentPageNum(p => Math.min(totalPages, p + 1))}
+                className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs"
+              >
+                Next <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </>
     );
   };
 
   return (
-    <section
-      className="
-        relative 
-        bg-gradient-to-b from-slate-50 to-white
-        px-4 md:px-8 mx-4 md:mx-8 mb-8 md:mb-16
-        py-12 md:py-16
-        rounded-[2rem] 
-        shadow-[0_0_60px_-15px_rgba(0,0,0,0.15)]
-        overflow-hidden
-      "
-    >
+    <section className="w-full bg-slate-50 py-16 md:py-24 border-b border-slate-200/80 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-red-50 to-transparent rounded-full blur-3xl opacity-50" />
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-blue-50 to-transparent rounded-full blur-3xl opacity-40" />
 
-      <div className="relative max-w-7xl mx-auto">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-10">
           <p
             className="text-xs sm:text-sm font-semibold tracking-[0.2em] uppercase mb-2"
             style={{ color: ACCENT_COLOR }}
           >
-            Private Airport & City Transfers
+            Private Airport &amp; City Transfers
           </p>
           <h2
             className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight mb-4"
-            style={{ color: PRIMARY_COLOR }}
+            style={{ color: HEADING_COLOR }}
           >
             Choose Your Route
           </h2>
@@ -470,7 +537,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                     inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
                     transition-all duration-200
                     ${activeFilter === cat.id
-                      ? 'bg-[#18234B] text-white shadow-md'
+                      ? 'bg-[#0F766E] text-white shadow-md'
                       : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300'
                     }
                   `}
@@ -493,7 +560,7 @@ const RoutesSection: React.FC<RoutesSectionProps> = ({
                 w-full sm:w-64 px-4 py-2.5 pl-10
                 rounded-full border border-gray-200
                 text-sm placeholder:text-gray-400
-                focus:outline-none focus:border-[#18234B] focus:ring-2 focus:ring-[#18234B]/20
+                focus:outline-none focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/20
                 transition-all
               "
             />

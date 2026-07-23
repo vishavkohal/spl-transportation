@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, RefreshCw, AlertCircle, FileText } from 'lucide-react';
 import BlogEditor, { BlogPost } from './blogs/BlogEditor';
 
-const PRIMARY_COLOR = '#18234B';
+const PRIMARY_COLOR = '#102A43';
 
 export default function BlogsManager() {
     const [blogs, setBlogs] = useState<BlogPost[]>([]);
@@ -79,7 +79,7 @@ export default function BlogsManager() {
                 <div className="flex gap-3">
                     <button
                         onClick={handleCreate}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#A61924] text-white rounded-lg text-sm font-medium hover:bg-[#8B151F] transition-colors shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#0F766E] text-white rounded-lg text-sm font-medium hover:bg-[#0C5D59] transition-colors shadow-sm"
                     >
                         <Plus className="w-4 h-4" /> New Post
                     </button>

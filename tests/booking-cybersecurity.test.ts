@@ -52,8 +52,14 @@ runTest('Should apply surcharge after 9 PM (e.g. 21:01, 22:30, 23:59)', () => {
   assert.equal(isAfterHours('23:59'), true);
 });
 
-runTest('Should NOT apply surcharge at midnight or morning (00:00, 08:30)', () => {
-  assert.equal(isAfterHours('00:00'), false);
+runTest('Should apply surcharge overnight through 5 AM (00:00, 04:59, 05:00)', () => {
+  assert.equal(isAfterHours('00:00'), true);
+  assert.equal(isAfterHours('04:59'), true);
+  assert.equal(isAfterHours('05:00'), true);
+});
+
+runTest('Should NOT apply surcharge after 5 AM (e.g. 05:01, 08:30, 12:00)', () => {
+  assert.equal(isAfterHours('05:01'), false);
   assert.equal(isAfterHours('08:30'), false);
   assert.equal(isAfterHours('12:00'), false);
 });
@@ -61,6 +67,8 @@ runTest('Should NOT apply surcharge at midnight or morning (00:00, 08:30)', () =
 runTest('Should safely handle undefined / empty / invalid time strings without crashing', () => {
   assert.equal(isAfterHours(undefined), false);
   assert.equal(isAfterHours(''), false);
+  assert.equal(isAfterHours('24:00'), false);
+  assert.equal(isAfterHours('99:99'), false);
 });
 
 

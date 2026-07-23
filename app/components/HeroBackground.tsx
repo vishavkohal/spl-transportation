@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 
 const HERO_IMAGES = [
+  "/homehero.png",
   "/hero-mercedes.webp",
   "/hero-2.webp",
   "/home.webp",
@@ -14,11 +15,13 @@ export default function HeroBackground() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    // Make the first image (/homehero.png) stay longer (12s) than other images (6s)
+    const duration = currentIndex === 0 ? 52000 : 6000;
+    const timer = setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % HERO_IMAGES.length);
-    }, 7000); // 7 seconds per slide — slower, more cinematic
-    return () => clearInterval(interval);
-  }, []);
+    }, duration);
+    return () => clearTimeout(timer);
+  }, [currentIndex]);
 
   return (
     <div className="absolute inset-0 bg-gray-900">

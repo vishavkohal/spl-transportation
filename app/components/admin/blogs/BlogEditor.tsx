@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, X, Image as ImageIcon, Eye, Code, RefreshCw } from 'lucide-react';
 
-const PRIMARY_COLOR = '#18234B';
+const PRIMARY_COLOR = '#102A43';
 
 export type BlogPost = {
     id: string;
@@ -186,7 +186,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                                 <input
                                     required
-                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none bg-white text-gray-900"
+                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none bg-white text-gray-900"
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     placeholder="Enter blog title"
@@ -196,7 +196,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
                                 <input
                                     required
-                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none bg-white text-gray-900"
+                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none bg-white text-gray-900"
                                     value={formData.slug}
                                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                                     placeholder="url-friendly-slug"
@@ -206,7 +206,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Read Time (min)</label>
                                 <input
                                     type="number"
-                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none bg-white text-gray-900"
+                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none bg-white text-gray-900"
                                     value={formData.readMinutes}
                                     onChange={(e) => setFormData({ ...formData, readMinutes: parseInt(e.target.value) || 0 })}
                                 />
@@ -245,7 +245,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                         <textarea
                             required
                             rows={3}
-                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none resize-y bg-white text-gray-900"
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none resize-y bg-white text-gray-900"
                             value={formData.excerpt}
                             onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
                             placeholder="Short summary for listing cards..."
@@ -268,7 +268,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                             <textarea
                                 required
                                 rows={15}
-                                className="w-full p-4 font-mono text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] outline-none resize-y bg-gray-50 text-gray-900"
+                                className="w-full p-4 font-mono text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] outline-none resize-y bg-gray-50 text-gray-900"
                                 value={formData.content}
                                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                                 placeholder="<p>Write your article content here...</p>"
@@ -290,7 +290,7 @@ export default function BlogEditor({ initialData, onSave, onCancel }: BlogEditor
                 <button
                     onClick={handleSubmit}
                     disabled={saving}
-                    className="px-6 py-2 bg-[#A61924] text-white rounded-xl text-sm font-bold hover:bg-[#8B151F] transition-colors shadow-lg flex items-center gap-2"
+                    className="px-6 py-2 bg-[#0F766E] text-white rounded-xl text-sm font-bold hover:bg-[#0C5D59] transition-colors shadow-lg flex items-center gap-2"
                 >
                     {saving && <RefreshCw className="w-4 h-4 animate-spin" />}
                     {initialData ? 'Update Post' : 'Publish Post'}

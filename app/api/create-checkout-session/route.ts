@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { AFTER_HOURS_SURCHARGE, isAfterHours } from '@/app/lib/afterHours';
 import { getRoutes } from '@/app/lib/routesStore';
 import { createPendingBooking, BookingPayload } from '@/app/lib/booking';
+import { bookingDetailsSchema } from '@/app/lib/validations';
 
 export const runtime = 'nodejs';
 
@@ -14,15 +16,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder'
 -------------------------------------------------- */
 
 const PAYMENT_FEE_RATE = 0.025; // 2.5% processing fee (GST inclusive)
-export const AFTER_HOURS_SURCHARGE = 30; // $30 surcharge for pickups after 9 PM
-export const AFTER_HOURS_CUTOFF = '21:00'; // 9:00 PM
-
-export function isAfterHours(pickupTime: string | undefined): boolean {
-  if (!pickupTime || typeof pickupTime !== 'string') return false;
-  const time = pickupTime.trim();
-  if (!/^\d{2}:\d{2}$/.test(time)) return false;
-  return time >= AFTER_HOURS_CUTOFF;
-}
+export { AFTER_HOURS_SURCHARGE, isAfterHours };
 
 /* -------------------------------------------------
    HOURLY PRICING (SERVER AUTHORITY)
@@ -97,12 +91,10 @@ export function calculateProcessingFee(amount: number): number {
   return Number((amount * PAYMENT_FEE_RATE).toFixed(2));
 }
 
-
 export function calculateFinalAmount(amount: number): number {
   const processingFee = calculateProcessingFee(amount);
   return Number((amount + processingFee).toFixed(2));
 }
-
 
 /* -------------------------------------------------
    POST
@@ -120,6 +112,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const parseResult = bookingDetailsSchema.safeParse({
+      ...booking,
+      passengers: Number(booking.passengers) || 1,
+      luggage: Number(booking.luggage) || 0,
+      hourlyHours: booking.hourlyHours ? Number(booking.hourlyHours) : undefined,
+      dayTripPrice: booking.dayTripPrice ? Number(booking.dayTripPrice) : undefined,
+    });
+
+    if (!parseResult.success) {
+      const issue = parseResult.error.issues[0];
+      return NextResponse.json(
+        { error: issue ? `${issue.path.join('.')}: ${issue.message}` : 'Invalid booking details' },
+        { status: 400 }
+      );
+    }
+
+    const validatedBooking = parseResult.data;
+
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
     if (!baseUrl) {
       return NextResponse.json(
@@ -129,9 +139,9 @@ export async function POST(req: NextRequest) {
     }
 
     const {
-      bookingType, // 'standard' | 'hourly'
-      pickupLocation,
-      dropoffLocation,
+      bookingType,
+      pickupLocation = '',
+      dropoffLocation = '',
       pickupDate,
       pickupTime,
       passengers,
@@ -140,14 +150,7 @@ export async function POST(req: NextRequest) {
       fullName,
       email,
       contactNumber,
-    } = booking;
-
-    if (!bookingType) {
-      return NextResponse.json(
-        { error: 'bookingType is required' },
-        { status: 400 }
-      );
-    }
+    } = validatedBooking;
 
     /* -------------------------------------------------
        🔒 SERVER-SIDE BASE PRICE CALCULATION
@@ -156,7 +159,7 @@ export async function POST(req: NextRequest) {
     let baseAmount = 0;
 
     if (bookingType === 'hourly') {
-      baseAmount = calculateHourlyBaseAmount(booking);
+      baseAmount = calculateHourlyBaseAmount(validatedBooking);
     } else if (bookingType === 'standard') {
       const routes = await getRoutes();
 
@@ -188,7 +191,7 @@ export async function POST(req: NextRequest) {
       }
     } else if (bookingType === 'daytrip') {
       // Day trip - validate against API routes
-      const { dayTripVehicleType, dayTripPrice, dayTripPickup, dayTripDestination } = booking;
+      const { dayTripVehicleType, dayTripPrice, dayTripPickup, dayTripDestination } = validatedBooking;
 
       if (!dayTripVehicleType || !dayTripPrice) {
         return NextResponse.json(
@@ -234,7 +237,7 @@ export async function POST(req: NextRequest) {
       baseAmount += 20;
     }
 
-    // After-hours surcharge (pickups at or after 9 PM)
+    // After-hours surcharge (pickups between 9 PM and 5 AM)
     const afterHoursSurcharge = isAfterHours(pickupTime) ? AFTER_HOURS_SURCHARGE : 0;
     baseAmount += afterHoursSurcharge;
 
@@ -253,9 +256,9 @@ export async function POST(req: NextRequest) {
       bookingType === 'hourly'
         ? [
           'Hourly Private Charter (GST inclusive)',
-          `Pickup: ${booking.hourlyPickupLocation}`,
-          `Vehicle: ${booking.hourlyVehicleType}`,
-          `Hours: ${booking.hourlyHours}`,
+          `Pickup: ${validatedBooking.hourlyPickupLocation}`,
+          `Vehicle: ${validatedBooking.hourlyVehicleType}`,
+          `Hours: ${validatedBooking.hourlyHours}`,
           ...(afterHoursSurcharge > 0 ? [`After-hours surcharge: $${afterHoursSurcharge}`] : []),
           `Processing fee: 2.5% (GST inclusive)`,
           `Name: ${fullName}`,
@@ -265,9 +268,9 @@ export async function POST(req: NextRequest) {
         : bookingType === 'daytrip'
           ? [
             'Day Trip Charter - 8 Hours (GST inclusive)',
-            `Pickup: ${booking.dayTripPickup}`,
-            `Destination: ${booking.dayTripDestination}`,
-            `Vehicle: ${booking.dayTripVehicleType}`,
+            `Pickup: ${validatedBooking.dayTripPickup}`,
+            `Destination: ${validatedBooking.dayTripDestination}`,
+            `Vehicle: ${validatedBooking.dayTripVehicleType}`,
             `Date & time: ${pickupDate} at ${pickupTime}`,
             ...(afterHoursSurcharge > 0 ? [`After-hours surcharge: $${afterHoursSurcharge}`] : []),
             `Processing fee: 2.5% (GST inclusive)`,
@@ -321,7 +324,7 @@ export async function POST(req: NextRequest) {
         processingFee: processingFee.toString(),
         finalAmount: finalAmount.toString(),
         afterHoursSurcharge: afterHoursSurcharge.toString(),
-        booking: JSON.stringify(booking),
+        booking: JSON.stringify(validatedBooking),
       },
     });
 
@@ -330,7 +333,7 @@ export async function POST(req: NextRequest) {
     -------------------------------------------------- */
     try {
       const pendingBooking: BookingPayload = {
-        ...booking,
+        ...validatedBooking,
         totalPrice: finalAmount,
         currency: 'AUD',
         bookingType,
@@ -339,7 +342,6 @@ export async function POST(req: NextRequest) {
       await createPendingBooking(session.id, pendingBooking);
     } catch (saveError) {
       console.error('Failed to create pending booking:', saveError);
-      // We continue anyway so the user can still pay (webhook will create it if needed)
     }
 
     return NextResponse.json({ url: session.url });

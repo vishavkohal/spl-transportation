@@ -4,8 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { RefreshCw, Search, Trash2, Megaphone, MapPin, Calendar, Filter, User, DollarSign } from 'lucide-react';
 import type { BookingLead } from '../AdminPanel';
 
-const PRIMARY_COLOR = '#18234B';
-const ACCENT_COLOR = '#A61924';
+const PRIMARY_COLOR = '#102A43';
+const ACCENT_COLOR = '#0F766E';
 
 export default function LeadsManager() {
     const [leads, setLeads] = useState<BookingLead[]>([]);
@@ -114,7 +114,7 @@ export default function LeadsManager() {
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                         <input
-                            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#18234B]/10 focus:border-[#18234B] outline-none text-gray-900 placeholder:text-gray-500"
+                            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-[#102A43]/10 focus:border-[#102A43] outline-none text-gray-900 placeholder:text-gray-500"
                             placeholder="Search by name, email, or UTM param..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
@@ -123,7 +123,7 @@ export default function LeadsManager() {
 
                     <div className="flex gap-2">
                         <select
-                            className="px-3 py-2 border rounded-lg text-sm bg-white outline-none focus:border-[#18234B] text-gray-900"
+                            className="px-3 py-2 border rounded-lg text-sm bg-white outline-none focus:border-[#102A43] text-gray-900"
                             value={statusFilter}
                             onChange={e => setStatusFilter(e.target.value as any)}
                         >
@@ -133,7 +133,7 @@ export default function LeadsManager() {
                         </select>
 
                         <select
-                            className="px-3 py-2 border rounded-lg text-sm bg-white outline-none focus:border-[#18234B] text-gray-900"
+                            className="px-3 py-2 border rounded-lg text-sm bg-white outline-none focus:border-[#102A43] text-gray-900"
                             value={typeFilter}
                             onChange={e => setTypeFilter(e.target.value as any)}
                         >
@@ -151,14 +151,14 @@ export default function LeadsManager() {
                         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Date:</span>
                         <input
                             type="date"
-                            className="px-2 py-1.5 border rounded text-sm bg-white outline-none focus:border-[#18234B] text-gray-900"
+                            className="px-2 py-1.5 border rounded text-sm bg-white outline-none focus:border-[#102A43] text-gray-900"
                             value={dateFrom}
                             onChange={e => setDateFrom(e.target.value)}
                         />
                         <span className="text-gray-400">-</span>
                         <input
                             type="date"
-                            className="px-2 py-1.5 border rounded text-sm bg-white outline-none focus:border-[#18234B] text-gray-900"
+                            className="px-2 py-1.5 border rounded text-sm bg-white outline-none focus:border-[#102A43] text-gray-900"
                             value={dateTo}
                             onChange={e => setDateTo(e.target.value)}
                         />
@@ -167,7 +167,7 @@ export default function LeadsManager() {
                     <div className="flex items-center gap-2 w-full md:w-auto md:ml-auto">
                         <Filter className="w-4 h-4 text-gray-400" />
                         <select
-                            className="px-3 py-1.5 border rounded text-sm bg-white outline-none focus:border-[#18234B] w-full md:w-auto text-gray-900"
+                            className="px-3 py-1.5 border rounded text-sm bg-white outline-none focus:border-[#102A43] w-full md:w-auto text-gray-900"
                             value={utmFilter}
                             onChange={e => setUtmFilter(e.target.value)}
                         >
@@ -229,7 +229,7 @@ export default function LeadsManager() {
                                     </div>
 
                                     <div className="flex items-center gap-2 text-xs text-gray-500 bg-white border border-gray-100 p-2 rounded w-fit shadow-sm">
-                                        <MapPin className="w-3 h-3 text-[#A61924]" />
+                                        <MapPin className="w-3 h-3 text-[#0F766E]" />
                                         {lead.bookingType === 'hourly'
                                             ? <span className="font-medium">Hourly Hire • {lead.hourlyHours} hrs • {lead.hourlyPickupLocation || 'No pickup set'}</span>
                                             : lead.bookingType === 'daytrip'
@@ -243,7 +243,7 @@ export default function LeadsManager() {
                                 <div className="flex flex-col items-end gap-3 text-right min-w-[200px]">
                                     <div>
                                         <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Potential Value</div>
-                                        <div className="text-xl font-bold text-[#18234B] flex items-center justify-end gap-1">
+                                        <div className="text-xl font-bold text-[#102A43] flex items-center justify-end gap-1">
                                             {lead.quotedPriceCents ? (
                                                 <>
                                                     <span className="text-sm text-gray-400">$</span>

@@ -7,6 +7,8 @@ import RoutesManager from './admin/RoutesManager';
 import BookingsManager, { type Booking } from './admin/BookingsManager';
 import LeadsManager from './admin/LeadsManager';
 import UpcomingTrips from './admin/UpcomingTrips';
+import QuotesManager from './admin/QuotesManager';
+import CustomCheckoutManager from './admin/CustomCheckoutManager';
 import type { Route } from '../types';
 import { Menu } from 'lucide-react';
 
@@ -57,7 +59,7 @@ export default function AdminPanel() {
   const [authLoading, setAuthLoading] = useState(false);
 
   // Navigation State
-  const [activeTab, setActiveTab] = useState<'overview' | 'routes' | 'bookings' | 'leads' | 'upcoming'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'custom-checkout' | 'routes' | 'bookings' | 'quotes' | 'leads' | 'upcoming'>('overview');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Dashboard Data State
@@ -137,8 +139,10 @@ export default function AdminPanel() {
         body: JSON.stringify({ password })
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        setAuthError('Invalid password');
+        setAuthError(data.error || 'Invalid password');
         setIsAuthed(false);
       } else {
         setIsAuthed(true);
@@ -146,7 +150,7 @@ export default function AdminPanel() {
         loadDashboardData();
       }
     } catch (err: any) {
-      setAuthError('Login failed');
+      setAuthError('Login failed. Please check your connection and try again.');
     } finally {
       setAuthLoading(false);
     }
@@ -170,7 +174,7 @@ export default function AdminPanel() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-sm w-full bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-[#18234B] mb-2 font-serif">SPL Admin</h1>
+            <h1 className="text-3xl font-bold text-[#102A43] mb-2 font-serif">SPL Admin</h1>
             <p className="text-sm text-gray-500">Authorized personnel only.</p>
           </div>
 
@@ -181,7 +185,7 @@ export default function AdminPanel() {
               </label>
               <input
                 type="password"
-                className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] transition-all"
+                className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] transition-all"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
@@ -197,7 +201,7 @@ export default function AdminPanel() {
             <button
               type="submit"
               disabled={authLoading}
-              className={`w-full text-white font-bold px-4 py-3 rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 ${authLoading ? 'bg-gray-400' : 'bg-[#18234B] hover:shadow-xl'
+              className={`w-full text-white font-bold px-4 py-3 rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 ${authLoading ? 'bg-gray-400' : 'bg-[#102A43] hover:shadow-xl'
                 }`}
             >
               {authLoading ? 'Verifying...' : 'Access Dashboard'}
@@ -224,7 +228,7 @@ export default function AdminPanel() {
 
         {/* Mobile Header */}
         <header className="md:hidden bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-          <h1 className="font-bold text-[#18234B]">SPL Admin</h1>
+          <h1 className="font-bold text-[#102A43]">SPL Admin</h1>
           <button onClick={() => setIsMobileOpen(true)} className="p-2 text-gray-600">
             <Menu className="w-6 h-6" />
           </button>
@@ -266,9 +270,11 @@ export default function AdminPanel() {
                 <DashboardOverview bookings={data.bookings} routes={data.routes} leads={data.leads} />
               )
             )}
+            {activeTab === 'custom-checkout' && <CustomCheckoutManager />}
             {activeTab === 'upcoming' && <UpcomingTrips bookings={data.bookings} />}
             {activeTab === 'routes' && <RoutesManager />}
             {activeTab === 'bookings' && <BookingsManager />}
+            {activeTab === 'quotes' && <QuotesManager />}
             {activeTab === 'leads' && <LeadsManager />}
           </div>
         </main>

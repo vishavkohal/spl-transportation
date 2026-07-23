@@ -42,8 +42,10 @@ type DestinationCard = {
   image: string;
 };
 
-const PRIMARY_COLOR = '#18234B';
-const ACCENT_COLOR = '#A61924';
+import { COLORS } from '../lib/colors';
+
+const HEADING_COLOR = COLORS.heading;
+const ACCENT_COLOR = COLORS.primary;
 
 // Map “marketing cards” to real DB routes via from/to
 const popularRouteConfigs = [
@@ -148,47 +150,53 @@ export default function PopularDestinations() {
   if (!showSection) return null;
 
   return (
-    <section className="py-20 mx-4 md:mx-6 mb-16 md:mb-24 rounded-[2.5rem] bg-[#F8F9FA] overflow-hidden shadow-2xl">
+    <section className="w-full bg-[#F8FAFC] py-16 md:py-24 border-b border-slate-200/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
-          {/* STATIC TITLE (Always Visible) */}
-          <div className="text-center flex-1">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
+          {/* TITLE SECTION */}
+          <div>
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <h2 className="text-base font-semibold tracking-wide uppercase mb-2" style={{ color: ACCENT_COLOR }}>
+              <p className="text-xs font-bold tracking-widest uppercase text-[#0F766E] mb-1">
                 Popular Routes
-              </h2>
-              <p className="text-3xl md:text-4xl font-extrabold tracking-tight" style={{ color: PRIMARY_COLOR }}>
-                Top Destinations
               </p>
-              <div
-                className="w-24 h-1.5 mt-4 rounded-full mx-auto"
-                style={{ backgroundColor: ACCENT_COLOR }}
-              />
+              <h2 className="text-3xl md:text-4xl font-extrabold text-[#102A43] tracking-tight">
+                Popular Private Routes
+              </h2>
             </motion.div>
           </div>
 
-          {!loading && (
-            <div className="hidden md:flex gap-3">
-              <button
-                onClick={() => scroll('left')}
-                className="p-3 rounded-full bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm text-slate-600"
-                aria-label="Scroll left"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => scroll('right')}
-                className="p-3 rounded-full bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm text-slate-600"
-                aria-label="Scroll right"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            <Link
+              href="/transfers"
+              className="hidden sm:inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#0F766E] hover:text-[#0C5D59] transition-colors"
+            >
+              View all routes
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+
+            {!loading && (
+              <div className="hidden md:flex gap-3">
+                <button
+                  onClick={() => scroll('left')}
+                  className="p-3 rounded-full bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm text-slate-600"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => scroll('right')}
+                  className="p-3 rounded-full bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm text-slate-600"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -256,7 +264,7 @@ export default function PopularDestinations() {
 
                 {/* CONTENT */}
                 <div className="p-6 flex flex-col flex-grow">
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-[#A61924] transition-colors" style={{ color: PRIMARY_COLOR }}>
+                  <h3 className="text-xl font-bold mb-2 group-hover:text-[#0F766E] transition-colors" style={{ color: HEADING_COLOR }}>
                     {item.title}
                   </h3>
 
@@ -267,10 +275,10 @@ export default function PopularDestinations() {
                   <div className="mt-auto pt-4 border-t border-gray-100 w-full flex items-center justify-between">
                     <div>
                       <p className="text-[11px] text-slate-400 uppercase font-bold tracking-wide mb-0.5">Starting from</p>
-                      <p className="text-lg font-bold" style={{ color: PRIMARY_COLOR }}>{item.price}</p>
+                      <p className="text-lg font-bold" style={{ color: HEADING_COLOR }}>{item.price}</p>
                     </div>
 
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 text-slate-600 group-hover:bg-[#A61924] group-hover:text-white transition-all shadow-sm">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 text-slate-600 group-hover:bg-[#0F766E] group-hover:text-white transition-all shadow-sm">
                       <ArrowRight className="w-5 h-5" />
                     </div>
                   </div>

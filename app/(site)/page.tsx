@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
 import HomePageClient from './HomePageClient';
+import JsonLd from '@/app/components/JsonLd';
 
 const BASE_URL = 'https://www.spltransportation.com.au';
 
@@ -156,6 +157,7 @@ const homepageJsonLd = [
 export default function Home() {
   return (
     <>
+      <JsonLd />
       <Script
         id="homepage-structured-data"
         type="application/ld+json"

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { upsertBookingLead } from '../../../lib/bookingLead';
+import { leadUpsertSchema } from '@/app/lib/validations';
 
 // In-memory rate limiter (resets on server restart)
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
@@ -33,13 +34,17 @@ export async function POST(req: Request) {
 
     // 2. Body parsing and payload validation
     const body = await req.json();
-    
-    // Prevent excessively large payloads
-    if (JSON.stringify(body).length > 10000) {
-      return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
+
+    const parseResult = leadUpsertSchema.safeParse(body);
+    if (!parseResult.success) {
+      const issue = parseResult.error.issues[0];
+      return NextResponse.json(
+        { error: issue ? `${issue.path.join('.')}: ${issue.message}` : 'Invalid lead payload' },
+        { status: 400 }
+      );
     }
 
-    const lead = await upsertBookingLead(body);
+    const lead = await upsertBookingLead(parseResult.data as any);
 
     if (!lead) {
       return NextResponse.json({ skipped: true });

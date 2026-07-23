@@ -73,7 +73,7 @@ export default function CMSPage() {
             <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 text-gray-900">
                 <div className="max-w-sm w-full bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
                     <div className="text-center mb-8">
-                        <h1 className="text-3xl font-bold text-[#18234B] mb-2 font-serif">Content Manager</h1>
+                        <h1 className="text-3xl font-bold text-[#102A43] mb-2 font-serif">Content Manager</h1>
                         <p className="text-sm text-gray-500">Please enter your credentials.</p>
                     </div>
 
@@ -84,7 +84,7 @@ export default function CMSPage() {
                             </label>
                             <input
                                 type="password"
-                                className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#A61924]/20 focus:border-[#A61924] transition-all bg-white text-gray-900"
+                                className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E] transition-all bg-white text-gray-900"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
                                 required
@@ -100,7 +100,7 @@ export default function CMSPage() {
                         <button
                             type="submit"
                             disabled={authLoading}
-                            className={`w-full text-white font-bold px-4 py-3 rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 ${authLoading ? 'bg-gray-400' : 'bg-[#18234B] hover:shadow-xl'
+                            className={`w-full text-white font-bold px-4 py-3 rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 ${authLoading ? 'bg-gray-400' : 'bg-[#102A43] hover:shadow-xl'
                                 }`}
                         >
                             {authLoading ? 'Verifying...' : 'Access CMS'}
@@ -120,7 +120,7 @@ export default function CMSPage() {
         <div className="min-h-screen bg-gray-50 text-gray-900">
             <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
                 <div className="flex items-center gap-3">
-                    <h1 className="text-xl font-bold text-[#18234B] font-serif">Content Manager</h1>
+                    <h1 className="text-xl font-bold text-[#102A43] font-serif">Content Manager</h1>
                     <span className="text-gray-300">|</span>
                     <span className="text-sm font-medium text-gray-500">SPL Transportation</span>
                 </div>
@@ -142,7 +142,7 @@ export default function CMSPage() {
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
                                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
-                                    ? 'border-[#A61924] text-[#A61924]'
+                                    ? 'border-[#0F766E] text-[#0F766E]'
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                             >

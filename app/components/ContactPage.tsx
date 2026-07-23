@@ -1,216 +1,490 @@
 'use client';
-import React, { useState } from 'react';
-import { Phone, Mail, MapPin, Send, CheckCircle } from 'lucide-react';
 
-// Define the custom colors for readability
-const PRIMARY_COLOR = '#18234B'; // Dark Navy
-const ACCENT_COLOR = '#A61924'; // Deep Red
+import React, { useState } from 'react';
+import { Phone, Mail, MapPin, Send, CheckCircle, AlertCircle, Calculator, ShieldCheck, Clock, FileText } from 'lucide-react';
+import { COLORS } from '../lib/colors';
+
+const PRIMARY_COLOR = COLORS.heading;
+const ACCENT_COLOR = COLORS.primary;
 
 export default function ContactPage() {
-  const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [formData, setFormData] = useState({
+    travelDate: '',
+    travelTime: '',
+    passengers: '1',
+    pickupAddress: '',
+    dropoffAddress: '',
+    checkInBags: '0',
+    carryOnBags: '0',
+    childSeats: 'No',
+    flightArrivalType: 'Arrival',
+    flightArrivalNumber: '',
+    flightArrivalTime: '',
+    flightDepartureType: 'Departure',
+    flightDepartureNumber: '',
+    flightDepartureTime: '',
+    fullName: '',
+    email: '',
+    phone: '',
+    message: '',
+    termsAccepted: false,
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.termsAccepted) {
+      setFormStatus('error');
+      setErrorMessage('Please accept the terms and conditions before submitting.');
+      return;
+    }
+
     setFormStatus('submitting');
-    // Simulate API call
-    setTimeout(() => {
+    setErrorMessage('');
+
+    try {
+      const res = await fetch('/api/quote-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || 'Failed to submit quote request.');
+      }
+
       setFormStatus('success');
-      // Reset after 3 seconds
-      setTimeout(() => setFormStatus('idle'), 3000);
-    }, 1500);
+      setFormData({
+        travelDate: '',
+        travelTime: '',
+        passengers: '1',
+        pickupAddress: '',
+        dropoffAddress: '',
+        checkInBags: '0',
+        carryOnBags: '0',
+        childSeats: 'No',
+        flightArrivalType: 'Arrival',
+        flightArrivalNumber: '',
+        flightArrivalTime: '',
+        flightDepartureType: 'Departure',
+        flightDepartureNumber: '',
+        flightDepartureTime: '',
+        fullName: '',
+        email: '',
+        phone: '',
+        message: '',
+        termsAccepted: false,
+      });
+    } catch (err: any) {
+      setFormStatus('error');
+      setErrorMessage(err.message || 'An error occurred. Please try again.');
+    }
   };
 
   return (
-    // Background remains light gray/white (bg-gray-50), removed dark background class
-    <section className="py-20 bg-gray-50 transition-colors duration-300 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="w-full py-12 sm:py-16 bg-[#f8fafc] transition-colors duration-300 min-h-screen">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <p
-            className="font-bold tracking-wider uppercase text-sm mb-2"
-            style={{ color: ACCENT_COLOR }} // Accent Color for "Get In Touch"
-          >
-            Get In Touch
-          </p>
-          <h1
-            className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4"
-            style={{ color: PRIMARY_COLOR }} // Primary Color for main heading
-          >
-            Contact Us
+        {/* Section Header - Focused on Custom Quote */}
+        <div className="w-full text-center mb-10 sm:mb-14">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 border border-teal-200 text-[#0F766E] text-xs font-bold uppercase tracking-wider mb-4 shadow-xs">
+            <Calculator className="w-4 h-4 text-[#0F766E]" />
+            <span>CUSTOM QUOTE REQUEST</span>
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#102A43] mb-4 tracking-tight">
+            Request a Custom Transfer Quote
           </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Have a question about a route? Need a custom quote? We are here to help you 24/7.
+          <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto font-light leading-relaxed">
+            Planning a private transfer, airport pickup, group tour, or custom itinerary? Submit your trip details below for a personalized fixed quote.
           </p>
-          {/* Accent-colored divider */}
-          <div
-            className="w-24 h-1.5 mx-auto mt-6 rounded-full"
-            style={{ backgroundColor: ACCENT_COLOR }}
-          ></div>
         </div>
+        {/* Responsive Grid: Benefits & Contact Info on Left, Custom Quote Form on Right */}
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-10 items-start">
 
-        <div className="grid lg:grid-cols-3 gap-10">
+          {/* Left Column: Custom Quote Benefits & Quick Contact Details */}
+          <div className="w-full lg:col-span-4 bg-[#102A43] text-white rounded-3xl shadow-xl p-6 sm:p-8 border border-slate-800 space-y-8 lg:sticky lg:top-24">
 
-          {/* Contact Info Cards (Left Column) */}
-          <div className="space-y-6 h-full">
-            {/* Phone */}
-            <ContactCard
-              icon={Phone}
-              title="Phone"
-              content="+61470032460"
-              subtext="Available for bookings"
-              action="Call Now"
-              href="tel:+61470032460"
-              accentColor={PRIMARY_COLOR}
-            />
+            {/* Why Request Custom Quote Banner (TOP FOCUS) */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-700/80 pb-3">
+                <Calculator className="w-5 h-5 text-[#2DD4BF]" />
+                <h3 className="font-extrabold text-lg text-white">Why Request a Quote?</h3>
+              </div>
 
-            {/* Email */}
-            <ContactCard
-              icon={Mail}
-              title="Email"
-              content="spltransportation.australia@gmail.com"
-              subtext="Response within 24 hours"
-              action="Send Email"
-              href="mailto:spltransportation.australia@gmail.com"
-              accentColor={PRIMARY_COLOR}
-            />
-
-            {/* Location */}
-            <ContactCard
-              icon={MapPin}
-              title="Service Area"
-              content="Queensland, Australia"
-              subtext="Cairns, Port Douglas & Palm Cove"
-              action="View on Map"
-              href="#"
-              accentColor={PRIMARY_COLOR}
-            />
-          </div>
-
-          {/* Contact Form (Right Column - Spans 2) */}
-          <div className="lg:col-span-2 bg-white rounded-3xl shadow-xl p-8 md:p-12 border border-gray-100 relative overflow-hidden">
-
-            <div className="relative z-10">
-              <h2
-                className="text-3xl font-bold text-gray-900 mb-8"
-                style={{ color: PRIMARY_COLOR }} // Primary Color for form title
-              >
-                Send us a Message
-              </h2>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <InputField label="Your Name" type="text" placeholder="John Doe" accentColor={ACCENT_COLOR} />
-                  <InputField label="Your Email" type="email" placeholder="john@example.com" accentColor={ACCENT_COLOR} />
-                </div>
-
-                <InputField label="Phone Number" type="tel" placeholder="+61 ..." accentColor={ACCENT_COLOR} />
-
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-gray-700 ml-1">
-                    Message
-                  </label>
-                  <textarea
-                    rows={5}
-                    placeholder="Tell us about your trip details..."
-                    className="w-full px-5 py-4 bg-gray-50 border border-gray-200 
-                             rounded-xl text-gray-900 placeholder-gray-400 
-                             focus:ring-2 focus:border-transparent focus:outline-none 
-                             transition-all resize-none"
-                    style={{
-                      '--tw-ring-color': ACCENT_COLOR, // Apply Accent Color to focus ring
-                      '--tw-ring-offset-width': '0px'
-                    } as React.CSSProperties}
-                    required
-                  ></textarea>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={formStatus !== 'idle'}
-                  className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 text-white
-                    ${formStatus === 'success'
-                      ? 'bg-green-600 scale-[1.02]'
-                      : 'hover:-translate-y-1 shadow-lg'
-                    }
-                  `}
-                  // Set background color using inline style, handling success state explicitly
-                  style={{
-                    backgroundColor: formStatus === 'success' ? '#10B981' : PRIMARY_COLOR,
-                    boxShadow: formStatus === 'success' ? 'none' : `0 4px 12px ${PRIMARY_COLOR}30`
-                  }}
-                >
-                  {formStatus === 'idle' && (
-                    <><span>Send Message</span> <Send className="w-5 h-5" /></>
-                  )}
-                  {formStatus === 'submitting' && (
-                    <span className="animate-pulse">Sending...</span>
-                  )}
-                  {formStatus === 'success' && (
-                    <><span>Message Sent!</span> <CheckCircle className="w-5 h-5" /></>
-                  )}
-                </button>
-              </form>
+              <ul className="text-xs sm:text-sm text-slate-200 space-y-3.5">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-[#2DD4BF] shrink-0 mt-0.5" />
+                  <span><strong>100% Fixed Fares:</strong> No hidden costs, toll surcharges, or peak pricing.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-[#2DD4BF] shrink-0 mt-0.5" />
+                  <span><strong>Multi-stop & Charters:</strong> Perfect for corporate groups, weddings, and full-day tours.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-[#2DD4BF] shrink-0 mt-0.5" />
+                  <span><strong>Meet & Greet Included:</strong> Flight monitoring and driver assistance at arrivals.</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-[#2DD4BF] shrink-0 mt-0.5" />
+                  <span><strong>Official Invoices:</strong> Receive a downloadable PDF quote ready for instant confirmation.</span>
+                </li>
+              </ul>
             </div>
+
+            {/* Direct Contact Information */}
+            <div className="pt-6 border-t border-slate-700/80 space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Need Urgent Assistance?
+              </h4>
+
+              <ContactCardDark
+                icon={Phone}
+                title="Direct Phone"
+                content="+61470032460"
+                subtext="Call for immediate quotes or phone bookings"
+                action="Call Driver"
+                href="tel:+61470032460"
+              />
+
+              <ContactCardDark
+                icon={Mail}
+                title="Email Support"
+                content="spltransportation.australia@gmail.com"
+                subtext="Email us your travel itinerary anytime"
+                action="Email Us"
+                href="mailto:spltransportation.australia@gmail.com"
+              />
+            </div>
+
           </div>
+
+          {/* Right Column: Custom Quote Form */}
+          <div className="w-full lg:col-span-8 bg-white rounded-3xl shadow-xl p-6 sm:p-8 md:p-10 border border-slate-100">
+            <div className="mb-6 sm:mb-8 border-b border-slate-100 pb-4">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#102A43]">
+                Request Your Custom Quote
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Fill in your trip details below. Our reservation team will review your request and calculate your exact fixed fare.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="w-full space-y-6">
+
+              {/* Travel Date & Travel Time */}
+              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div className="w-full space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Travel Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="travelDate"
+                    value={formData.travelDate}
+                    onChange={handleChange}
+                    required
+                    className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 focus:border-[#102A43] outline-none text-sm transition-all"
+                  />
+                </div>
+
+                <div className="w-full space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Travel Time <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    name="travelTime"
+                    value={formData.travelTime}
+                    onChange={handleChange}
+                    required
+                    className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 focus:border-[#102A43] outline-none text-sm transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Passengers & Pickup Address */}
+              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div className="w-full space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Passengers <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="passengers"
+                    min="1"
+                    max="14"
+                    placeholder="Number of Passengers"
+                    value={formData.passengers}
+                    onChange={handleChange}
+                    required
+                    className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 focus:border-[#102A43] outline-none text-sm transition-all"
+                  />
+                </div>
+
+                <div className="w-full space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Pickup Location / Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="pickupAddress"
+                    placeholder="e.g. Cairns Airport Terminal or Hotel Name"
+                    value={formData.pickupAddress}
+                    onChange={handleChange}
+                    required
+                    className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 focus:border-[#102A43] outline-none text-sm transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Drop-off Address */}
+              <div className="w-full space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">
+                  Drop-off Destination / Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="dropoffAddress"
+                  placeholder="e.g. Resort Name, Port Douglas, or Specific Address"
+                  value={formData.dropoffAddress}
+                  onChange={handleChange}
+                  required
+                  className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 focus:border-[#102A43] outline-none text-sm transition-all"
+                />
+              </div>
+
+              {/* Check in Bags */}
+              <div className="w-full space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">
+                  Check-in Suitcases
+                </label>
+                <input
+                  type="number"
+                  name="checkInBags"
+                  min="0"
+                  placeholder="Number of large suitcases"
+                  value={formData.checkInBags}
+                  onChange={handleChange}
+                  className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 focus:border-[#102A43] outline-none text-sm transition-all"
+                />
+              </div>
+
+              {/* Carry on Bags & Child Seats */}
+              <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div className="w-full space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Carry-on Bags
+                  </label>
+                  <input
+                    type="number"
+                    name="carryOnBags"
+                    min="0"
+                    placeholder="Number of small bags"
+                    value={formData.carryOnBags}
+                    onChange={handleChange}
+                    className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 focus:border-[#102A43] outline-none text-sm transition-all"
+                  />
+                </div>
+
+                <div className="w-full space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Child / Booster Seats Needed
+                  </label>
+                  <select
+                    name="childSeats"
+                    value={formData.childSeats}
+                    onChange={handleChange}
+                    className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 focus:border-[#102A43] outline-none text-sm transition-all"
+                  >
+                    <option value="No">No child seats required</option>
+                    <option value="Yes (1 Seat)">Yes (1 Child / Booster Seat)</option>
+                    <option value="Yes (2 Seats)">Yes (2 Child / Booster Seats)</option>
+                    <option value="Yes (3+ Seats)">Yes (3+ Seats)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Select Flight Arrival Section */}
+              <div className="w-full space-y-3 pt-2">
+                <label className="block text-xs font-bold text-[#102A43]">
+                  Flight Arrival Details (Optional - for Airport Pickups)
+                </label>
+                <select
+                  name="flightArrivalType"
+                  value={formData.flightArrivalType}
+                  onChange={handleChange}
+                  className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 outline-none text-sm"
+                >
+                  <option value="Arrival">Arriving at Airport</option>
+                  <option value="None">Not an Airport Pickup</option>
+                </select>
+
+                {formData.flightArrivalType === 'Arrival' && (
+                  <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input
+                      type="text"
+                      name="flightArrivalNumber"
+                      placeholder="Flight Number (e.g. QF672)"
+                      value={formData.flightArrivalNumber}
+                      onChange={handleChange}
+                      className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 outline-none text-sm"
+                    />
+                    <input
+                      type="time"
+                      name="flightArrivalTime"
+                      placeholder="Arrival Time"
+                      value={formData.flightArrivalTime}
+                      onChange={handleChange}
+                      className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 outline-none text-sm"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Personal Details Section */}
+              <div className="w-full space-y-4 pt-4 border-t border-slate-100">
+                <label className="block text-sm font-extrabold text-[#102A43]">
+                  Your Contact Information <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  name="fullName"
+                  placeholder="Full Name"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  required
+                  className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 focus:border-[#102A43] outline-none text-sm transition-all"
+                />
+
+                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Email Address (Quote will be sent here)"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 focus:border-[#102A43] outline-none text-sm transition-all"
+                  />
+                  <input
+                    type="tel"
+                    name="phone"
+                    placeholder="Mobile Phone Number"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                    className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 focus:border-[#102A43] outline-none text-sm transition-all"
+                  />
+                </div>
+
+                <textarea
+                  rows={4}
+                  name="message"
+                  placeholder="Special requests, multi-stops, oversized luggage, or additional trip details..."
+                  value={formData.message}
+                  onChange={handleChange}
+                  className="w-full box-border px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#102A43]/20 focus:border-[#102A43] outline-none text-sm resize-none transition-all"
+                ></textarea>
+              </div>
+
+              {/* Terms Checkbox */}
+              <div className="w-full flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="termsAccepted"
+                  name="termsAccepted"
+                  checked={formData.termsAccepted}
+                  onChange={handleChange}
+                  required
+                  className="w-4 h-4 text-[#102A43] rounded border-slate-300 focus:ring-[#102A43]"
+                />
+                <label htmlFor="termsAccepted" className="text-xs text-slate-600">
+                  I accept the terms and conditions.
+                </label>
+              </div>
+
+              {/* Error Banner */}
+              {formStatus === 'error' && (
+                <div className="w-full p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{errorMessage || 'Something went wrong. Please check your entries.'}</span>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={formStatus === 'submitting'}
+                className={`w-full py-4 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 transition-all duration-300 text-white shadow-lg ${formStatus === 'success'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-[#0F766E] hover:bg-[#0C5D59] hover:-translate-y-0.5 active:translate-y-0 hover:shadow-xl'
+                  }`}
+              >
+                {formStatus === 'idle' && (
+                  <><span>Submit Custom Quote Request</span> <Send className="w-5 h-5 ml-1" /></>
+                )}
+                {formStatus === 'submitting' && (
+                  <span className="animate-pulse">Calculating Your Custom Quote...</span>
+                )}
+                {formStatus === 'success' && (
+                  <><span>Quote Request Submitted!</span> <CheckCircle className="w-5 h-5 ml-1 text-white" /></>
+                )}
+                {formStatus === 'error' && (
+                  <><span>Retry Quote Request</span> <Send className="w-5 h-5 ml-1" /></>
+                )}
+              </button>
+
+              {formStatus === 'success' && (
+                <p className="w-full text-center text-xs text-green-700 bg-green-50 p-3 rounded-xl">
+                  Thank you! Our reservation team has received your quote request and will generate your official custom fare quote shortly.
+                </p>
+              )}
+
+            </form>
+          </div>
+
         </div>
       </div>
     </section>
   );
 }
 
-// Helper Component for Contact Cards
-// Props updated to accept accentColor
-function ContactCard({ icon: Icon, title, content, subtext, action, href, accentColor }: any) {
+// Dark Navy Helper Component for Contact Cards
+function ContactCardDark({ icon: Icon, title, content, subtext, action, href }: any) {
   return (
     <a
       href={href}
-      className="flex items-start gap-5 bg-white p-6 rounded-2xl 
-                  border border-gray-100 shadow-sm hover:shadow-md 
-                  transition-all duration-300 hover:-translate-y-1 group"
+      className="w-full flex items-start gap-4 bg-white/5 hover:bg-white/10 p-4 rounded-2xl 
+                  border border-white/10 shadow-sm hover:shadow-md 
+                  transition-all duration-300 hover:-translate-y-0.5 group"
     >
-      <div
-        className="w-12 h-12 flex items-center justify-center rounded-xl shadow-sm shrink-0 group-hover:scale-110 transition-transform"
-        style={{ backgroundColor: accentColor }} // Accent Color for icon background
-      >
-        <Icon className="w-6 h-6 text-white" strokeWidth={2} /> {/* Changed icon color to white for contrast */}
+      <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#0F766E] text-white shrink-0 group-hover:scale-105 transition-transform shadow-md">
+        <Icon className="w-5 h-5" strokeWidth={2} />
       </div>
-      <div>
-        <h3 className="font-bold text-lg text-gray-900 mb-1">{title}</h3>
-        <p className="text-gray-600 font-medium mb-1">{content}</p>
-        <p className="text-sm text-gray-400 mb-3">{subtext}</p>
-        <span
-          className="text-sm font-bold group-hover:underline"
-          style={{ color: accentColor }} // Accent Color for action link
-        >
-          {action}
+      <div className="flex-1 min-w-0">
+        <h4 className="font-bold text-sm text-white mb-0.5">{title}</h4>
+        <p className="text-slate-200 font-semibold text-xs mb-0.5 truncate">{content}</p>
+        <p className="text-[11px] text-slate-400 mb-1.5">{subtext}</p>
+        <span className="text-xs font-bold text-[#2DD4BF] group-hover:underline flex items-center gap-1">
+          {action} →
         </span>
       </div>
     </a>
-  );
-}
-
-// Helper Component for Inputs
-// Props updated to accept accentColor
-function InputField({ label, type, placeholder, accentColor }: any) {
-  return (
-    <div className="space-y-2">
-      <label className="text-sm font-semibold text-gray-700 ml-1">
-        {label}
-      </label>
-      <input
-        type={type}
-        placeholder={placeholder}
-        required
-        className="w-full px-5 py-4 bg-gray-50 border border-gray-200 
-                  rounded-xl text-gray-900 placeholder-gray-400 
-                  focus:ring-2 focus:border-transparent focus:outline-none 
-                  transition-all"
-        style={{
-          '--tw-ring-color': accentColor, // Apply Accent Color to focus ring
-          '--tw-ring-offset-width': '0px'
-        } as React.CSSProperties}
-      />
-    </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import RoutesPage from '../../components/RoutesPage';
+import JsonLd from '@/app/components/JsonLd';
 
 export const metadata: Metadata = {
   title: 'All Transfer Routes Cairns | Private Airport Transfers | SPL Transportation',
@@ -16,5 +17,10 @@ export const metadata: Metadata = {
 };
 
 export default function TransfersPage() {
-  return <RoutesPage />;
+  return (
+    <>
+      <JsonLd />
+      <RoutesPage />
+    </>
+  );
 }

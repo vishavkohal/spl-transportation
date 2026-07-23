@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { LayoutDashboard, Map, CalendarCheck, Users, LogOut, FileText, Calendar } from 'lucide-react';
+import { LayoutDashboard, Map, CalendarCheck, Users, LogOut, FileText, Calendar, CreditCard } from 'lucide-react';
 
 import { motion } from 'framer-motion';
 
-type AdminTab = 'overview' | 'routes' | 'bookings' | 'leads' | 'upcoming';
+type AdminTab = 'overview' | 'custom-checkout' | 'routes' | 'bookings' | 'quotes' | 'leads' | 'upcoming';
 
 
 interface AdminSidebarProps {
@@ -16,13 +16,15 @@ interface AdminSidebarProps {
     setIsMobileOpen: (open: boolean) => void;
 }
 
-const PRIMARY_COLOR = '#18234B';
-const ACCENT_COLOR = '#A61924';
+const PRIMARY_COLOR = '#102A43';
+const ACCENT_COLOR = '#0F766E';
 
 const menuItems = [
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'custom-checkout', label: 'Quick Payment Link', icon: CreditCard },
     { id: 'upcoming', label: 'Upcoming Trips', icon: Calendar },
     { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
+    { id: 'quotes', label: 'Requested Quotes', icon: FileText },
     { id: 'routes', label: 'Routes', icon: Map },
     { id: 'leads', label: 'Leads', icon: Users },
 ] as const;

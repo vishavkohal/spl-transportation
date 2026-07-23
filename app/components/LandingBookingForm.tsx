@@ -12,6 +12,7 @@ import {
   ArrowRight,
   CheckCircle,
   AlertCircle,
+  AlertTriangle,
   ChevronDown,
   Shield,
   CreditCard,
@@ -19,12 +20,19 @@ import {
 } from 'lucide-react';
 import { useBooking } from '../providers/BookingProvider';
 import { useDebouncedCallback } from 'use-debounce';
+import {
+  AFTER_HOURS_SURCHARGE,
+  AFTER_HOURS_SURCHARGE_NOTICE,
+  isAfterHours,
+} from '@/app/lib/afterHours';
 import { getStoredUtms } from '@/app/lib/utm';
 import type { BookingFormData } from '../types';
 import { toast } from 'sonner';
 
-const PRIMARY_COLOR = '#18234B';
-const ACCENT_COLOR = '#A61924';
+import { COLORS } from '../lib/colors';
+
+const PRIMARY_COLOR = COLORS.primary;
+const ACCENT_COLOR = COLORS.primary;
 const MAX_PASSENGERS = 7;
 
 function getMaxBagsForCurrentPax(pax: number): number {
@@ -60,15 +68,6 @@ function isPickupAtLeast30Mins(pickupDate: string, pickupTime: string) {
 }
 
 const PAYMENT_FEE_RATE = 0.025;
-const AFTER_HOURS_SURCHARGE = 30;
-const AFTER_HOURS_CUTOFF = '21:00';
-
-function isAfterHours(pickupTime: string): boolean {
-  if (!pickupTime || typeof pickupTime !== 'string') return false;
-  const time = pickupTime.trim();
-  if (!/^\d{2}:\d{2}$/.test(time)) return false;
-  return time >= AFTER_HOURS_CUTOFF;
-}
 
 function calculateProcessingFee(amount: number) {
   return Number((amount * PAYMENT_FEE_RATE).toFixed(2));
@@ -217,7 +216,7 @@ export default function LandingBookingForm() {
       );
     return (
       base +
-      'bg-gray-50/80 border-2 border-gray-200 hover:border-gray-300 focus:bg-white focus:border-[#18234B] focus:ring-2 focus:ring-[#18234B]/10'
+      'bg-gray-50/80 border-2 border-gray-200 hover:border-gray-300 focus:bg-white focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/10'
     );
   };
 
@@ -395,14 +394,13 @@ export default function LandingBookingForm() {
                 </div>
               )}
 
-              {/* ── Route Section ── */}
+              {/* ── Route + Schedule in one row ── */}
               <div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_0.6fr_0.5fr] gap-3 sm:gap-4">
                   {/* Pickup */}
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
-                      Pickup Location
+                      Pickup
                     </label>
                     <div className="relative">
                       <select
@@ -431,7 +429,7 @@ export default function LandingBookingForm() {
                   {/* Dropoff */}
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
-                      Dropoff Location
+                      Dropoff
                     </label>
                     <div className="relative">
                       <select
@@ -455,17 +453,11 @@ export default function LandingBookingForm() {
                     </div>
                     <FieldError error={getFieldError('dropoffLocation')} />
                   </div>
-                </div>
-              </div>
 
-              {/* ── Schedule Section ── */}
-              <div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Date */}
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
-                      Pickup Date
+                      Date
                     </label>
                     <input
                       type="date"
@@ -480,9 +472,22 @@ export default function LandingBookingForm() {
 
                   {/* Time */}
                   <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
-                      Pickup Time
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5 ml-1">
+                      <label className="block text-xs font-semibold text-gray-600">
+                        Time
+                      </label>
+                      {isAfterHours(formData.pickupTime) && (
+                        <div className="relative group/tooltip inline-flex items-center">
+                          <AlertTriangle
+                            className="w-4 h-4 text-amber-500 cursor-help"
+                          />
+                          <div className="absolute right-0 bottom-full mb-1.5 hidden group-hover/tooltip:block w-56 p-2.5 bg-slate-900 text-white text-[11px] font-medium leading-tight rounded-lg shadow-xl z-50 pointer-events-none">
+                            {AFTER_HOURS_SURCHARGE_NOTICE}
+                            <div className="absolute top-full right-1.5 border-4 border-transparent border-t-slate-900" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <input
                       type="time"
                       value={formData.pickupTime}
@@ -492,17 +497,10 @@ export default function LandingBookingForm() {
                       className={inputCls('pickupTime')}
                     />
                     <FieldError error={getFieldError('pickupTime')} />
-                    {isAfterHours(formData.pickupTime) && (
-                      <span className="flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-1.5">
-                        <Clock className="w-3 h-3 flex-shrink-0" />
-                        After-hours surcharge of ${AFTER_HOURS_SURCHARGE} applies for pickups after 9:00 PM
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
 
-              {/* ── Passengers & Luggage Section ── */}
               <div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -557,11 +555,11 @@ export default function LandingBookingForm() {
                 </div>
 
                 {/* Child seat */}
-                <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl border-2 border-gray-200 hover:border-gray-300 bg-gray-50/50 hover:bg-gray-50 transition-all duration-200">
+                <label className="flex items-center gap-2 cursor-pointer group py-1">
                   <div
-                    className="w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 flex-shrink-0"
+                    className="w-5 h-5 rounded border flex items-center justify-center transition-colors shrink-0"
                     style={{
-                      backgroundColor: formData.childSeat ? ACCENT_COLOR : 'white',
+                      backgroundColor: formData.childSeat ? ACCENT_COLOR : 'transparent',
                       borderColor: formData.childSeat ? ACCENT_COLOR : 'rgb(209 213 219)',
                     }}
                   >
@@ -573,10 +571,9 @@ export default function LandingBookingForm() {
                     onChange={e => handleInputChange('childSeat', e.target.checked)}
                     className="hidden"
                   />
-                  <div className="flex-1">
-                    <span className="text-sm font-semibold text-gray-800">Child Seat</span>
-                    <span className="text-xs text-gray-500 ml-1.5">(+$20)</span>
-                  </div>
+                  <span className="text-xs sm:text-sm font-medium text-gray-600 group-hover:text-gray-900 whitespace-nowrap">
+                    Child Seat (+$20)
+                  </span>
                 </label>
               </div>
 
@@ -595,8 +592,7 @@ export default function LandingBookingForm() {
                   <button
                     onClick={goToStep2}
                     disabled={!isStep1Valid()}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide uppercase text-white shadow-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed hover:opacity-90 hover:shadow-xl active:scale-[0.98]"
-                    style={{ backgroundColor: isStep1Valid() ? PRIMARY_COLOR : undefined }}
+                    className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold text-sm tracking-wide uppercase text-white shadow-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:shadow-none disabled:cursor-not-allowed bg-[#102A43] hover:bg-[#0C5D59] hover:shadow-xl active:scale-[0.98]"
                   >
                     Next Step <ArrowRight className="w-4 h-4" />
                   </button>

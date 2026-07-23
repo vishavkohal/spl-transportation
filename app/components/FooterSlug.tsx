@@ -3,9 +3,12 @@
 import React from 'react';
 import { Mail, Phone, Clock, MapPin, Facebook, Twitter, Instagram, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
-const PRIMARY_COLOR = '#18234B';
-const ACCENT_COLOR = '#A61924';
+import { COLORS } from '../lib/colors';
+
+const BG_COLOR = COLORS.heroOverlay;
+const ACCENT_COLOR = COLORS.primary;
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -13,22 +16,22 @@ export default function Footer() {
   return (
     <footer 
       className="text-gray-300 pt-16 pb-8 mt-24 border-t border-gray-800"
-      style={{ backgroundColor: PRIMARY_COLOR }}
+      style={{ backgroundColor: BG_COLOR }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="grid md:grid-cols-3 gap-12 mb-12">
           {/* Column 1: Brand & About */}
           <div className="space-y-6">
-            <div>
-              <h3 className="text-2xl font-extrabold text-white tracking-tight">
-                SPL <span style={{ color: ACCENT_COLOR }}>Transportation</span>
-              </h3>
-              <div 
-                className="w-12 h-1 rounded-full mt-2"
-                style={{ backgroundColor: ACCENT_COLOR }}
+            <Link href="/" className="inline-block">
+              <Image
+                src="/logo.png"
+                alt="SPL Transportation"
+                width={200}
+                height={70}
+                className="h-14 w-auto object-contain"
               />
-            </div>
+            </Link>
             <p className="text-gray-400 leading-relaxed max-w-sm text-sm">
               Premium ride transfer services across Queensland. We prioritize safety, punctuality, and comfort in every journey we take.
             </p>
@@ -37,8 +40,7 @@ export default function Footer() {
                 <a 
                   key={i} 
                   href="#" 
-                  className="bg-gray-800 p-2 rounded-full transition-all duration-300 hover:text-[#18234B]"
-                  style={{ '--hover-bg': ACCENT_COLOR } as any}
+                  className="bg-gray-800 p-2 rounded-full transition-all duration-300"
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = ACCENT_COLOR}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#1F2937'}
                 >
@@ -90,7 +92,7 @@ export default function Footer() {
                     className="flex items-center space-x-2 text-sm text-gray-400 transition-all duration-300 group hover:text-white"
                   >
                     <ArrowRight 
-                      className="w-4 h-4 text-gray-600 group-hover:translate-x-1 group-hover:text-[#A61924] transition-all" 
+                      className="w-4 h-4 text-gray-600 group-hover:translate-x-1 group-hover:text-[#0F766E] transition-all" 
                     />
                     <span>{link.label}</span>
                   </Link>

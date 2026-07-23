@@ -1,77 +1,50 @@
 'use client';
-import React from 'react';
-import { Clock, Shield, Truck, Users, Car, Star, type LucideIcon } from 'lucide-react';
+import React, { useRef, useEffect } from 'react';
+import { Tag, Plane, Clock, Award, Users, Star, ShieldCheck, CalendarCheck, type LucideIcon } from 'lucide-react';
 import { motion, useInView, useSpring } from 'framer-motion';
-import { useEffect, useRef } from 'react';
-import ScrollReveal, { staggerContainer, fadeUp, scaleIn } from './ScrollReveal';
 
-// Define the custom colors
-const PRIMARY_COLOR = '#18234B'; // Dark Navy
-const ACCENT_COLOR = '#A61924';  // Deep Red
-
-type Feature = {
-  title: string;
-  description: string;
-  icon: LucideIcon;
-};
-
-const featureData: Feature[] = [
+const featureHighlights = [
   {
-    title: 'Full Availability',
-    description: 'Book for early flights and late arrivals.',
+    icon: Tag,
+    title: 'Fixed, All-Inclusive Pricing',
+    description: 'What you see is what you pay. No hidden fees or unexpected surge charges.',
+  },
+  {
+    icon: Plane,
+    title: 'Flight Tracking',
+    description: 'We monitor your flight status in real time and adjust pickup times automatically.',
+  },
+  {
     icon: Clock,
+    title: 'Free Waiting Time',
+    description: 'Up to 60 minutes free waiting time for airport pickups to clear luggage.',
   },
   {
-    title: 'Fully Licensed & Insured',
-    description: 'Professional drivers with full commercial insurance coverage.',
-    icon: Shield,
-  },
-  {
-    title: 'Premium Fleet',
-    description: 'Clean, comfortable, and air-conditioned vehicles.',
-    icon: Truck,
+    icon: Award,
+    title: 'Professional Drivers',
+    description: 'Experienced, fully licensed, and knowledgeable local chauffeur drivers.',
   },
 ];
 
 const stats = [
-  {
-    id: 1,
-    label: 'Happy Passengers',
-    value: '15k+',
-    icon: Users,
-  },
-  {
-    id: 2,
-    label: 'On-Time Rate',
-    value: '99%',
-    icon: Clock,
-  },
-  {
-    id: 3,
-    label: 'Fleet Size',
-    value: '50+',
-    icon: Car,
-  },
-  {
-    id: 4,
-    label: '5-Star Reviews',
-    value: '4.9',
-    icon: Star,
-  }
+  { id: 1, label: 'Happy Customers', value: '2,500+', icon: Users },
+  { id: 2, label: 'Average Rating', value: '4.9/5', icon: Star },
+  { id: 3, label: 'Customer Support', value: '24/7', icon: CalendarCheck },
+  { id: 4, label: 'Years Experience', value: '10+', icon: ShieldCheck },
 ];
 
 const AnimatedCounter = ({ value }: { value: string }) => {
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-10px" });
+  const inView = useInView(ref, { once: true, margin: '-10px' });
 
   const match = value.match(/([\d.]+)(.*)/);
   const numericValue = match ? parseFloat(match[1]) : 0;
-  const suffix = match ? match[2] : "";
+  const suffix = match ? match[2] : '';
 
   const springValue = useSpring(0, {
     stiffness: 50,
     damping: 20,
-    duration: 2
+    duration: 2,
   });
 
   useEffect(() => {
@@ -81,10 +54,12 @@ const AnimatedCounter = ({ value }: { value: string }) => {
   }, [inView, numericValue, springValue]);
 
   useEffect(() => {
-    return springValue.on("change", (latest) => {
+    return springValue.on('change', (latest) => {
       if (ref.current) {
         const isFloat = value.includes('.');
-        ref.current.textContent = isFloat ? latest.toFixed(1) + suffix : Math.floor(latest) + suffix;
+        ref.current.textContent = isFloat
+          ? latest.toFixed(1) + suffix
+          : Math.floor(latest) + suffix;
       }
     });
   }, [springValue, suffix, value]);
@@ -94,89 +69,56 @@ const AnimatedCounter = ({ value }: { value: string }) => {
 
 const FeaturesSection: React.FC = React.memo(() => {
   return (
-    <section className="py-6 md:py-12 mx-3 md:mx-6 mb-6 md:mb-12 rounded-[2.5rem] bg-[#F8F9FA] text-slate-800 overflow-hidden shadow-[0_0_50px_-12px_rgba(0,0,0,0.25)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        {/* TITLE SECTION */}
-        <div className="text-center mb-12 lg:mb-16">
-          <ScrollReveal variant="fadeUpSubtle">
-            <p className="font-bold tracking-wider uppercase text-sm mb-2" style={{ color: ACCENT_COLOR }}>
-              Our Commitment
-            </p>
-          </ScrollReveal>
-          <ScrollReveal variant="fadeUp" delay={0.1}>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-[#18234B] mb-4">
-              Why Choose Us?
-            </h2>
-          </ScrollReveal>
-          <ScrollReveal variant="fadeUpSubtle" delay={0.2}>
-            <div className="w-16 h-1 mx-auto rounded-full" style={{ backgroundColor: ACCENT_COLOR }} />
-          </ScrollReveal>
+    <>
+      {/* 1. DARK NAVY FEATURE STRIP */}
+      <section className="w-full bg-[#102A43] text-white py-14 border-y border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+            {featureHighlights.map((feat, idx) => {
+              const Icon = feat.icon;
+              return (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  className="flex flex-col items-start text-left group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center mb-4 text-[#2DD4BF] group-hover:bg-[#0F766E] group-hover:text-white transition-all duration-300">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-base font-bold text-white mb-2 leading-tight">
+                    {feat.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light">
+                    {feat.description}
+                  </p>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
+      </section>
 
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start">
-
-          {/* LEFT: Content & Features List */}
-          <motion.div
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-          >
-            <div className="space-y-8">
-              {featureData.map((feature, idx) => {
-                const Icon = feature.icon;
-                return (
-                  <motion.div
-                    key={idx}
-                    variants={fadeUp}
-                    className="flex items-start gap-4"
-                  >
-                    <div className="shrink-0 w-12 h-12 flex items-center justify-center rounded-xl bg-slate-100 border border-slate-200 mt-1">
-                      <Icon className="w-6 h-6" style={{ color: PRIMARY_COLOR }} />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-[#18234B] mb-1">{feature.title}</h3>
-                      <p className="text-sm text-slate-600 leading-relaxed">{feature.description}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-
-          {/* RIGHT: Compact Metrics Grid */}
-          <motion.div
-            className="grid grid-cols-2 gap-4 sm:gap-6 lg:mt-16"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-          >
-            {stats.map((stat) => (
-              <motion.div
-                key={stat.id}
-                variants={scaleIn}
-                whileHover={{
-                  y: -4,
-                  scale: 1.03,
-                  transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }
-                }}
-                className="bg-[#18234B] rounded-2xl p-6 text-center shadow-lg transition-all duration-500 border border-transparent"
-              >
-                <div className="text-3xl sm:text-4xl font-extrabold mb-1 text-white">
+      {/* 2. FULL WIDTH LIGHT STATS BAR */}
+      <section className="w-full bg-slate-50 py-10 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center divide-y sm:divide-y-0 sm:divide-x divide-slate-200/80">
+            {stats.map((stat, idx) => (
+              <div key={stat.id} className={`pt-4 sm:pt-0 ${idx !== 0 ? 'sm:pl-6' : ''}`}>
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#102A43] tracking-tight mb-1">
                   <AnimatedCounter value={stat.value} />
                 </div>
-                <div className="text-xs sm:text-sm font-medium text-blue-100 uppercase tracking-wide">
+                <div className="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">
                   {stat.label}
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
-
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 });
 

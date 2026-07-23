@@ -21,14 +21,16 @@ model Route {
 }
 
 model RoutePageContent {
-  id        String   @id @default(cuid())
-  routeId   Int      @unique
-  route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  content   Json
-  imageId   String?
-  image     Image?   @relation(fields: [imageId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(cuid())
+  routeId        Int      @unique
+  route          Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  content        Json
+  imageId        String?
+  image          Image?   @relation("HeroImage", fields: [imageId], references: [id])
+  reverseImageId String?
+  reverseImage   Image?   @relation("ReverseHeroImage", fields: [reverseImageId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model RoutePricing {
@@ -162,6 +164,46 @@ model Image {
   altText   String?
   createdAt DateTime @default(now())
 
-  blogPosts          BlogPost[]
-  routePageContents  RoutePageContent[]
+  blogPosts                BlogPost[]
+  routePageContents        RoutePageContent[] @relation("HeroImage")
+  reverseRoutePageContents RoutePageContent[] @relation("ReverseHeroImage")
 }
+
+model QuoteRequest {
+  id                    String   @id @default(cuid())
+
+  travelDate            String
+  travelTime            String
+  passengers            Int
+  pickupAddress         String
+  dropoffAddress        String
+  checkInBags           Int      @default(0)
+  carryOnBags           Int      @default(0)
+  childSeats            String   @default("No")
+
+  flightArrivalType     String?  // Arrival, etc.
+  flightArrivalNumber   String?
+  flightArrivalTime     String?
+
+  flightDepartureType   String?  // Departure, etc.
+  flightDepartureNumber String?
+  flightDepartureTime   String?
+
+  fullName              String
+  email                 String
+  phone                 String
+  message               String?
+
+  termsAccepted         Boolean  @default(true)
+  status                String   @default("PENDING") // PENDING, QUOTED, CANCELLED
+
+  amount                Float?   // Base price set by Admin in AUD
+  processingFee         Float?   // 2.5% calculated automatically
+  totalAmount           Float?   // amount + processingFee
+
+  adminNotes            String?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
