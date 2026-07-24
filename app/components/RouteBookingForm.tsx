@@ -24,9 +24,7 @@ function parsePassengerRange(range: string): [number, number] {
 
 function priceForPassengers(pricing: Route['pricing'], pax: number) {
   if (!pricing?.length) return 0;
-  // Fallback to 1 pax for pricing lookup if input is currently 0 or empty
   const lookupPax = pax || 1;
-
   const tier = pricing.find(p => {
     const [min, max] = parsePassengerRange(p.passengers);
     return lookupPax >= min && lookupPax <= max;
@@ -49,17 +47,19 @@ function minTimeForDate(date: string) {
   ).padStart(2, '0')}`;
 }
 
-// RULES:
-// 1-5 pax: 3 bags
-// 6 pax:   2 bags
-// 7 pax:   4 bags
-function getMaxBagsForCurrentPax(pax: number): number {
-  const count = pax || 1; // Treat 0 input as 1 for validation purposes
+function isPickupAtLeast30Mins(pickupDate: string, pickupTime: string) {
+  if (!pickupDate || !pickupTime) return true;
+  const [h, m] = pickupTime.split(':').map(Number);
+  const dt = new Date(pickupDate);
+  dt.setHours(h, m, 0, 0);
+  return dt.getTime() - Date.now() >= 30 * 60_000;
+}
 
+function getMaxBagsForCurrentPax(pax: number): number {
+  const count = pax || 1;
   if (count <= 5) return 3;
   if (count === 6) return 2;
   if (count > 6 && count <= MAX_PASSENGERS) return 4;
-
   return MAX_LUGGAGE_LIMIT;
 }
 
@@ -313,6 +313,12 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 onChange={e => update('pickupTime', e.target.value)}
                 className="w-full min-w-0 rounded-lg border border-gray-200 px-1 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] text-gray-900 bg-white"
               />
+              {form.pickupDate && form.pickupTime && !isPickupAtLeast30Mins(form.pickupDate, form.pickupTime) && (
+                <div className="flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-lg bg-red-50/90 border border-red-200/90 text-red-700 text-xs font-semibold animate-in fade-in duration-200">
+                  <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                  <span>Min 30 mins advance notice required</span>
+                </div>
+              )}
               {isAfterHours(form.pickupTime) && (
                 <div className="mt-1.5 p-2 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-between text-[11px] text-amber-900 shadow-xs">
                   <span className="font-medium flex items-center gap-1">

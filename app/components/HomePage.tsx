@@ -109,6 +109,16 @@ function getMinTimeForDate(dateStr: string | undefined) {
   return '00:00';
 }
 
+function FieldError({ error }: { error: string | null }) {
+  if (!error) return null;
+  return (
+    <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1 rounded-lg bg-red-50/90 border border-red-200/90 text-red-700 text-xs font-semibold animate-in fade-in slide-in-from-top-1 duration-200 shadow-xs">
+      <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0" />
+      <span>{error}</span>
+    </div>
+  );
+}
+
 function isPickupAtLeast30Mins(pickupDate: string, pickupTime: string) {
   if (!pickupDate || !pickupTime) return false;
   const [h, m] = pickupTime.split(':').map(Number);
@@ -303,7 +313,7 @@ export default function HomePage(props: {
       case 'pickupTime':
         if (!value) return 'Required';
         if (!isPickupAtLeast30Mins(formData.pickupDate, String(value))) {
-          return 'Min 30 mins notice';
+          return 'Min 30 mins advance notice required';
         }
         return null;
 
@@ -1434,16 +1444,10 @@ function Step1StandardContent(props: {
                 <MapPin className="w-3 h-3 text-[#102A43]" />
                 Pickup
               </label>
-              {routesLoading ? (
+              {routesLoading && (
                 <span className="text-[11px] text-gray-400 italic">
                   Loading…
                 </span>
-              ) : (
-                getFieldError('pickupLocation') && (
-                  <span className="text-xs font-bold text-red-500 animate-pulse">
-                    Required
-                  </span>
-                )
               )}
             </div>
             <div className="relative">
@@ -1473,6 +1477,7 @@ function Step1StandardContent(props: {
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none z-20" />
             </div>
+            <FieldError error={getFieldError('pickupLocation')} />
           </div>
 
           {/* Dropoff */}
@@ -1482,16 +1487,10 @@ function Step1StandardContent(props: {
                 <MapPin className="w-3 h-3 text-[#102A43]" />
                 Dropoff
               </label>
-              {routesLoading && formData.pickupLocation ? (
+              {routesLoading && formData.pickupLocation && (
                 <span className="text-[11px] text-gray-400 italic">
                   Loading…
                 </span>
-              ) : (
-                getFieldError('dropoffLocation') && (
-                  <span className="text-xs font-bold text-red-500 animate-pulse">
-                    Required
-                  </span>
-                )
               )}
             </div>
             <div className="relative">
@@ -1532,6 +1531,7 @@ function Step1StandardContent(props: {
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none z-20" />
             </div>
+            <FieldError error={getFieldError('dropoffLocation')} />
           </div>
 
           {/* Date */}
@@ -1541,11 +1541,6 @@ function Step1StandardContent(props: {
                 <Calendar className="w-3 h-3 text-[#102A43]" />
                 Date
               </label>
-              {getFieldError('pickupDate') && (
-                <span className="text-xs font-bold text-red-500">
-                  Required
-                </span>
-              )}
             </div>
             <div className="relative">
               <input
@@ -1559,6 +1554,7 @@ function Step1StandardContent(props: {
                 )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
               />
             </div>
+            <FieldError error={getFieldError('pickupDate')} />
           </div>
 
           {/* Time */}
@@ -1581,12 +1577,7 @@ function Step1StandardContent(props: {
                 )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
               />
             </div>
-            {getFieldError('pickupTime') && (
-              <p className="text-[11px] font-semibold text-red-500 mt-1 leading-tight flex items-center gap-1">
-                <AlertCircle className="w-3 h-3 text-red-500 shrink-0" />
-                {getFieldError('pickupTime')}
-              </p>
-            )}
+            <FieldError error={getFieldError('pickupTime')} />
             {isAfterHours(formData.pickupTime) && (
               <div className="mt-1.5 p-2 rounded-xl bg-amber-50/90 border border-amber-200/90 flex items-center justify-between text-xs text-amber-900 shadow-xs">
                 <span className="font-medium flex items-center gap-1.5">
@@ -1614,11 +1605,6 @@ function Step1StandardContent(props: {
                 <Users className="w-3 h-3 text-[#102A43]" />
                 Passengers
               </label>
-              {getFieldError('passengers') && (
-                <span className="text-xs font-bold text-red-500">
-                  {getFieldError('passengers')}
-                </span>
-              )}
             </div>
             <div className="relative">
               <select
@@ -1639,6 +1625,7 @@ function Step1StandardContent(props: {
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none z-20" />
             </div>
+            <FieldError error={getFieldError('passengers')} />
           </div>
 
           {/* Luggage Dropdown */}
@@ -1648,11 +1635,6 @@ function Step1StandardContent(props: {
                 <Briefcase className="w-3 h-3 text-[#102A43]" />
                 Bags
               </label>
-              {getFieldError('luggage') && (
-                <span className="text-xs font-bold text-red-500">
-                  {getFieldError('luggage')}
-                </span>
-              )}
             </div>
             <div className="relative">
               <select
@@ -1673,6 +1655,7 @@ function Step1StandardContent(props: {
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none z-20" />
             </div>
+            <FieldError error={getFieldError('luggage')} />
           </div>
 
           {/* Flight # */}
@@ -1908,6 +1891,7 @@ function Step1HourlyContent(props: {
               placeholder="Address, hotel, venue, etc."
               className={getInputClass('hourlyPickupLocation', false)}
             />
+            <FieldError error={getFieldError('hourlyPickupLocation')} />
           </div>
 
           {/* Hours */}
@@ -1917,11 +1901,6 @@ function Step1HourlyContent(props: {
                 <Clock className="w-3 h-3 text-[#102A43]" />
                 No. of Hours
               </label>
-              {getFieldError('hourlyHours') && (
-                <span className="text-xs font-bold text-red-500">
-                  {getFieldError('hourlyHours')}
-                </span>
-              )}
             </div>
             <div className="relative">
               <input
@@ -1937,6 +1916,7 @@ function Step1HourlyContent(props: {
                 className={getInputClass('hourlyHours', false)}
               />
             </div>
+            <FieldError error={getFieldError('hourlyHours')} />
           </div>
 
           {/* Vehicle type */}
@@ -1945,11 +1925,6 @@ function Step1HourlyContent(props: {
               <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1">
                 Vehicle Type
               </label>
-              {getFieldError('hourlyVehicleType') && (
-                <span className="text-xs font-bold text-red-500 animate-pulse">
-                  Required
-                </span>
-              )}
             </div>
             <select
               value={formData.hourlyVehicleType || ''}
@@ -1964,6 +1939,7 @@ function Step1HourlyContent(props: {
               <option value="SUV">SUV (up to 5 pax)</option>
               <option value="Van">Van (group / luggage)</option>
             </select>
+            <FieldError error={getFieldError('hourlyVehicleType')} />
           </div>
         </div>
 
@@ -1978,11 +1954,6 @@ function Step1HourlyContent(props: {
                     <Calendar className="w-3 h-3 text-[#102A43]" />
                     Date
                   </label>
-                  {getFieldError('pickupDate') && (
-                    <span className="text-xs font-bold text-red-500">
-                      Required
-                    </span>
-                  )}
                 </div>
                 <div className="relative">
                   <input
@@ -1996,6 +1967,7 @@ function Step1HourlyContent(props: {
                     )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
                   />
                 </div>
+                <FieldError error={getFieldError('pickupDate')} />
               </div>
             </div>
 
@@ -2020,12 +1992,7 @@ function Step1HourlyContent(props: {
                     )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
                   />
                 </div>
-                {getFieldError('pickupTime') && (
-                  <p className="text-[11px] font-semibold text-red-500 mt-1 leading-tight flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3 text-red-500 shrink-0" />
-                    {getFieldError('pickupTime')}
-                  </p>
-                )}
+                <FieldError error={getFieldError('pickupTime')} />
                 {isAfterHours(formData.pickupTime) && (
                   <div className="mt-1.5 p-2 rounded-xl bg-amber-50/90 border border-amber-200/90 flex items-center justify-between text-xs text-amber-900 shadow-xs">
                     <span className="font-medium flex items-center gap-1.5">
@@ -2051,11 +2018,6 @@ function Step1HourlyContent(props: {
                   <Users className="w-3 h-3 text-[#102A43]" />
                   Pax
                 </label>
-                {getFieldError('passengers') && (
-                  <span className="text-xs font-bold text-red-500">
-                    {getFieldError('passengers')}
-                  </span>
-                )}
               </div>
               <div className="relative group">
                 <input
@@ -2068,6 +2030,7 @@ function Step1HourlyContent(props: {
                   className={getInputClass('passengers', false)}
                 />
               </div>
+              <FieldError error={getFieldError('passengers')} />
             </div>
 
             {/* Luggage */}
@@ -2077,11 +2040,6 @@ function Step1HourlyContent(props: {
                   <Briefcase className="w-3 h-3 text-[#102A43]" />
                   Bags
                 </label>
-                {getFieldError('luggage') && (
-                  <span className="text-xs font-bold text-red-500">
-                    {getFieldError('luggage')}
-                  </span>
-                )}
               </div>
               <div className="relative group">
                 <input
@@ -2094,6 +2052,7 @@ function Step1HourlyContent(props: {
                   className={getInputClass('luggage', false)}
                 />
               </div>
+              <FieldError error={getFieldError('luggage')} />
             </div>
 
             {/* Flight # */}
@@ -2397,11 +2356,6 @@ function Step2StandardContent(props: {
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                   Full Name
                 </label>
-                {getFieldError('fullName') && (
-                  <span className="text-xs text-red-500 font-bold">
-                    {getFieldError('fullName')}
-                  </span>
-                )}
               </div>
               <input
                 type="text"
@@ -2411,6 +2365,7 @@ function Step2StandardContent(props: {
                 className={getInputClass('fullName', false)}
                 placeholder="e.g. John Doe"
               />
+              <FieldError error={getFieldError('fullName')} />
             </div>
 
             {/* Email */}
@@ -2419,11 +2374,6 @@ function Step2StandardContent(props: {
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
                   Email
                 </label>
-                {getFieldError('email') && (
-                  <span className="text-xs text-red-500 font-bold">
-                    {getFieldError('email')}
-                  </span>
-                )}
               </div>
               <input
                 type="email"
@@ -2433,6 +2383,7 @@ function Step2StandardContent(props: {
                 className={getInputClass('email', false)}
                 placeholder="john@example.com"
               />
+              <FieldError error={getFieldError('email')} />
             </div>
 
             {/* Mobile: country code + number */}
