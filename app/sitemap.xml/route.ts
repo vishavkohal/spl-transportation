@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { getRoutes } from "../lib/routesStore";
 import { routeToSlug } from "../lib/routeSlug";
 import { blogPosts } from "../lib/blogPosts";
+import { BASE_URL } from "../lib/constants";
 
-const BASE_URL = "https://www.spltransportation.com.au";
 const NOW = new Date().toISOString();
 
 export async function GET() {
@@ -31,6 +31,7 @@ export async function GET() {
   const routeUrls = routes.map(route => {
     const slug = routeToSlug(route);
     const loc = `${BASE_URL}/transfers/${slug}`;
+    const routeTitle = `${route.from} to ${route.to} Private Transfer`;
 
     return `
   <url>
@@ -38,6 +39,10 @@ export async function GET() {
     <lastmod>${NOW}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
+    <image:image>
+      <image:loc>${BASE_URL}/routes/${slug}.jpg</image:loc>
+      <image:title>${routeTitle}</image:title>
+    </image:image>
   </url>`;
   }).join("");
 
@@ -55,7 +60,7 @@ export async function GET() {
   }).join("");
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${staticUrls}
 ${routeUrls}
 ${blogUrls}
@@ -69,3 +74,4 @@ ${blogUrls}
     }
   });
 }
+

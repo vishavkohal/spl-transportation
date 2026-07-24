@@ -69,9 +69,9 @@ export default function HowToBookModern() {
           </p>
         </ScrollReveal>
 
-        {/* Steps Grid */}
+        {/* Steps Grid on Desktop, Horizontal Touch Track on Mobile */}
         <motion.div
-          className="grid md:grid-cols-3 gap-6"
+          className="flex md:grid md:grid-cols-3 gap-5 md:gap-6 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-6 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide"
           variants={staggerContainerSlow}
           initial="hidden"
           whileInView="visible"
@@ -87,7 +87,7 @@ export default function HowToBookModern() {
                 boxShadow: '0 12px 30px rgba(0,0,0,0.12)',
                 transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }
               }}
-              className="p-5 md:p-6 rounded-xl cursor-default bg-white shadow-md transition-all duration-500"
+              className="snap-center shrink-0 w-[80vw] md:w-auto p-5 md:p-6 rounded-2xl cursor-default bg-white border border-slate-100 shadow-md transition-all duration-500"
             >
               {/* Step Icon & Number */}
               <div className="flex items-center mb-3 space-x-3">

@@ -231,10 +231,10 @@ export default function PopularDestinations() {
                 className="
                 snap-center shrink-0 
                 w-[85vw] sm:w-[340px]
-                bg-white rounded-2xl 
-                shadow-md hover:shadow-2xl transition-all duration-300
-                group relative hover:-translate-y-1
-                flex flex-col overflow-hidden border border-gray-100
+                bg-white rounded-3xl 
+                shadow-sm hover:shadow-2xl transition-all duration-300
+                group relative hover:-translate-y-1.5
+                flex flex-col overflow-hidden border border-slate-200/80 hover:border-[#0F766E]/30
               "
               initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -244,41 +244,44 @@ export default function PopularDestinations() {
                 <Link href={`/transfers/${item.slug}`} className="absolute inset-0 z-10" aria-label={`Book ${item.title}`} />
 
                 {/* IMAGE CONTAINER */}
-                <div className="relative h-56 w-full overflow-hidden">
+                <div className="relative h-56 w-full overflow-hidden bg-slate-100">
                   <Image
                     src={item.image}
                     alt={item.title}
                     fill
                     sizes="(max-width: 640px) 85vw, 340px"
-                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-108"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#102A43]/70 via-transparent to-black/20 opacity-80" />
 
-                  <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-white/90 text-slate-800 shadow-sm backdrop-blur-sm">
-                      <MapPin className="w-3 h-3 mr-1" />
+                  <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between z-10">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-white/90 text-slate-800 shadow-sm backdrop-blur-md">
+                      <MapPin className="w-3 h-3 mr-1 text-[#0F766E]" />
                       Popular
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold text-white bg-[#0F766E]/90 shadow-sm backdrop-blur-md">
+                      Fixed Price
                     </span>
                   </div>
                 </div>
 
                 {/* CONTENT */}
                 <div className="p-6 flex flex-col flex-grow">
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-[#0F766E] transition-colors" style={{ color: HEADING_COLOR }}>
+                  <h3 className="text-xl font-extrabold mb-2 group-hover:text-[#0F766E] transition-colors tracking-tight" style={{ color: HEADING_COLOR }}>
                     {item.title}
                   </h3>
 
-                  <p className="text-sm text-slate-500 mb-6 leading-relaxed line-clamp-2">
+                  <p className="text-xs sm:text-sm text-slate-500 mb-6 leading-relaxed line-clamp-2 font-light">
                     {item.subtitle}
                   </p>
 
-                  <div className="mt-auto pt-4 border-t border-gray-100 w-full flex items-center justify-between">
+                  <div className="mt-auto pt-4 border-t border-slate-100 w-full flex items-center justify-between">
                     <div>
-                      <p className="text-[11px] text-slate-400 uppercase font-bold tracking-wide mb-0.5">Starting from</p>
-                      <p className="text-lg font-bold" style={{ color: HEADING_COLOR }}>{item.price}</p>
+                      <p className="text-[10px] text-slate-400 uppercase font-extrabold tracking-wider mb-0.5">Starting from</p>
+                      <p className="text-xl font-extrabold" style={{ color: HEADING_COLOR }}>{item.price}</p>
                     </div>
 
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-50 text-slate-600 group-hover:bg-[#0F766E] group-hover:text-white transition-all shadow-sm">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-100 text-slate-700 group-hover:bg-[#0F766E] group-hover:text-white transition-all shadow-xs group-hover:scale-105">
                       <ArrowRight className="w-5 h-5" />
                     </div>
                   </div>

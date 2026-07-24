@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Navigation from "../components/Navigation"; 
 import Footer from "../components/Footer";
+import MobileBottomNav from "../components/MobileBottomNav";
+
 export default function RootLayout({ children, }: { children: React.ReactNode; }) {
   return (
     <>
@@ -13,6 +15,9 @@ export default function RootLayout({ children, }: { children: React.ReactNode; }
       </main>
 
       <Footer/>
+
+      {/* Global Sticky Mobile Bottom Navigation (Visible on all pages for mobile) */}
+      <MobileBottomNav />
     </>
   );
 }

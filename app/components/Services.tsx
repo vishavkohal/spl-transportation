@@ -76,8 +76,8 @@ export function Services() {
           </motion.div>
         </div>
 
-        {/* 4-Card 2x2 Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+        {/* 4-Card Grid on Desktop, Horizontal Touch Carousel on Mobile */}
+        <div className="flex md:grid md:grid-cols-2 gap-6 lg:gap-10 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-6 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
           {featuredServices.map((item, idx) => (
             <motion.div
               key={item.id}
@@ -86,7 +86,7 @@ export function Services() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
               onClick={scrollToBooking}
-              className="group cursor-pointer bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-2xl hover:border-teal-500/30 transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1"
+              className="snap-center shrink-0 w-[84vw] md:w-auto group cursor-pointer bg-white rounded-3xl border border-slate-200/80 shadow-sm hover:shadow-2xl hover:border-teal-500/30 transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1"
             >
               {/* Image Header with Badge Overlay */}
               <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-slate-100">
@@ -147,18 +147,6 @@ export function Services() {
             </motion.div>
           ))}
         </div>
-
-        {/* Bottom CTA Bar */}
-        <div className="mt-12 text-center">
-          <button
-            onClick={scrollToBooking}
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-[#102A43] hover:bg-[#0F766E] text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5"
-          >
-            <span>Book Your Transfer</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-
       </div>
     </section>
   );

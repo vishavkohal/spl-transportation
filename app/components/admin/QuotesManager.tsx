@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { RefreshCw, Search, Trash2, FileText, Download, Save, CheckCircle, Clock, MapPin, Calendar, User, DollarSign, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { RefreshCw, Search, Trash2, FileText, Download, Save, CheckCircle, Clock, MapPin, Calendar, User, DollarSign, ChevronDown, ChevronUp, AlertCircle, CreditCard, ExternalLink, Mail, MessageCircle } from 'lucide-react';
 
 const PRIMARY_COLOR = '#102A43';
 const ACCENT_COLOR = '#0F766E';
@@ -48,6 +48,13 @@ export default function QuotesManager() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
+  // Payment Link Generation & Sharing State
+  const [generatingLinkId, setGeneratingLinkId] = useState<string | null>(null);
+  const [generatedLinks, setGeneratedLinks] = useState<Record<string, string>>({});
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
+  const [sendingEmailQuoteId, setSendingEmailQuoteId] = useState<string | null>(null);
+  const [emailSentQuoteId, setEmailSentQuoteId] = useState<string | null>(null);
+
   function loadQuotes() {
     setLoading(true);
     fetch('/api/admin/quote-requests')
@@ -64,6 +71,23 @@ export default function QuotesManager() {
   useEffect(() => {
     loadQuotes();
   }, []);
+
+  // Check URL parameters for specific quote ID to auto-expand
+  useEffect(() => {
+    if (quotes.length > 0 && typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const targetId = searchParams.get('id');
+      if (targetId) {
+        const found = quotes.find(q => q.id === targetId || q.id.slice(-8).toUpperCase() === targetId.toUpperCase());
+        if (found) {
+          setExpandedId(found.id);
+          setEditAmount(found.amount !== undefined && found.amount !== null ? String(found.amount) : '');
+          setEditStatus(found.status || 'QUOTED');
+          setEditNotes(found.adminNotes || '');
+        }
+      }
+    }
+  }, [quotes]);
 
   const filteredQuotes = useMemo(() => {
     let result = quotes;
@@ -166,6 +190,115 @@ export default function QuotesManager() {
       }
     } catch (err) {
       console.error('Error deleting quote:', err);
+    }
+  };
+
+  const handleGeneratePaymentLink = async (quote: QuoteRequestItem) => {
+    const baseFare = parseFloat(editAmount || String(quote.amount || 0));
+    if (isNaN(baseFare) || baseFare <= 0) {
+      alert('Please enter a valid base quote amount before generating a payment link.');
+      return;
+    }
+
+    setGeneratingLinkId(quote.id);
+    try {
+      // 1. Save quote updates first if amount changed
+      await fetch('/api/admin/quote-requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: quote.id,
+          amount: baseFare,
+          status: 'QUOTED',
+          adminNotes: editNotes || quote.adminNotes || '',
+        }),
+      });
+
+      // 2. Call custom-checkout endpoint to create Stripe session & pending booking
+      const res = await fetch('/api/admin/custom-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pickupLocation: quote.pickupAddress,
+          dropoffLocation: quote.dropoffAddress,
+          pickupDate: quote.travelDate,
+          pickupTime: quote.travelTime,
+          passengers: quote.passengers,
+          luggage: (quote.checkInBags || 0) + (quote.carryOnBags || 0),
+          childSeat: Boolean(quote.childSeats && quote.childSeats !== 'No'),
+          amount: baseFare,
+          fullName: quote.fullName,
+          email: quote.email,
+          contactNumber: quote.phone,
+          includeProcessingFee: true,
+          notes: `Quote Request ID: QTE-${quote.id.slice(-8).toUpperCase()}`,
+          quoteId: quote.id,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || 'Failed to generate Stripe payment link.');
+      }
+
+      setGeneratedLinks(prev => ({ ...prev, [quote.id]: data.url }));
+      setEditStatus('QUOTED');
+      loadQuotes();
+    } catch (err: any) {
+      console.error('Error generating payment link:', err);
+      alert(err?.message || 'Failed to generate custom payment link.');
+    } finally {
+      setGeneratingLinkId(null);
+    }
+  };
+
+  const handleSendEmailLink = async (quote: QuoteRequestItem, paymentUrl: string) => {
+    setSendingEmailQuoteId(quote.id);
+    try {
+      const res = await fetch('/api/admin/quote-requests/send-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quoteId: quote.id,
+          paymentUrl,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send payment link email.');
+      }
+
+      setEmailSentQuoteId(quote.id);
+      setTimeout(() => setEmailSentQuoteId(null), 3000);
+      loadQuotes();
+    } catch (err: any) {
+      console.error('Error sending email link:', err);
+      alert(err?.message || 'Failed to send payment link email.');
+    } finally {
+      setSendingEmailQuoteId(null);
+    }
+  };
+
+  const getWhatsAppShareUrl = (quote: QuoteRequestItem, paymentUrl: string) => {
+    const rawPhone = quote.phone.replace(/[^0-9]/g, '');
+    const total = quote.totalAmount || (quote.amount ? Number((quote.amount * 1.025).toFixed(2)) : 0);
+
+    const text = `Hi ${quote.fullName}, here is your custom transfer quote payment link from SPL Transportation:\n\n` +
+      `🚗 Transfer: ${quote.pickupAddress} → ${quote.dropoffAddress}\n` +
+      `📅 Date & Time: ${quote.travelDate} at ${quote.travelTime}\n` +
+      `👥 Passengers: ${quote.passengers}\n` +
+      `💳 Total Amount: $${total.toFixed(2)} AUD\n\n` +
+      `Click here to complete your booking & pay online:\n${paymentUrl}`;
+
+    return `https://wa.me/${rawPhone}?text=${encodeURIComponent(text)}`;
+  };
+
+  const handleCopyLink = (id: string, url: string) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      setCopiedLinkId(id);
+      setTimeout(() => setCopiedLinkId(null), 2500);
     }
   };
 
@@ -453,14 +586,23 @@ export default function QuotesManager() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 pt-2">
+                        <div className="flex flex-wrap items-center gap-3 pt-2">
                           <button
                             onClick={() => handleSaveQuote(quote.id)}
                             disabled={savingId === quote.id}
-                            className="flex-1 py-2.5 bg-[#0F766E] hover:bg-[#0C5D59] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                            className="flex-1 min-w-[140px] py-2.5 bg-[#0F766E] hover:bg-[#0C5D59] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all"
                           >
                             <Save className="w-4 h-4" />
-                            {savingId === quote.id ? 'Saving...' : 'Save Quote & Calculate Fee'}
+                            {savingId === quote.id ? 'Saving...' : 'Save Quote'}
+                          </button>
+
+                          <button
+                            onClick={() => handleGeneratePaymentLink(quote)}
+                            disabled={generatingLinkId === quote.id}
+                            className="flex-1 min-w-[160px] py-2.5 bg-[#102A43] hover:bg-[#091D30] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all"
+                          >
+                            <CreditCard className="w-4 h-4" />
+                            {generatingLinkId === quote.id ? 'Generating...' : 'Generate Payment Link'}
                           </button>
 
                           <a
@@ -470,12 +612,82 @@ export default function QuotesManager() {
                             className="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
                           >
                             <Download className="w-4 h-4" />
-                            Download Quote PDF
+                            PDF Quote
                           </a>
                         </div>
 
+                        {generatedLinks[quote.id] && (
+                          <div className="p-4 bg-teal-50/80 border border-teal-200 rounded-2xl space-y-3 text-xs mt-3">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-[#0F766E] flex items-center gap-1.5 text-xs">
+                                <CheckCircle className="w-4 h-4 text-[#0F766E]" />
+                                Stripe Payment Link Ready
+                              </span>
+                              <span className="text-[11px] text-slate-500 font-mono">
+                                Pending Booking Created
+                              </span>
+                            </div>
+
+                            {/* Link input */}
+                            <div className="flex items-center gap-2 bg-white p-2.5 border border-slate-200 rounded-xl shadow-xs">
+                              <input
+                                type="text"
+                                readOnly
+                                value={generatedLinks[quote.id]}
+                                className="flex-1 bg-transparent text-xs text-slate-800 outline-none truncate font-mono"
+                              />
+                            </div>
+
+                            {/* Action Buttons Row */}
+                            <div className="flex flex-wrap items-center gap-2 pt-1">
+                              <button
+                                onClick={() => handleSendEmailLink(quote, generatedLinks[quote.id])}
+                                disabled={sendingEmailQuoteId === quote.id}
+                                className="flex-1 min-w-[130px] px-3 py-2 bg-[#0F766E] hover:bg-[#0C5D59] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
+                              >
+                                <Mail className="w-3.5 h-3.5" />
+                                {sendingEmailQuoteId === quote.id ? 'Sending Email...' : emailSentQuoteId === quote.id ? 'Email Sent ✓' : 'Send via Email'}
+                              </button>
+
+                              <a
+                                href={getWhatsAppShareUrl(quote, generatedLinks[quote.id])}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex-1 min-w-[130px] px-3 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5 fill-white text-[#25D366]" />
+                                Send via WhatsApp
+                              </a>
+
+                              <button
+                                onClick={() => handleCopyLink(quote.id, generatedLinks[quote.id])}
+                                className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5"
+                              >
+                                {copiedLinkId === quote.id ? 'Copied! ✓' : 'Copy Link'}
+                              </button>
+
+                              <a
+                                href={generatedLinks[quote.id]}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                Open Link
+                              </a>
+                            </div>
+
+                            {emailSentQuoteId === quote.id && (
+                              <div className="p-2 bg-emerald-100/80 border border-emerald-300 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 mt-2">
+                                <CheckCircle className="w-4 h-4 text-emerald-600" />
+                                <span>Payment link email dispatched to {quote.email}!</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {saveSuccess === quote.id && (
-                          <div className="p-2 bg-green-50 border border-green-200 text-green-700 rounded-xl text-xs flex items-center gap-1.5">
+                          <div className="p-2 bg-green-50 border border-green-200 text-green-700 rounded-xl text-xs flex items-center gap-1.5 mt-2">
                             <CheckCircle className="w-4 h-4" />
                             <span>Quote updated and fee calculated successfully!</span>
                           </div>

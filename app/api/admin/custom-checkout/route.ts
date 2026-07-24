@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
       contactNumber,
       includeProcessingFee = true,
       notes = '',
+      quoteId,
     } = body;
 
     // Validate mandatory fields
@@ -115,6 +116,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         bookingType: 'standard',
         isCustomPaymentLink: 'true',
+        quoteId: quoteId || '',
         baseAmount: baseAmount.toString(),
         processingFee: processingFee.toString(),
         finalAmount: finalAmount.toString(),

@@ -11,7 +11,7 @@ export const quoteRequestSchema = z.object({
   passengers: z.number().int().min(1, 'At least 1 passenger is required').max(7, 'Max 7 passengers'),
   checkInBags: z.number().int().min(0).max(5).optional().default(0),
   carryOnBags: z.number().int().min(0).max(5).optional().default(0),
-  childSeats: z.string().max(5).optional().default('No'),
+  childSeats: z.string().max(50).optional().default('No'),
   flightArrivalType: z.string().max(50).nullable().optional(),
   flightArrivalNumber: z.string().max(50).nullable().optional(),
   flightArrivalTime: z.string().max(50).nullable().optional(),

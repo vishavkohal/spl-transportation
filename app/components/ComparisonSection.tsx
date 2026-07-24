@@ -138,6 +138,11 @@ export default function ComparisonSection() {
           </motion.div>
         </div>
 
+        {/* Mobile Scroll Hint Banner */}
+        <div className="flex md:hidden items-center justify-center gap-2 mb-3 text-xs font-semibold text-[#0F766E] bg-[#0F766E]/10 py-1.5 px-4 rounded-full w-fit mx-auto">
+          <span>👈 Swipe horizontally to compare options 👉</span>
+        </div>
+
         {/* Responsive Comparison Table */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}

@@ -464,38 +464,77 @@ export type QuoteNotificationData = {
 };
 
 /**
- * Send admin email notification when a new Quote Request is submitted
+ * Helper to construct the admin dashboard URL for quote requests
  */
-export async function sendAdminQuoteNotification(quote: QuoteNotificationData): Promise<void> {
-  const subject = `New Quote Request from ${quote.fullName} – ${quote.pickupAddress} to ${quote.dropoffAddress}`;
+export function getAdminDashboardQuoteUrl(quoteId?: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.APP_URL || 'https://spltransportation.com.au';
+  const cleanBase = baseUrl.replace(/\/+$/, '');
+  return `${cleanBase}/admin?tab=quotes${quoteId ? `&id=${quoteId}` : ''}`;
+}
 
-  const html = `
-    <div style="font-family: system-ui, -apple-system, sans-serif; color:#111827; max-width:650px; margin:0 auto; padding:20px; border:1px solid #E5E7EB; rounded-xl;">
-      <h2 style="color:#102A43; margin-top:0;">SPL Transportation – New Quote Request</h2>
-      <p style="font-size:14px; color:#4B5563;">A customer has requested a custom price quote on the website.</p>
-      
-      <table style="width:100%; border-collapse:collapse; margin:20px 0; font-size:14px;">
-        <tbody>
-          <tr style="background:#F9FAFB;"><td style="padding:8px; font-weight:bold; width:35%;">Customer Name:</td><td style="padding:8px;">${quote.fullName}</td></tr>
-          <tr><td style="padding:8px; font-weight:bold;">Email:</td><td style="padding:8px;"><a href="mailto:${quote.email}">${quote.email}</a></td></tr>
-          <tr style="background:#F9FAFB;"><td style="padding:8px; font-weight:bold;">Phone:</td><td style="padding:8px;"><a href="tel:${quote.phone}">${quote.phone}</a></td></tr>
-          <tr><td style="padding:8px; font-weight:bold;">Travel Date & Time:</td><td style="padding:8px;">${quote.travelDate} at ${quote.travelTime}</td></tr>
-          <tr style="background:#F9FAFB;"><td style="padding:8px; font-weight:bold;">Pickup Address:</td><td style="padding:8px;">${quote.pickupAddress}</td></tr>
-          <tr><td style="padding:8px; font-weight:bold;">Dropoff Address:</td><td style="padding:8px;">${quote.dropoffAddress}</td></tr>
-          <tr style="background:#F9FAFB;"><td style="padding:8px; font-weight:bold;">Passengers:</td><td style="padding:8px;">${quote.passengers}</td></tr>
-          <tr><td style="padding:8px; font-weight:bold;">Baggage:</td><td style="padding:8px;">${quote.checkInBags ?? 0} Check-in, ${quote.carryOnBags ?? 0} Carry-on</td></tr>
-          <tr style="background:#F9FAFB;"><td style="padding:8px; font-weight:bold;">Child Seats:</td><td style="padding:8px;">${quote.childSeats || 'No'}</td></tr>
-          ${quote.flightArrivalNumber ? `<tr><td style="padding:8px; font-weight:bold;">Flight Arrival:</td><td style="padding:8px;">${quote.flightArrivalType || 'Arrival'} - Flight #${quote.flightArrivalNumber} (${quote.flightArrivalTime || 'N/A'})</td></tr>` : ''}
-          ${quote.flightDepartureNumber ? `<tr style="background:#F9FAFB;"><td style="padding:8px; font-weight:bold;">Flight Departure:</td><td style="padding:8px;">${quote.flightDepartureType || 'Departure'} - Flight #${quote.flightDepartureNumber} (${quote.flightDepartureTime || 'N/A'})</td></tr>` : ''}
-          ${quote.message ? `<tr><td style="padding:8px; font-weight:bold;">Message / Notes:</td><td style="padding:8px;">${quote.message}</td></tr>` : ''}
-        </tbody>
-      </table>
+/**
+ * Build HTML content for admin quote notification
+ */
+export function buildAdminQuoteNotificationHtml(quote: QuoteNotificationData): string {
+  const adminDashboardLink = getAdminDashboardQuoteUrl(quote.id);
+  return `
+    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#111827; max-width:650px; margin:0 auto; padding:24px; border:1px solid #E5E7EB; border-radius:16px; background-color:#ffffff;">
+      <div style="border-bottom: 2px solid #0F766E; padding-bottom: 16px; margin-bottom: 20px;">
+        <span style="font-family:Segoe UI, Arial, sans-serif; font-weight:700; font-size:22px;">
+          <span style="color:#0F766E;">SPL</span>
+          <span style="color:#102A43;">Transportation</span>
+        </span>
+        <h2 style="color:#102A43; margin-top:8px; margin-bottom:4px; font-size:20px;">New Custom Quote Request</h2>
+        <p style="font-size:14px; color:#4B5563; margin:0;">A customer has submitted a new custom quote request on the website.</p>
+      </div>
 
-      <div style="margin-top:20px; padding:12px; bg-color:#F3F4F6; border-left:4px solid #0F766E; font-size:13px; color:#374151;">
-        Log into the SPL Admin Panel to set the quote amount, calculate fees, and generate the quote PDF.
+      <div style="background-color:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:16px; margin-bottom:20px;">
+        <h3 style="margin-top:0; margin-bottom:12px; font-size:14px; font-weight:700; color:#102A43; text-transform:uppercase; letter-spacing:0.5px;">Trip Details</h3>
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <tbody>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; width:40%; color:#475569;">Travel Date & Time:</td><td style="padding:8px 0; font-weight:600; color:#0F172A;">${quote.travelDate} at ${quote.travelTime}</td></tr>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; color:#475569;">Pickup Location:</td><td style="padding:8px 0; color:#0F172A;">${quote.pickupAddress}</td></tr>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; color:#475569;">Dropoff Destination:</td><td style="padding:8px 0; color:#0F172A;">${quote.dropoffAddress}</td></tr>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; color:#475569;">Passengers:</td><td style="padding:8px 0; color:#0F172A;">${quote.passengers}</td></tr>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; color:#475569;">Luggage / Baggage:</td><td style="padding:8px 0; color:#0F172A;">${quote.checkInBags ?? 0} Check-in, ${quote.carryOnBags ?? 0} Carry-on</td></tr>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; color:#475569;">Child / Booster Seats:</td><td style="padding:8px 0; color:#0F172A;">${quote.childSeats || 'No'}</td></tr>
+            ${quote.flightArrivalNumber ? `<tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; color:#475569;">Flight Arrival:</td><td style="padding:8px 0; color:#0F172A;">${quote.flightArrivalType || 'Arrival'} - Flight #${quote.flightArrivalNumber} (${quote.flightArrivalTime || 'N/A'})</td></tr>` : ''}
+            ${quote.flightDepartureNumber ? `<tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; color:#475569;">Flight Departure:</td><td style="padding:8px 0; color:#0F172A;">${quote.flightDepartureType || 'Departure'} - Flight #${quote.flightDepartureNumber} (${quote.flightDepartureTime || 'N/A'})</td></tr>` : ''}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="background-color:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:16px; margin-bottom:24px;">
+        <h3 style="margin-top:0; margin-bottom:12px; font-size:14px; font-weight:700; color:#102A43; text-transform:uppercase; letter-spacing:0.5px;">Customer Contact Information</h3>
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <tbody>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; width:40%; color:#475569;">Customer Name:</td><td style="padding:8px 0; font-weight:600; color:#0F172A;">${quote.fullName}</td></tr>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; color:#475569;">Email Address:</td><td style="padding:8px 0;"><a href="mailto:${quote.email}" style="color:#0F766E; font-weight:600;">${quote.email}</a></td></tr>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; color:#475569;">Phone Number:</td><td style="padding:8px 0;"><a href="tel:${quote.phone}" style="color:#0F766E; font-weight:600;">${quote.phone}</a></td></tr>
+            ${quote.message ? `<tr><td style="padding:8px 0; font-weight:bold; color:#475569;">Customer Notes:</td><td style="padding:8px 0; color:#334155; font-style:italic;">${quote.message}</td></tr>` : ''}
+          </tbody>
+        </table>
+      </div>
+
+      <div style="text-align:center; margin:28px 0 20px 0;">
+        <a href="${adminDashboardLink}" target="_blank" style="background-color:#0F766E; color:#ffffff; font-size:15px; font-weight:700; text-decoration:none; padding:14px 28px; border-radius:10px; display:inline-block; box-shadow:0 4px 6px -1px rgba(15, 118, 110, 0.2);">
+          Open Quote in Admin Dashboard →
+        </a>
+      </div>
+
+      <div style="margin-top:20px; padding:12px 16px; background-color:#F1F5F9; border-left:4px solid #0F766E; border-radius:4px; font-size:13px; color:#475569;">
+        Direct Dashboard Link: <a href="${adminDashboardLink}" style="color:#0F766E; word-break:break-all;">${adminDashboardLink}</a>
       </div>
     </div>
   `;
+}
+
+/**
+ * Send admin email notification when a new Quote Request is submitted
+ */
+export async function sendAdminQuoteNotification(quote: QuoteNotificationData): Promise<void> {
+  const subject = `New Custom Quote Request from ${quote.fullName} – ${quote.pickupAddress} to ${quote.dropoffAddress}`;
+  const html = buildAdminQuoteNotificationHtml(quote);
 
   if (!resend) {
     console.log('sendAdminQuoteNotification – RESEND_API_KEY not set, logging instead.');
@@ -515,4 +554,103 @@ export async function sendAdminQuoteNotification(quote: QuoteNotificationData): 
     console.error('Failed to send admin quote notification email:', err);
   }
 }
+
+export type QuotePaymentLinkEmailData = {
+  quoteId: string;
+  fullName: string;
+  email: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  travelDate: string;
+  travelTime: string;
+  passengers: number;
+  amount: number;
+  processingFee?: number;
+  totalAmount: number;
+  paymentUrl: string;
+};
+
+export function buildQuotePaymentLinkEmailHtml(data: QuotePaymentLinkEmailData): string {
+  const baseFareFormatted = data.amount.toFixed(2);
+  const feeFormatted = (data.processingFee ?? (data.amount * 0.025)).toFixed(2);
+  const totalFormatted = data.totalAmount.toFixed(2);
+
+  return `
+    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#111827; max-width:650px; margin:0 auto; padding:24px; border:1px solid #E5E7EB; border-radius:16px; background-color:#ffffff;">
+      <div style="border-bottom: 2px solid #0F766E; padding-bottom: 16px; margin-bottom: 20px;">
+        <span style="font-family:Segoe UI, Arial, sans-serif; font-weight:700; font-size:22px;">
+          <span style="color:#0F766E;">SPL</span>
+          <span style="color:#102A43;">Transportation</span>
+        </span>
+        <h2 style="color:#102A43; margin-top:8px; margin-bottom:4px; font-size:20px;">Your Custom Transfer Quote is Ready</h2>
+        <p style="font-size:14px; color:#4B5563; margin:0;">Hello ${data.fullName}, here are your custom quote details for your upcoming transfer.</p>
+      </div>
+
+      <div style="background-color:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:16px; margin-bottom:20px;">
+        <h3 style="margin-top:0; margin-bottom:12px; font-size:14px; font-weight:700; color:#102A43; text-transform:uppercase; letter-spacing:0.5px;">Trip Details</h3>
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <tbody>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; width:40%; color:#475569;">Quote Reference:</td><td style="padding:8px 0; font-weight:700; color:#0F766E;">QTE-${data.quoteId.slice(-8).toUpperCase()}</td></tr>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; color:#475569;">Travel Date &amp; Time:</td><td style="padding:8px 0; font-weight:600; color:#0F172A;">${data.travelDate} at ${data.travelTime}</td></tr>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; color:#475569;">Pickup Location:</td><td style="padding:8px 0; color:#0F172A;">${data.pickupAddress}</td></tr>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; font-weight:bold; color:#475569;">Dropoff Destination:</td><td style="padding:8px 0; color:#0F172A;">${data.dropoffAddress}</td></tr>
+            <tr><td style="padding:8px 0; font-weight:bold; color:#475569;">Passengers:</td><td style="padding:8px 0; color:#0F172A;">${data.passengers}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="background-color:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:16px; margin-bottom:24px;">
+        <h3 style="margin-top:0; margin-bottom:12px; font-size:14px; font-weight:700; color:#102A43; text-transform:uppercase; letter-spacing:0.5px;">Fare Breakdown</h3>
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+          <tbody>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; color:#475569;">Base Fare:</td><td style="padding:8px 0; font-weight:600; color:#0F172A; text-align:right;">$${baseFareFormatted} AUD</td></tr>
+            <tr style="border-bottom:1px solid #E2E8F0;"><td style="padding:8px 0; color:#475569;">Card Processing Fee (2.5%):</td><td style="padding:8px 0; font-weight:600; color:#0F172A; text-align:right;">$${feeFormatted} AUD</td></tr>
+            <tr><td style="padding:10px 0; font-weight:bold; font-size:16px; color:#102A43;">Total Quoted Amount:</td><td style="padding:10px 0; font-weight:800; font-size:18px; color:#0F766E; text-align:right;">$${totalFormatted} AUD</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="text-align:center; margin:28px 0 24px 0;">
+        <a href="${data.paymentUrl}" target="_blank" style="background-color:#0F766E; color:#ffffff; font-size:16px; font-weight:700; text-decoration:none; padding:15px 32px; border-radius:12px; display:inline-block; box-shadow:0 4px 10px rgba(15, 118, 110, 0.3);">
+          Complete Booking &amp; Pay $${totalFormatted} AUD →
+        </a>
+      </div>
+
+      <div style="padding:12px 16px; background-color:#F1F5F9; border-left:4px solid #0F766E; border-radius:4px; font-size:12px; color:#475569;">
+        Having trouble with the button? Copy and paste this payment link into your browser:<br/>
+        <a href="${data.paymentUrl}" style="color:#0F766E; word-break:break-all; font-weight:600;">${data.paymentUrl}</a>
+      </div>
+
+      <div style="margin-top:24px; padding-top:16px; border-top:1px solid #E5E7EB; text-align:center; font-size:12px; color:#6B7280;">
+        Need assistance or changes? Contact us 24/7 at <a href="tel:${COMPANY_PHONE}" style="color:#0F766E;">${COMPANY_PHONE}</a> or email <a href="mailto:${COMPANY_EMAIL}" style="color:#0F766E;">${COMPANY_EMAIL}</a>.
+      </div>
+    </div>
+  `;
+}
+
+export async function sendQuotePaymentLinkEmail(data: QuotePaymentLinkEmailData): Promise<void> {
+  const subject = `Your Custom Transfer Quote (${data.pickupAddress} → ${data.dropoffAddress}) – SPL Transportation`;
+  const html = buildQuotePaymentLinkEmailHtml(data);
+
+  if (!resend) {
+    console.log('sendQuotePaymentLinkEmail – RESEND_API_KEY not set, logging instead.');
+    console.log('To:', data.email);
+    console.log(html.replace(/<[^>]+>/g, ' ').slice(0, 500));
+    return;
+  }
+
+  try {
+    await sendWithRetries({
+      from: FROM_EMAIL,
+      to: data.email,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error('Failed to send quote payment link email:', err);
+    throw err;
+  }
+}
+
+
 

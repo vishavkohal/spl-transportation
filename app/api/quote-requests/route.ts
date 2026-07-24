@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Fire & forget or await email notification to admin
-    sendAdminQuoteNotification(quoteRequest).catch((err) => {
+    // Send email notification to admin (awaited with catch to handle errors safely in serverless environments)
+    await sendAdminQuoteNotification(quoteRequest).catch((err) => {
       console.error('Error sending quote admin email notification:', err);
     });
 

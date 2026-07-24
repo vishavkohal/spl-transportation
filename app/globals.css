@@ -146,3 +146,29 @@ select.landing-form-input {
 .landing-form-input[type="number"]::-webkit-outer-spin-button {
   opacity: 1;
 }
+
+/* ===== Mobile PWA & Touch Polish ===== */
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Prevent unwanted double-tap zoom on buttons and interactive components */
+button, input, select, a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile Safe Area Padding Helpers */
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.pt-safe {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}

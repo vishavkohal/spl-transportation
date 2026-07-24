@@ -70,6 +70,18 @@ export default function AdminPanel() {
     leads: []
   });
 
+  // Check URL parameters for active tab on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tabParam = searchParams.get('tab');
+      const validTabs = ['overview', 'custom-checkout', 'routes', 'bookings', 'quotes', 'leads', 'upcoming'];
+      if (tabParam && validTabs.includes(tabParam)) {
+        setActiveTab(tabParam as any);
+      }
+    }
+  }, []);
+
   // 1. Check Session
   useEffect(() => {
     const checkSession = async () => {

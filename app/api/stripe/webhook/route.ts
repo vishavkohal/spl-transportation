@@ -8,6 +8,7 @@ import {
   sendEmailsOnce,
 } from '../../../lib/booking';
 import { markLeadConvertedByEmail } from '../../../lib/bookingLead';
+import { prisma } from '@/lib/prisma';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
@@ -136,7 +137,19 @@ export async function POST(req: NextRequest) {
         );
         
         await markLeadConvertedByEmail(booking.email);
-        // console.log('✅ Webhook processed for session', session.id, 'paid=', paid);
+
+        // Update QuoteRequest status if quoteId is present
+        if (session.metadata?.quoteId) {
+          try {
+            await prisma.quoteRequest.update({
+              where: { id: session.metadata.quoteId },
+              data: { status: 'QUOTED' },
+            });
+          } catch (qErr) {
+            console.error('Failed to update quote request status on webhook:', qErr);
+          }
+        }
+
         break;
       }
 

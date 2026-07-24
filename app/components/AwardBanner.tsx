@@ -34,7 +34,7 @@ export default function AwardBanner() {
 
             {/* Description with Custom Metric */}
             <p className="text-sm sm:text-base text-slate-200 font-light leading-relaxed">
-              Recognized as the premier private transfer & luxury charter service in New South Wales, achieving a <strong className="text-white font-semibold">99.4% On-Time Reliability Score</strong> across over <strong className="text-[#2DD4BF] font-semibold">10,000+ completed transfers</strong>.
+              Recognized as the premier private transfer & luxury charter service in Cairns & Tropical North Queensland, achieving a <strong className="text-white font-semibold">99.4% On-Time Reliability Score</strong> across over <strong className="text-[#2DD4BF] font-semibold">10,000+ completed transfers</strong>.
             </p>
 
             {/* Citation Label */}

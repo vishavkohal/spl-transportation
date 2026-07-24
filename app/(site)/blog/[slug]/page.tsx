@@ -3,10 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { BASE_URL } from "@/app/lib/constants";
 
 const PRIMARY_COLOR = "#102A43";
 const ACCENT_COLOR = "#0F766E";
-const BASE_URL = "https://spltransportation.com.au";
 
 export const revalidate = 600;
 
@@ -265,6 +265,37 @@ export default async function BlogPostPage({
             />
           </div>
 
+          {/* Contextual Route Interlinking Recommendation Box */}
+          <div className="border-t border-slate-200 bg-gradient-to-br from-[#102A43] to-[#19324D] text-white p-6 sm:p-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <span className="inline-block px-3 py-1 rounded-full bg-[#0F766E]/30 text-[#2DD4BF] text-xs font-bold uppercase tracking-wider">
+                  Popular Route Transfer
+                </span>
+                <h3 className="text-xl font-bold text-white">
+                  Traveling between Cairns Airport, Port Douglas &amp; Palm Cove?
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
+                  Book direct door-to-door private transfers with fixed pricing, flight tracking, and professional drivers across Tropical North Queensland.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3 shrink-0">
+                <Link
+                  href="/transfers/cairns-airport-to-port-douglas"
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-[#0F766E] hover:bg-[#0C5D59] text-white transition-all shadow-md"
+                >
+                  Port Douglas Transfers →
+                </Link>
+                <Link
+                  href="/transfers/cairns-airport-to-palm-cove"
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all"
+                >
+                  Palm Cove Transfers →
+                </Link>
+              </div>
+            </div>
+          </div>
+
           {/* Bottom CTA */}
           <div className="border-t border-slate-200 bg-slate-50 px-6 sm:px-10 py-7">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -273,11 +304,10 @@ export default async function BlogPostPage({
                   className="text-sm font-bold"
                   style={{ color: PRIMARY_COLOR }}
                 >
-                  Need a private transfer?
+                  Need a custom private transfer quote?
                 </p>
                 <p className="text-xs text-slate-600 mt-1">
-                  Request a fixed-price quote with a professional driver and a
-                  premium vehicle.
+                  Request a fixed-price quote with a professional driver and premium vehicle.
                 </p>
               </div>
 
@@ -293,16 +323,80 @@ export default async function BlogPostPage({
         </div>
 
         {/* Back to blog */}
-        <div className="mt-10">
+        <div className="mt-10 flex items-center justify-between">
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 text-sm font-semibold hover:underline"
             style={{ color: PRIMARY_COLOR }}
           >
-            ← Back to Blog
+            ← Back to All Travel Guides
+          </Link>
+          <Link
+            href="/transfers"
+            className="inline-flex items-center gap-2 text-sm font-semibold hover:underline text-[#0F766E]"
+          >
+            View All Transfer Routes →
           </Link>
         </div>
       </section>
+
+      {/* JSON-LD Article & Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              "headline": post.title,
+              "description": post.excerpt,
+              "datePublished": post.publishedAt,
+              "dateModified": post.updatedAt || post.publishedAt,
+              "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": `${BASE_URL}/blog/${post.slug}`
+              },
+              "image": post.featuredImage ? `${BASE_URL}/api/images/${post.featuredImage.id}` : `${BASE_URL}/hero-mercedes.webp`,
+              "author": {
+                "@type": "Organization",
+                "name": "SPL Transportation"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "SPL Transportation",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": `${BASE_URL}/logo.png`
+                }
+              }
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": BASE_URL
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Blog",
+                  "item": `${BASE_URL}/blog`
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": post.title,
+                  "item": `${BASE_URL}/blog/${post.slug}`
+                }
+              ]
+            }
+          ])
+        }}
+      />
     </main>
   );
 }

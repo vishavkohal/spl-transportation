@@ -73,7 +73,7 @@ const FeaturesSection: React.FC = React.memo(() => {
       {/* 1. DARK NAVY FEATURE STRIP */}
       <section className="w-full bg-[#102A43] text-white py-14 border-y border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+          <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 lg:gap-10 overflow-x-auto sm:overflow-visible snap-x snap-mandatory pb-4 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
             {featureHighlights.map((feat, idx) => {
               const Icon = feat.icon;
               return (
@@ -83,7 +83,7 @@ const FeaturesSection: React.FC = React.memo(() => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  className="flex flex-col items-start text-left group"
+                  className="snap-center shrink-0 w-[78vw] sm:w-auto bg-white/5 sm:bg-transparent border border-white/10 sm:border-0 rounded-2xl p-5 sm:p-0 flex flex-col items-start text-left group"
                 >
                   <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center mb-4 text-[#2DD4BF] group-hover:bg-[#0F766E] group-hover:text-white transition-all duration-300">
                     <Icon className="w-6 h-6" />

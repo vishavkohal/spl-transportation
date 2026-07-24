@@ -13,7 +13,7 @@ export default function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"
-      className="fixed bottom-6 right-6 z-40 flex items-center gap-2 group focus:outline-none"
+      className="fixed bottom-[calc(4.8rem+env(safe-area-inset-bottom))] right-4 lg:bottom-6 lg:right-6 z-40 flex items-center gap-2 group focus:outline-none"
     >
       {/* Tooltip Label */}
       <span className="hidden sm:inline-block bg-slate-900/90 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap backdrop-blur-sm border border-white/10">
@@ -21,13 +21,13 @@ export default function WhatsAppButton() {
       </span>
 
       {/* Button Body */}
-      <div className="relative flex items-center justify-center w-16 h-16 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-full shadow-xl hover:shadow-2xl hover:shadow-green-500/40 transition-all duration-300 hover:scale-110 active:scale-95">
+      <div className="relative flex items-center justify-center w-14 h-14 lg:w-16 lg:h-16 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-full shadow-xl hover:shadow-2xl hover:shadow-green-500/40 transition-all duration-300 hover:scale-110 active:scale-95">
         {/* Subtle Pulse Animation Ring */}
         <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-75 animate-ping -z-10 pointer-events-none" />
 
         {/* WhatsApp Official Icon */}
         <svg
-          className="w-10 h-10 fill-current"
+          className="w-8 h-8 lg:w-10 lg:h-10 fill-current"
           viewBox="0 0 32 32"
           xmlns="http://www.w3.org/2000/svg"
         >

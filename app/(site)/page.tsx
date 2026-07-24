@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import Script from 'next/script';
 import HomePageClient from './HomePageClient';
 import JsonLd from '@/app/components/JsonLd';
-
-const BASE_URL = 'https://www.spltransportation.com.au';
+import { BASE_URL, BUSINESS_PHONE_RAW } from '@/app/lib/constants';
 
 export const metadata: Metadata = {
   title: 'Private Airport Transfers Cairns | From $55 | SPL Transportation',

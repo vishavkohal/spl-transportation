@@ -14,3 +14,7 @@
 .infiniteScroll {
   animation: scroll 35s linear infinite;
 }
+
+.infiniteScroll:hover {
+  animation-play-state: paused;
+}

@@ -30,8 +30,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
 
-          {/* Brand Column (Span 4) */}
-          <div className="lg:col-span-4 space-y-6">
+          {/* Brand Column (Span 3) */}
+          <div className="lg:col-span-3 space-y-6">
             <Link href="/" className="inline-block">
               <Image
                 src="/logo.png"
@@ -42,11 +42,10 @@ export default function Footer() {
               />
             </Link>
             <p className="text-sm leading-relaxed max-w-sm" style={{ color: TEXT_MUTED }}>
-              Professional private transfers across Queensland.
+              Professional private transfers across Tropical North Queensland.
               Elevating your journey with safety, punctuality, and premium comfort.
             </p>
 
-            {/* Minimal Social Icons */}
             <div className="flex gap-4">
               <a
                 href="https://www.facebook.com/spltransportation"
@@ -69,17 +68,16 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Spacer (Span 1) */}
-          <div className="hidden lg:block lg:col-span-1" />
-
-          {/* Quick Links (Span 3) */}
-          <div className="lg:col-span-3">
-            <h4 className="font-semibold text-white mb-6">Company</h4>
+          {/* Quick Links (Span 2) */}
+          <div className="lg:col-span-2">
+            <h4 className="font-semibold text-white mb-6">Navigation</h4>
             <ul className="space-y-3 text-sm">
               {[
+                { label: 'Home', href: '/' },
+                { label: 'All Transfers', href: '/transfers' },
+                { label: 'Book Now', href: '/book' },
+                { label: 'Travel Guides', href: '/blog' },
                 { label: 'About Us', href: '/about' },
-                { label: 'Our Fleet', href: '/about' },
-                { label: 'Pricing & Routes', href: '/transfers' },
                 { label: 'Contact', href: '/contact' }
               ].map((link) => (
                 <li key={link.label}>
@@ -96,9 +94,35 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact (Span 4) */}
+          {/* Popular Routes (Span 4) */}
           <div className="lg:col-span-4">
-            <h4 className="font-semibold text-white mb-6">Contact</h4>
+            <h4 className="font-semibold text-white mb-6">Popular Transfer Routes</h4>
+            <ul className="space-y-3 text-sm">
+              {[
+                { label: 'Cairns Airport → Port Douglas', href: '/transfers/cairns-airport-to-port-douglas' },
+                { label: 'Cairns Airport → Palm Cove', href: '/transfers/cairns-airport-to-palm-cove' },
+                { label: 'Cairns Airport → Cairns City', href: '/transfers/cairns-airport-to-cairns-city' },
+                { label: 'Cairns City → Kuranda', href: '/transfers/cairns-city-to-kuranda' },
+                { label: 'Cairns City → Atherton Tablelands', href: '/transfers/cairns-city-to-tablelands' },
+                { label: 'Palm Cove → Cairns Airport', href: '/transfers/palm-cove-to-cairns-airport' },
+              ].map((route) => (
+                <li key={route.label}>
+                  <Link
+                    href={route.href}
+                    className="group flex items-center justify-between hover:text-white transition-colors duration-200"
+                    style={{ color: TEXT_MUTED }}
+                  >
+                    <span>{route.label}</span>
+                    <ArrowUpRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact (Span 3) */}
+          <div className="lg:col-span-3">
+            <h4 className="font-semibold text-white mb-6">Contact & Support</h4>
             <ul className="space-y-4 text-sm">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 mt-0.5 shrink-0" style={{ color: ACCENT_COLOR }} strokeWidth={1.5} />

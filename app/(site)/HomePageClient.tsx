@@ -17,6 +17,8 @@ const ComparisonSection = dynamic(() => import('../components/ComparisonSection'
 const CustomerReviews = dynamic(() => import('../components/CustomerReviews'));
 const Faqsection = dynamic(() => import('../components/FaqSection'));
 const CtaBanner = dynamic(() => import('../components/CtaBanner'));
+const ExitIntentModal = dynamic(() => import('../components/ExitIntentModal'));
+const MobileBottomNav = dynamic(() => import('../components/MobileBottomNav'));
 
 export default function HomePageClient() {
     const isOnline = useOnlineStatus();
@@ -38,6 +40,7 @@ export default function HomePageClient() {
 
     return (
         <>
+            <ExitIntentModal />
             {/* 🔴 Offline Banner */}
             {!isOnline && (
                 <div className="bg-red-600 text-white text-center py-2 text-sm font-medium sticky top-0 z-50 shadow-md">
@@ -69,9 +72,9 @@ export default function HomePageClient() {
                 error={routesError}
                 onSelectRoute={handleRouteSelect}
             />
+            <CustomerReviews />
             <HowToBookModern />
             <ComparisonSection />
-            <CustomerReviews />
             <Services />
             <Faqsection />
             <CtaBanner />

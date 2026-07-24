@@ -21,8 +21,8 @@ import UtmTracker from "@/app/components/UtmTracker";
 import CookieConsent from "@/app/components/CookieConsent";
 import WhatsAppButton from "@/app/components/WhatsAppButton";
 import { Toaster } from 'sonner';
-const BASE_URL = "https://www.spltransportation.com.au";
-const GA_ID = "G-0F1THLNR5M";
+import { BASE_URL, GA_ID, BUSINESS_PHONE } from "@/app/lib/constants";
+
 
 export const metadata: Metadata = {
   title: {
@@ -85,6 +85,14 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
   },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#102A43",
 };
 
 export default function RootLayout({
@@ -164,7 +172,7 @@ export default function RootLayout({
                 "logo": `${BASE_URL}/logo.png`,
                 "description":
                   "Private airport and regional transfers across Cairns, Port Douglas and Far North Queensland.",
-                "telephone": "+61 450 565 078",
+                "telephone": BUSINESS_PHONE,
                 "address": {
                   "@type": "PostalAddress",
                   "addressCountry": "AU",
