@@ -472,22 +472,9 @@ export default function LandingBookingForm() {
 
                   {/* Time */}
                   <div>
-                    <div className="flex items-center justify-between mb-1.5 ml-1">
-                      <label className="block text-xs font-semibold text-gray-600">
-                        Time
-                      </label>
-                      {isAfterHours(formData.pickupTime) && (
-                        <div className="relative group/tooltip inline-flex items-center">
-                          <AlertTriangle
-                            className="w-4 h-4 text-amber-500 cursor-help"
-                          />
-                          <div className="absolute right-0 bottom-full mb-1.5 hidden group-hover/tooltip:block w-56 p-2.5 bg-slate-900 text-white text-[11px] font-medium leading-tight rounded-lg shadow-xl z-50 pointer-events-none">
-                            {AFTER_HOURS_SURCHARGE_NOTICE}
-                            <div className="absolute top-full right-1.5 border-4 border-transparent border-t-slate-900" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5 ml-1">
+                      Time
+                    </label>
                     <input
                       type="time"
                       value={formData.pickupTime}
@@ -497,6 +484,14 @@ export default function LandingBookingForm() {
                       className={inputCls('pickupTime')}
                     />
                     <FieldError error={getFieldError('pickupTime')} />
+                    {isAfterHours(formData.pickupTime) && (
+                      <div className="mt-1.5 p-2 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between text-xs text-amber-900 shadow-xs">
+                        <span className="font-medium flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span>After-hours (9 PM - 5 AM): <strong>+$30 surcharge</strong></span>
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

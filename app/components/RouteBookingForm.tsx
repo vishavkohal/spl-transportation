@@ -305,17 +305,6 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                   <Clock className="w-3 h-3 text-[#102A43]" />
                   Time
                 </label>
-                {isAfterHours(form.pickupTime) && (
-                  <div className="relative group/tooltip inline-flex items-center">
-                    <AlertTriangle
-                      className="w-4 h-4 text-amber-500 cursor-help"
-                    />
-                    <div className="absolute right-0 bottom-full mb-1.5 hidden group-hover/tooltip:block w-56 p-2.5 bg-slate-900 text-white text-[11px] font-medium leading-tight rounded-lg shadow-xl z-50 pointer-events-none">
-                      {AFTER_HOURS_SURCHARGE_NOTICE}
-                      <div className="absolute top-full right-1.5 border-4 border-transparent border-t-slate-900" />
-                    </div>
-                  </div>
-                )}
               </div>
               <input
                 type="time"
@@ -324,6 +313,14 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 onChange={e => update('pickupTime', e.target.value)}
                 className="w-full min-w-0 rounded-lg border border-gray-200 px-1 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] text-gray-900 bg-white"
               />
+              {isAfterHours(form.pickupTime) && (
+                <div className="mt-1.5 p-2 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-between text-[11px] text-amber-900 shadow-xs">
+                  <span className="font-medium flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>After-hours (9 PM - 5 AM): <strong>+$30 fee</strong></span>
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="col-span-1 md:col-span-2 space-y-1">

@@ -1042,17 +1042,6 @@ export default function HomePage(props: {
                             <Clock className="w-3 h-3" style={{ color: PRIMARY_COLOR }} />
                             Pickup Time
                           </label>
-                          {isAfterHours(formData.pickupTime) && (
-                            <button
-                              type="button"
-                              onClick={() => setShowSurchargeModal(true)}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold hover:bg-amber-100 transition-colors"
-                            >
-                              <Clock className="w-3 h-3 text-amber-600" />
-                              <span>+$30 After-Hours</span>
-                              <Info className="w-3 h-3 text-amber-500" />
-                            </button>
-                          )}
                         </div>
                         <input
                           type="time"
@@ -1061,8 +1050,11 @@ export default function HomePage(props: {
                           className="w-[92%] mx-auto px-3 py-2.5 rounded-lg border border-gray-300 text-sm text-black focus:ring-2 focus:ring-[#0F766E]/20 focus:border-[#0F766E]"
                         />
                         {isAfterHours(formData.pickupTime) && (
-                          <div className="w-[92%] mx-auto mt-1 p-2 rounded-lg bg-amber-50 border border-amber-200/90 flex items-center justify-between text-[11px] text-amber-900">
-                            <span className="font-medium">🌙 After-hours (9 PM - 5 AM): +$30 fee</span>
+                          <div className="w-[92%] mx-auto mt-1 p-2 rounded-lg bg-amber-50 border border-amber-200/90 flex items-center justify-between text-[11px] text-amber-900 shadow-xs">
+                            <span className="font-medium flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                              <span>After-hours (9 PM - 5 AM): <strong>+$30 fee</strong></span>
+                            </span>
                             <button
                               type="button"
                               onClick={() => setShowSurchargeModal(true)}
@@ -1571,29 +1563,11 @@ function Step1StandardContent(props: {
 
           {/* Time */}
           <div className="relative group">
-            <div className="flex justify-between items-center gap-2">
-              <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
-                <Clock className="w-3 h-3 text-[#102A43]" />
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-xs font-semibold text-gray-700 ml-1 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#102A43]" />
                 Time
               </label>
-              <div className="flex items-center gap-2">
-                {getFieldError('pickupTime') && (
-                  <span className="text-xs font-bold text-red-500">
-                    {getFieldError('pickupTime')}
-                  </span>
-                )}
-                {isAfterHours(formData.pickupTime) && (
-                  <button
-                    type="button"
-                    onClick={onOpenSurchargeModal}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold hover:bg-amber-100 transition-colors"
-                  >
-                    <Clock className="w-3 h-3 text-amber-600" />
-                    <span>+$30 After-Hours</span>
-                    <Info className="w-3 h-3 text-amber-500" />
-                  </button>
-                )}
-              </div>
             </div>
             <div className="relative">
               <input
@@ -1607,16 +1581,22 @@ function Step1StandardContent(props: {
                 )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
               />
             </div>
+            {getFieldError('pickupTime') && (
+              <p className="text-[11px] font-semibold text-red-500 mt-1 leading-tight flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 text-red-500 shrink-0" />
+                {getFieldError('pickupTime')}
+              </p>
+            )}
             {isAfterHours(formData.pickupTime) && (
-              <div className="mt-1.5 p-2 rounded-xl bg-amber-50/90 border border-amber-200/90 flex items-center justify-between text-xs text-amber-900">
+              <div className="mt-1.5 p-2 rounded-xl bg-amber-50/90 border border-amber-200/90 flex items-center justify-between text-xs text-amber-900 shadow-xs">
                 <span className="font-medium flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  <span>After-hours pickup (9 PM - 5 AM): <strong>+$30 surcharge</strong></span>
+                  <span>After-hours (9 PM - 5 AM): <strong>+$30 surcharge</strong></span>
                 </span>
                 <button
                   type="button"
                   onClick={onOpenSurchargeModal}
-                  className="text-amber-700 font-bold underline shrink-0 ml-2"
+                  className="text-amber-700 font-bold underline hover:text-amber-900 shrink-0 ml-2"
                 >
                   Details
                 </button>
@@ -2022,29 +2002,11 @@ function Step1HourlyContent(props: {
             {/* Time */}
             <div className="col-span-1 sm:col-span-2">
               <div className="relative group">
-                <div className="flex justify-between items-center gap-2">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
-                    <Clock className="w-3 h-3 text-[#102A43]" />
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-semibold text-gray-700 ml-1 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-[#102A43]" />
                     Time
                   </label>
-                  <div className="flex items-center gap-2">
-                    {getFieldError('pickupTime') && (
-                      <span className="text-xs font-bold text-red-500">
-                        {getFieldError('pickupTime')}
-                      </span>
-                    )}
-                    {isAfterHours(formData.pickupTime) && (
-                      <button
-                        type="button"
-                        onClick={onOpenSurchargeModal}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold hover:bg-amber-100 transition-colors"
-                      >
-                        <Clock className="w-3 h-3 text-amber-600" />
-                        <span>+$30 After-Hours</span>
-                        <Info className="w-3 h-3 text-amber-500" />
-                      </button>
-                    )}
-                  </div>
                 </div>
                 <div className="relative">
                   <input
@@ -2058,16 +2020,22 @@ function Step1HourlyContent(props: {
                     )} [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer`}
                   />
                 </div>
+                {getFieldError('pickupTime') && (
+                  <p className="text-[11px] font-semibold text-red-500 mt-1 leading-tight flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 text-red-500 shrink-0" />
+                    {getFieldError('pickupTime')}
+                  </p>
+                )}
                 {isAfterHours(formData.pickupTime) && (
-                  <div className="mt-1.5 p-2 rounded-xl bg-amber-50/90 border border-amber-200/90 flex items-center justify-between text-xs text-amber-900">
+                  <div className="mt-1.5 p-2 rounded-xl bg-amber-50/90 border border-amber-200/90 flex items-center justify-between text-xs text-amber-900 shadow-xs">
                     <span className="font-medium flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      <span>After-hours pickup (9 PM - 5 AM): <strong>+$30 surcharge</strong></span>
+                      <span>After-hours (9 PM - 5 AM): <strong>+$30 surcharge</strong></span>
                     </span>
                     <button
                       type="button"
                       onClick={onOpenSurchargeModal}
-                      className="text-amber-700 font-bold underline shrink-0 ml-2"
+                      className="text-amber-700 font-bold underline hover:text-amber-900 shrink-0 ml-2"
                     >
                       Details
                     </button>

@@ -13,7 +13,7 @@ export default function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"
-      className="fixed bottom-[calc(4.8rem+env(safe-area-inset-bottom))] right-4 lg:bottom-6 lg:right-6 z-40 flex items-center gap-2 group focus:outline-none"
+      className="hidden lg:flex fixed bottom-6 right-6 z-40 items-center gap-2 group focus:outline-none"
     >
       {/* Tooltip Label */}
       <span className="hidden sm:inline-block bg-slate-900/90 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap backdrop-blur-sm border border-white/10">
