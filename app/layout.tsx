@@ -16,7 +16,6 @@ const playfair = Playfair_Display({
 });
 import { BookingProvider } from "./providers/BookingProvider";
 import Navigation from "../app/components/Navigation";
-import Footer from "../app/components/Footer";
 import UtmTracker from "@/app/components/UtmTracker";
 import CookieConsent from "@/app/components/CookieConsent";
 import WhatsAppButton from "@/app/components/WhatsAppButton";

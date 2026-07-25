@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { Search, Calendar, Clock, MapPin, Plane, User, Phone, Mail, CheckCircle2, AlertCircle, Edit2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
-import Footer from './Footer';
 
 interface BookingDetails {
   id: string;
@@ -400,8 +399,6 @@ export default function ManageBookingClient() {
           </div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }
