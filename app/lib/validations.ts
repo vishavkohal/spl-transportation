@@ -47,6 +47,21 @@ export const bookingDetailsSchema = z.object({
   dayTripDestination: z.string().trim().max(300).nullable().optional(),
   dayTripVehicleType: z.string().max(50).nullable().optional(),
   dayTripPrice: z.number().min(0).optional(),
+
+  // Round-trip fields
+  transferType: z.enum(['one-way', 'round-trip']).optional().default('one-way'),
+  returnDate: z.string().trim().max(30).nullable().optional(),
+  returnTime: z.string().trim().max(30).nullable().optional(),
+  returnFlightNumber: z.string().max(50).nullable().optional(),
+
+  // Promo Code fields
+  promoCode: z.string().max(50).nullable().optional(),
+  appliedDiscount: z.object({
+    code: z.string(),
+    discountType: z.enum(['PERCENTAGE', 'FIXED']),
+    discountValue: z.number(),
+    discountAmount: z.number(),
+  }).nullable().optional(),
 });
 
 export const leadUpsertSchema = z.object({

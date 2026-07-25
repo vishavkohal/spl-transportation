@@ -114,41 +114,41 @@ export default function ContactPage() {
           </p>
         </div>
         {/* Responsive Grid: Benefits & Contact Info on Left, Custom Quote Form on Right */}
-        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-10 items-start">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-8 items-start">
 
           {/* Left Column: Custom Quote Benefits & Quick Contact Details */}
-          <div className="w-full lg:col-span-4 bg-[#102A43] text-white rounded-3xl shadow-xl p-6 sm:p-8 border border-slate-800 space-y-8 lg:sticky lg:top-24">
+          <div className="w-full lg:col-span-4 xl:col-span-3.5 bg-[#102A43] text-white rounded-2xl shadow-lg p-4 sm:p-5 border border-slate-800 space-y-5 lg:sticky lg:top-24">
 
             {/* Why Request Custom Quote Banner (TOP FOCUS) */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-700/80 pb-3">
-                <Calculator className="w-5 h-5 text-[#2DD4BF]" />
-                <h3 className="font-extrabold text-lg text-white">Why Request a Quote?</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 border-b border-slate-700/80 pb-2.5">
+                <Calculator className="w-4 h-4 text-[#2DD4BF]" />
+                <h3 className="font-extrabold text-base text-white">Why Request a Quote?</h3>
               </div>
 
-              <ul className="text-xs sm:text-sm text-slate-200 space-y-3.5">
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-[#2DD4BF] shrink-0 mt-0.5" />
+              <ul className="text-xs text-slate-200 space-y-2.5">
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-[#2DD4BF] shrink-0 mt-0.5" />
                   <span><strong>100% Fixed Fares:</strong> No hidden costs, toll surcharges, or peak pricing.</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-[#2DD4BF] shrink-0 mt-0.5" />
-                  <span><strong>Multi-stop & Charters:</strong> Perfect for corporate groups, weddings, and full-day tours.</span>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-[#2DD4BF] shrink-0 mt-0.5" />
+                  <span><strong>Multi-stop & Charters:</strong> Corporate groups, weddings, and full-day tours.</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-[#2DD4BF] shrink-0 mt-0.5" />
-                  <span><strong>Meet & Greet Included:</strong> Flight monitoring and driver assistance at arrivals.</span>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-[#2DD4BF] shrink-0 mt-0.5" />
+                  <span><strong>Meet & Greet Included:</strong> Flight tracking and driver assistance at arrivals.</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle className="w-4 h-4 text-[#2DD4BF] shrink-0 mt-0.5" />
-                  <span><strong>Official Invoices:</strong> Receive a downloadable PDF quote ready for instant confirmation.</span>
+                <li className="flex items-start gap-2.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-[#2DD4BF] shrink-0 mt-0.5" />
+                  <span><strong>Official Invoices:</strong> Downloadable PDF quote ready for instant booking.</span>
                 </li>
               </ul>
             </div>
 
             {/* Direct Contact Information */}
-            <div className="pt-6 border-t border-slate-700/80 space-y-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            <div className="pt-4 border-t border-slate-700/80 space-y-3">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 Need Urgent Assistance?
               </h4>
 
@@ -174,7 +174,7 @@ export default function ContactPage() {
           </div>
 
           {/* Right Column: Custom Quote Form */}
-          <div className="w-full lg:col-span-8 bg-white rounded-3xl shadow-xl p-6 sm:p-8 md:p-10 border border-slate-100">
+          <div className="w-full lg:col-span-8 xl:col-span-8.5 bg-white rounded-3xl shadow-xl p-6 sm:p-8 md:p-10 border border-slate-100">
             <div className="mb-6 sm:mb-8 border-b border-slate-100 pb-4">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#102A43]">
                 Request Your Custom Quote
@@ -470,18 +470,18 @@ function ContactCardDark({ icon: Icon, title, content, subtext, action, href }: 
   return (
     <a
       href={href}
-      className="w-full flex items-start gap-4 bg-white/5 hover:bg-white/10 p-4 rounded-2xl 
-                  border border-white/10 shadow-sm hover:shadow-md 
+      className="w-full flex items-start gap-3 bg-white/5 hover:bg-white/10 p-3 rounded-xl 
+                  border border-white/10 shadow-xs hover:shadow-md 
                   transition-all duration-300 hover:-translate-y-0.5 group"
     >
-      <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#0F766E] text-white shrink-0 group-hover:scale-105 transition-transform shadow-md">
-        <Icon className="w-5 h-5" strokeWidth={2} />
+      <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#0F766E] text-white shrink-0 group-hover:scale-105 transition-transform shadow-xs">
+        <Icon className="w-4 h-4" strokeWidth={2} />
       </div>
       <div className="flex-1 min-w-0">
-        <h4 className="font-bold text-sm text-white mb-0.5">{title}</h4>
-        <p className="text-slate-200 font-semibold text-xs mb-0.5 truncate">{content}</p>
-        <p className="text-[11px] text-slate-400 mb-1.5">{subtext}</p>
-        <span className="text-xs font-bold text-[#2DD4BF] group-hover:underline flex items-center gap-1">
+        <h4 className="font-bold text-xs text-white mb-0.5">{title}</h4>
+        <p className="text-slate-200 font-semibold text-[11px] mb-0.5 truncate">{content}</p>
+        <p className="text-[10px] text-slate-400 mb-1">{subtext}</p>
+        <span className="text-[11px] font-bold text-[#2DD4BF] group-hover:underline flex items-center gap-0.5">
           {action} →
         </span>
       </div>

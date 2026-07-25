@@ -651,6 +651,66 @@ export async function sendQuotePaymentLinkEmail(data: QuotePaymentLinkEmailData)
     throw err;
   }
 }
+export type BookingUpdateNotificationData = {
+  bookingId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  changes: { field: string; oldVal: string; newVal: string }[];
+  updatedAt: string;
+};
+
+export async function sendAdminBookingUpdateNotification(data: BookingUpdateNotificationData): Promise<void> {
+  const subject = `⚠️ Customer Updated Booking #${data.bookingId.slice(0, 8)} – ${data.customerName}`;
+  
+  const changesHtml = data.changes.map(c => `
+    <tr>
+      <td style="padding:8px; font-weight:bold; color:#475569;">${c.field}</td>
+      <td style="padding:8px; text-decoration:line-through; color:#EF4444;">${c.oldVal || 'Empty'}</td>
+      <td style="padding:8px; font-weight:bold; color:#0F766E;">${c.newVal || 'Empty'}</td>
+    </tr>
+  `).join('');
+
+  const html = `
+    <div style="font-family: system-ui, -apple-system, sans-serif; color:#111827; max-width:600px; margin:0 auto; padding:20px; border:1px solid #E5E7EB; border-radius:12px;">
+      <h2 style="color:#102A43; margin-top:0;">Customer Modified Booking #${data.bookingId.slice(0, 8)}</h2>
+      <p style="font-size:14px; color:#4B5563;">Customer <strong>${data.customerName}</strong> (${data.customerEmail}, ${data.customerPhone}) updated their booking details via the Manage Booking Portal.</p>
+      
+      <h3 style="font-size:14px; text-transform:uppercase; color:#102A43; margin-top:16px;">Changed Fields</h3>
+      <table style="width:100%; border-collapse:collapse; font-size:13px; border:1px solid #E2E8F0;">
+        <thead>
+          <tr style="background-color:#F8FAFC; text-align:left;">
+            <th style="padding:8px;">Field</th>
+            <th style="padding:8px;">Previous Value</th>
+            <th style="padding:8px;">Updated Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${changesHtml}
+        </tbody>
+      </table>
+      
+      <p style="margin-top:20px; font-size:12px; color:#6B7280;">Log in to your SPL Admin Dashboard to review full updated trip details.</p>
+    </div>
+  `;
+
+  if (!resend) {
+    console.log('sendAdminBookingUpdateNotification – RESEND_API_KEY not set, logging instead.');
+    console.log('To (admin):', ADMIN_EMAIL);
+    return;
+  }
+
+  try {
+    await sendWithRetries({
+      from: FROM_EMAIL,
+      to: ADMIN_EMAIL,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error('Failed to send admin booking update email:', err);
+  }
+}
 
 
 

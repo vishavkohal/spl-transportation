@@ -79,9 +79,33 @@ model Booking {
   dayTripDestination   String?
   dayTripVehicleType   String?
 
+  // Round Trip (optional for backward compatibility)
+  transferType         String   @default("one-way") // "one-way" | "round-trip"
+  returnDate           String?
+  returnTime           String?
+  returnFlightNumber   String?
+
+  // Discounts & Promos
+  promoCode            String?
+  discountCents        Int?     @default(0)
+
   status               String   @default("PENDING") // PENDING, PAID, CANCELLED
 
   createdAt            DateTime @default(now())
+}
+
+model PromoCode {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  discountType  String   // "PERCENTAGE" | "FIXED"
+  discountValue Float    // e.g. 10 for 10%, or 15 for $15 off
+  targetType    String   @default("ALL") // "ALL" | "ROUND_TRIP"
+  minSpend      Float?   // Optional minimum booking total in AUD
+  isActive      Boolean  @default(true)
+  usageCount    Int      @default(0)
+  maxUsages     Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model BookingLead {

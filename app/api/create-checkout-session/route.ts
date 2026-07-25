@@ -232,14 +232,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Round-Trip doubling for standard transfers
+    if (bookingType === 'standard' && booking.transferType === 'round-trip') {
+      baseAmount = baseAmount * 2;
+    }
+
     // Add-ons
     if (childSeat) {
       baseAmount += 20;
     }
 
     // After-hours surcharge (pickups between 9 PM and 5 AM)
-    const afterHoursSurcharge = isAfterHours(pickupTime) ? AFTER_HOURS_SURCHARGE : 0;
+    let afterHoursSurcharge = isAfterHours(pickupTime) ? AFTER_HOURS_SURCHARGE : 0;
+    if (booking.transferType === 'round-trip' && booking.returnTime && isAfterHours(booking.returnTime)) {
+      afterHoursSurcharge += AFTER_HOURS_SURCHARGE;
+    }
     baseAmount += afterHoursSurcharge;
+
+    // Promo Code Discount Deduction
+    let appliedDiscountCents = 0;
+    if (booking.appliedDiscount?.discountAmount) {
+      const discountVal = Number(booking.appliedDiscount.discountAmount);
+      baseAmount = Math.max(0, baseAmount - discountVal);
+      appliedDiscountCents = Math.round(discountVal * 100);
+    }
 
     /* -------------------------------------------------
        💳 PROCESSING FEE + FINAL AMOUNT
@@ -279,12 +295,13 @@ export async function POST(req: NextRequest) {
             `Mobile: ${contactNumber}`,
           ]
           : [
-            'Standard Transfer (GST inclusive)',
+            `Standard Transfer (${validatedBooking.transferType === 'round-trip' ? 'Round Trip' : 'One Way'}) (GST inclusive)`,
             `Route: ${pickupLocation} → ${dropoffLocation}`,
-            `Date & time: ${pickupDate} at ${pickupTime}`,
-            `Passengers: ${passengers}, Bags: ${luggage}${childSeat ? ', Child seat: Yes' : ''
-            }`,
+            `Outbound: ${pickupDate} at ${pickupTime}`,
+            ...(validatedBooking.transferType === 'round-trip' && validatedBooking.returnDate ? [`Return: ${validatedBooking.returnDate} at ${validatedBooking.returnTime || 'N/A'}`] : []),
+            `Passengers: ${passengers}, Bags: ${luggage}${childSeat ? ', Child seat: Yes' : ''}`,
             ...(afterHoursSurcharge > 0 ? [`After-hours surcharge: $${afterHoursSurcharge}`] : []),
+            ...(validatedBooking.appliedDiscount ? [`Promo Discount (${validatedBooking.appliedDiscount.code}): -$${validatedBooking.appliedDiscount.discountAmount}`] : []),
             `Processing fee: 2.5% (GST inclusive)`,
             `Name: ${fullName}`,
             `Email: ${email}`,
@@ -324,7 +341,26 @@ export async function POST(req: NextRequest) {
         processingFee: processingFee.toString(),
         finalAmount: finalAmount.toString(),
         afterHoursSurcharge: afterHoursSurcharge.toString(),
-        booking: JSON.stringify(validatedBooking),
+        transferType: validatedBooking.transferType || 'one-way',
+        promoCode: validatedBooking.promoCode || '',
+        booking: JSON.stringify({
+          bookingType,
+          transferType: validatedBooking.transferType,
+          pickupLocation: validatedBooking.pickupLocation,
+          dropoffLocation: validatedBooking.dropoffLocation,
+          pickupDate: validatedBooking.pickupDate,
+          pickupTime: validatedBooking.pickupTime,
+          passengers: validatedBooking.passengers,
+          luggage: validatedBooking.luggage,
+          childSeat: validatedBooking.childSeat,
+          flightNumber: validatedBooking.flightNumber,
+          returnDate: validatedBooking.returnDate,
+          returnTime: validatedBooking.returnTime,
+          returnFlightNumber: validatedBooking.returnFlightNumber,
+          fullName: validatedBooking.fullName,
+          email: validatedBooking.email,
+          contactNumber: validatedBooking.contactNumber,
+        }).slice(0, 490),
       },
     });
 

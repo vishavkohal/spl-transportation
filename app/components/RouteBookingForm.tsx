@@ -78,21 +78,25 @@ function calculateFinalAmount(amount: number) {
 /* ---------------- Component ---------------- */
 
 export default function RouteBookingForm({ route }: { route: Route }) {
-  const [direction, setDirection] =
-    useState<'forward' | 'reverse'>('forward');
+  const [direction, setDirection] = useState<'forward' | 'reverse'>('forward');
+  const [step, setStep] = useState<1 | 2>(1);
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const pickupLocation =
-    direction === 'forward' ? route.from : route.to;
-  const dropoffLocation =
-    direction === 'forward' ? route.to : route.from;
+  const pickupLocation = direction === 'forward' ? route.from : route.to;
+  const dropoffLocation = direction === 'forward' ? route.to : route.from;
 
   const [form, setForm] = useState({
+    transferType: 'one-way',
     pickupDate: '',
     pickupTime: '',
     passengers: 1,
     luggage: 0,
     childSeat: false,
     flightNumber: '',
+    returnDate: '',
+    returnTime: '',
+    returnFlightNumber: '',
     fullName: '',
     email: '',
     countryCode: '+61',
@@ -102,25 +106,16 @@ export default function RouteBookingForm({ route }: { route: Route }) {
   const update = (k: string, v: any) =>
     setForm(p => ({ ...p, [k]: v }));
 
-  /* ---------------- Strict Input Handlers ---------------- */
-
   const handlePassengerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Parse immediately to remove leading zeros (e.g. "01" -> 1)
     let val = parseInt(e.target.value, 10);
+    if (isNaN(val)) val = 1;
+    if (val < 1) val = 1;
+    if (val > MAX_PASSENGERS) val = MAX_PASSENGERS;
 
-    // Handle backspace/empty input (treat as 0 temporarily)
-    if (isNaN(val)) val = 0;
-
-    // Strict Rule: Don't allow typing higher than MAX
-    if (val > MAX_PASSENGERS) return;
-
-    // Calculate new luggage limit based on new passenger count
     const newMaxLuggage = getMaxBagsForCurrentPax(val);
-
     setForm(prev => ({
       ...prev,
       passengers: val,
-      // If current luggage is now too high for new passenger count, clamp it down
       luggage: prev.luggage > newMaxLuggage ? newMaxLuggage : prev.luggage
     }));
   };
@@ -129,10 +124,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
     let val = parseInt(e.target.value, 10);
     if (isNaN(val)) val = 0;
 
-    // Check limit dynamically based on current passengers
     const maxAllowed = getMaxBagsForCurrentPax(form.passengers);
-
-    // Strict Rule: Don't allow typing higher than allowed limit
     if (val > maxAllowed) return;
 
     update('luggage', val);
@@ -141,28 +133,25 @@ export default function RouteBookingForm({ route }: { route: Route }) {
   /* ---------------- Pricing ---------------- */
 
   const basePrice = useMemo(
-    () => priceForPassengers(route.pricing, form.passengers),
-    [route.pricing, form.passengers]
+    () => {
+      let p = priceForPassengers(route.pricing, form.passengers);
+      if (form.transferType === 'round-trip') p = p * 2;
+      return p;
+    },
+    [route.pricing, form.passengers, form.transferType]
   );
 
-  const baseTotal = basePrice + (form.childSeat ? 20 : 0) + (isAfterHours(form.pickupTime) ? AFTER_HOURS_SURCHARGE : 0);
+  const baseTotal = basePrice + (form.childSeat ? 20 : 0) + (isAfterHours(form.pickupTime) ? AFTER_HOURS_SURCHARGE : 0) + (form.transferType === 'round-trip' && isAfterHours(form.returnTime) ? AFTER_HOURS_SURCHARGE : 0);
   const processingFee = calculateProcessingFee(baseTotal);
   const finalTotal = calculateFinalAmount(baseTotal);
-
-  /* ---------------- State ---------------- */
-
-  const [step, setStep] = useState<1 | 2>(1);
-  const [leadId, setLeadId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   /* ---------------- Validation ---------------- */
 
   const isStep1Valid =
-    form.pickupDate &&
-    form.pickupTime &&
+    Boolean(form.pickupDate) &&
+    Boolean(form.pickupTime) &&
     form.passengers >= 1 &&
     form.passengers <= MAX_PASSENGERS;
-  // Luggage is validated by the input handler itself now
 
   const isStep2Valid =
     form.fullName.trim().length >= 3 &&
@@ -284,6 +273,32 @@ export default function RouteBookingForm({ route }: { route: Route }) {
       {step === 1 && (
         <div className="space-y-6">
 
+          {/* Transfer Type Toggle */}
+          <div className="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold mb-2">
+            <button
+              type="button"
+              onClick={() => update('transferType', 'one-way')}
+              className={`px-4 py-1.5 rounded-lg transition-all ${
+                (form.transferType || 'one-way') === 'one-way'
+                  ? 'bg-[#102A43] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              One Way
+            </button>
+            <button
+              type="button"
+              onClick={() => update('transferType', 'round-trip')}
+              className={`px-4 py-1.5 rounded-lg transition-all ${
+                form.transferType === 'round-trip'
+                  ? 'bg-[#102A43] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Round Trip
+            </button>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pr-1">
             <div className="col-span-1 md:col-span-2 space-y-1">
               <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
@@ -328,7 +343,48 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 </div>
               )}
             </div>
+          </div>
 
+          {form.transferType === 'round-trip' && (
+            <div className="p-4 rounded-2xl bg-teal-50/70 border border-teal-200/80 space-y-3">
+              <div className="text-xs font-bold uppercase tracking-wider text-[#0F766E] flex items-center gap-1.5">
+                <Calendar className="w-4 h-4" /> Return Transfer Details
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Return Date</label>
+                  <input
+                    type="date"
+                    min={form.pickupDate || minDate()}
+                    value={form.returnDate || ''}
+                    onChange={e => update('returnDate', e.target.value)}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Return Time</label>
+                  <input
+                    type="time"
+                    value={form.returnTime || ''}
+                    onChange={e => update('returnTime', e.target.value)}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Return Flight # (Optional)</label>
+                  <input
+                    type="text"
+                    value={form.returnFlightNumber || ''}
+                    onChange={e => update('returnFlightNumber', e.target.value)}
+                    placeholder="e.g. QF802"
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pr-1">
             <div className="col-span-1 md:col-span-2 space-y-1">
               <label className="block text-xs font-semibold text-gray-700 mb-1 ml-1 flex items-center gap-1.5">
                 <Users className="w-3 h-3 text-[#102A43]" />

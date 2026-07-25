@@ -1,12 +1,11 @@
 'use client';
 
 import React from 'react';
-import { LayoutDashboard, Map, CalendarCheck, Users, LogOut, FileText, Calendar, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Map, CalendarCheck, Users, LogOut, FileText, Calendar, CreditCard, Tag } from 'lucide-react';
 
 import { motion } from 'framer-motion';
 
-type AdminTab = 'overview' | 'custom-checkout' | 'routes' | 'bookings' | 'quotes' | 'leads' | 'upcoming';
-
+type AdminTab = 'overview' | 'custom-checkout' | 'promos' | 'routes' | 'bookings' | 'quotes' | 'leads' | 'upcoming';
 
 interface AdminSidebarProps {
     activeTab: AdminTab;
@@ -22,6 +21,7 @@ const ACCENT_COLOR = '#0F766E';
 const menuItems = [
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'custom-checkout', label: 'Quick Payment Link', icon: CreditCard },
+    { id: 'promos', label: 'Promos & Discounts', icon: Tag },
     { id: 'upcoming', label: 'Upcoming Trips', icon: Calendar },
     { id: 'bookings', label: 'Bookings', icon: CalendarCheck },
     { id: 'quotes', label: 'Requested Quotes', icon: FileText },

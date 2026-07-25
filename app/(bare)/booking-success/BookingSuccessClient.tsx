@@ -723,19 +723,28 @@ export default function BookingSuccessClient() {
 
           {/* Actions */}
           <div className="mt-6 flex flex-col md:flex-row gap-3 items-center justify-between">
-            {paid && (
-              <PDFDownloadLink
-                document={<InvoicePDF booking={booking} />}
-                fileName={`Invoice-${booking.id?.slice(-8) || 'receipt'}.pdf`}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+            <div className="flex items-center gap-2 flex-wrap">
+              {paid && (
+                <PDFDownloadLink
+                  document={<InvoicePDF booking={booking} />}
+                  fileName={`Invoice-${booking.id?.slice(-8) || 'receipt'}.pdf`}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                >
+                  {({ loading }) => (
+                    <>
+                      <Download className="w-4 h-4" /> {loading ? 'Generating PDF...' : 'Download Receipt'}
+                    </>
+                  )}
+                </PDFDownloadLink>
+              )}
+
+              <button
+                onClick={() => router.push(`/manage-booking?bookingId=${encodeURIComponent(booking.invoiceId || booking.id || '')}&email=${encodeURIComponent(booking.email)}`)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#0F766E]/30 bg-[#0F766E]/10 text-xs font-bold text-[#0F766E] hover:bg-[#0F766E]/20 transition"
               >
-                {({ loading }) => (
-                  <>
-                    <Download className="w-4 h-4" /> {loading ? 'Generating PDF...' : 'Download Receipt'}
-                  </>
-                )}
-              </PDFDownloadLink>
-            )}
+                Modify or Manage Trip
+              </button>
+            </div>
 
             <button onClick={() => router.push('/')} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white shadow" style={{ backgroundColor: PRIMARY_COLOR }}>
               Back to home

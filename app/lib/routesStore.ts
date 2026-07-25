@@ -1,5 +1,6 @@
 // lib/routesStore.ts
 import { prisma } from '@/lib/prisma';
+import { unstable_cache } from 'next/cache';
 
 // 1. UPDATED: PricingItem type with 'vehicleType'
 export type PricingItem = {
@@ -38,19 +39,25 @@ function mapRoute(route: any): RouteDTO {
   };
 }
 
-import { unstable_cache } from 'next/cache';
+export async function fetchRoutesDirect(): Promise<RouteDTO[]> {
+  const routes = await prisma.route.findMany({
+    include: { pricing: true },
+    orderBy: { id: 'asc' },
+  });
+  return routes.map(mapRoute);
+}
 
-export const getRoutes = unstable_cache(
-  async (): Promise<RouteDTO[]> => {
-    const routes = await prisma.route.findMany({
-      include: { pricing: true },
-      orderBy: { id: 'asc' },
-    });
-    return routes.map(mapRoute);
-  },
-  ['all-routes'],
-  { tags: ['routes'], revalidate: 3600 } // Cache for 1 hour, or revalidate by tag
-);
+export const getRoutes = async (): Promise<RouteDTO[]> => {
+  try {
+    return await unstable_cache(
+      fetchRoutesDirect,
+      ['all-routes'],
+      { tags: ['routes'], revalidate: 3600 }
+    )();
+  } catch {
+    return await fetchRoutesDirect();
+  }
+};
 
 // 4. UPDATED: addRoute function to include new fields
 export async function addRoute(route: Omit<RouteDTO, 'id'>): Promise<RouteDTO> {

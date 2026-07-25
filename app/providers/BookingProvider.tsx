@@ -27,7 +27,7 @@ type BookingContextType = {
   setBookingStep: (s: 1 | 2) => void;
   handleInputChange: (
     field: keyof BookingFormData,
-    value: string | number | boolean
+    value: string | number | boolean | any
   ) => void;
   handleRouteSelect: (route: Route) => void;
 };
@@ -58,7 +58,13 @@ const initialFormData: BookingFormData = {
   contactNumber: '',
   hourlyPickupLocation: '',
   hourlyHours: 0,
-  hourlyVehicleType: ''
+  hourlyVehicleType: '',
+  transferType: 'one-way',
+  returnDate: '',
+  returnTime: '',
+  returnFlightNumber: '',
+  promoCode: '',
+  appliedDiscount: null,
 };
 
 /* ---- Routes sessionStorage cache ---- */
@@ -89,8 +95,6 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
   const [formData, setFormData] = useState<BookingFormData>(initialFormData);
   const [bookingStep, setBookingStep] = useState<1 | 2>(1);
 
-  // Always start with loading=true and empty routes for consistent SSR/CSR hydration.
-  // Routes are loaded from sessionStorage (instant) or fetched (async) in useEffect below.
   const [routes, setRoutes] = useState<Route[]>([]);
   const [routesLoading, setRoutesLoading] = useState(true);
   const [routesError, setRoutesError] = useState<string | null>(null);
@@ -122,7 +126,6 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
   /* -------- Load Routes (post-hydration) -------- */
 
   useEffect(() => {
-    // First, try loading from sessionStorage for instant display
     const cached = readCachedRoutes();
     if (cached.length > 0) {
       setRoutes(cached);
@@ -137,7 +140,6 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Background fetch to get fresh data (or initial data if no cache)
     let cancelled = false;
 
     fetch('/api/routes')
@@ -175,7 +177,6 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
   /* -------- User Data Cookie Storage -------- */
   
   useEffect(() => {
-    // Load initial user data from cookies if present
     const savedData = Cookies.get('spl_user_data');
     if (savedData) {
       try {
@@ -193,7 +194,6 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Save user data to cookies when it changes, but ONLY if they consented
     const consent = Cookies.get(COOKIE_CONSENT_KEY);
     if (consent === 'granted') {
       const { fullName, email, contactNumber } = formData;
@@ -247,11 +247,21 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
         return pax >= min && pax <= max;
       }) || tiers[tiers.length - 1];
 
-    let price = tier?.price || 0;
+    let baseOneWay = tier?.price || 0;
+    let price = formData.transferType === 'round-trip' ? baseOneWay * 2 : baseOneWay;
+
     if (formData.childSeat) price += 20;
     if (isAfterHours(formData.pickupTime)) price += AFTER_HOURS_SURCHARGE;
+    if (formData.transferType === 'round-trip' && isAfterHours(formData.returnTime)) {
+      price += AFTER_HOURS_SURCHARGE;
+    }
+
+    if (formData.appliedDiscount) {
+      price = Math.max(0, price - formData.appliedDiscount.discountAmount);
+    }
+
     return price;
-  }, [currentRoute, formData.passengers, formData.childSeat, formData.pickupTime]);
+  }, [currentRoute, formData.passengers, formData.childSeat, formData.pickupTime, formData.transferType, formData.returnTime, formData.appliedDiscount]);
 
   /* -------- Handlers -------- */
 

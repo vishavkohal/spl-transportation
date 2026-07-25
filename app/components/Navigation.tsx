@@ -32,8 +32,21 @@ export default function Navigation() {
 
   // Desktop Hover Dropdown state
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const moreTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMoreMouseEnter = () => {
+    if (moreTimeoutRef.current) clearTimeout(moreTimeoutRef.current);
+    setMoreDropdownOpen(true);
+  };
+
+  const handleMoreMouseLeave = () => {
+    moreTimeoutRef.current = setTimeout(() => {
+      setMoreDropdownOpen(false);
+    }, 150);
+  };
 
   // Secondary fallback fetch if routes list from provider is empty
   const [fallbackRoutes, setFallbackRoutes] = useState<Route[]>([]);
@@ -254,53 +267,85 @@ export default function Navigation() {
                 )}
               </div>
 
-              <Link
-                href="/about"
-                className={`relative pb-1 text-sm font-semibold transition-colors duration-200 ${
-                  isActive('/about') ? 'text-[#0F766E]' : 'text-slate-800 hover:text-[#0F766E]'
-                }`}
-              >
-                About
-                {isActive('/about') && (
-                  <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-7 h-[2.5px] rounded-full bg-[#0F766E]" />
-                )}
-              </Link>
-
+              {/* CONTACT */}
               <Link
                 href="/contact"
                 className={`relative pb-1 text-sm font-semibold transition-colors duration-200 ${
                   isActive('/contact') ? 'text-[#0F766E]' : 'text-slate-800 hover:text-[#0F766E]'
                 }`}
               >
-                Contact
+                Contact Us
                 {isActive('/contact') && (
                   <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-7 h-[2.5px] rounded-full bg-[#0F766E]" />
                 )}
               </Link>
 
+              {/* MANAGE BOOKING */}
               <Link
-                href="/terms"
+                href="/manage-booking"
                 className={`relative pb-1 text-sm font-semibold transition-colors duration-200 ${
-                  isActive('/terms') ? 'text-[#0F766E]' : 'text-slate-800 hover:text-[#0F766E]'
+                  isActive('/manage-booking') ? 'text-[#0F766E]' : 'text-slate-800 hover:text-[#0F766E]'
                 }`}
               >
-                Terms
-                {isActive('/terms') && (
+                Manage Booking
+                {isActive('/manage-booking') && (
                   <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-7 h-[2.5px] rounded-full bg-[#0F766E]" />
                 )}
               </Link>
 
-              <Link
-                href="/blog"
-                className={`relative pb-1 text-sm font-semibold transition-colors duration-200 ${
-                  isActive('/blog') ? 'text-[#0F766E]' : 'text-slate-800 hover:text-[#0F766E]'
-                }`}
+              {/* MORE DROPDOWN */}
+              <div
+                className="relative"
+                onMouseEnter={handleMoreMouseEnter}
+                onMouseLeave={handleMoreMouseLeave}
               >
-                Blog
-                {isActive('/blog') && (
-                  <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-7 h-[2.5px] rounded-full bg-[#0F766E]" />
+                <button
+                  type="button"
+                  className={`inline-flex items-center gap-1 pb-1 text-sm font-semibold transition-colors duration-200 ${
+                    ['/about', '/blog', '/terms'].some(p => isActive(p))
+                      ? 'text-[#0F766E]'
+                      : 'text-slate-800 hover:text-[#0F766E]'
+                  }`}
+                >
+                  <span>More</span>
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-200 ${
+                      moreDropdownOpen ? 'rotate-180 text-[#0F766E]' : 'text-slate-400'
+                    }`}
+                  />
+                  {['/about', '/blog', '/terms'].some(p => isActive(p)) && (
+                    <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-7 h-[2.5px] rounded-full bg-[#0F766E]" />
+                  )}
+                </button>
+
+                {moreDropdownOpen && (
+                  <div className="absolute right-0 top-full pt-3 w-48 animate-in fade-in slide-in-from-top-2 duration-150 z-50">
+                    <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/80 p-2 space-y-1 ring-1 ring-black/5 text-xs font-semibold">
+                      <Link
+                        href="/about"
+                        onClick={() => setMoreDropdownOpen(false)}
+                        className="block px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-700 hover:text-[#0F766E] transition-colors"
+                      >
+                        About Us
+                      </Link>
+                      <Link
+                        href="/blog"
+                        onClick={() => setMoreDropdownOpen(false)}
+                        className="block px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-700 hover:text-[#0F766E] transition-colors"
+                      >
+                        Travel Blog
+                      </Link>
+                      <Link
+                        href="/terms"
+                        onClick={() => setMoreDropdownOpen(false)}
+                        className="block px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-700 hover:text-[#0F766E] transition-colors"
+                      >
+                        Terms & Conditions
+                      </Link>
+                    </div>
+                  </div>
                 )}
-              </Link>
+              </div>
             </div>
           </div>
 
@@ -423,7 +468,7 @@ export default function Navigation() {
               isActive('/contact') ? 'bg-[#0F766E]/10 text-[#0F766E]' : 'text-slate-700 hover:bg-slate-100'
             }`}
           >
-            Contact
+            Contact Us
           </Link>
 
           <Link
@@ -444,6 +489,16 @@ export default function Navigation() {
             }`}
           >
             Blog
+          </Link>
+
+          <Link
+            href="/manage-booking"
+            onClick={() => setMenuOpen(false)}
+            className={`block rounded-xl px-4 py-3 text-base font-semibold transition ${
+              isActive('/manage-booking') ? 'bg-[#0F766E]/10 text-[#0F766E]' : 'text-[#0F766E] hover:bg-[#0F766E]/5'
+            }`}
+          >
+            Manage My Booking →
           </Link>
 
           <a

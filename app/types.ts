@@ -39,6 +39,21 @@ export interface BookingFormData {
   hourlyPickupLocation: string;
   hourlyHours: number;
   hourlyVehicleType: string; // 'Sedan' | 'SUV' | 'Van' stored as string
+
+  // Round Trip fields
+  transferType?: 'one-way' | 'round-trip';
+  returnDate?: string;
+  returnTime?: string;
+  returnFlightNumber?: string;
+
+  // Promo Code & Discount
+  promoCode?: string;
+  appliedDiscount?: {
+    code: string;
+    discountType: 'PERCENTAGE' | 'FIXED';
+    discountValue: number;
+    discountAmount: number;
+  } | null;
 }
 
 export interface Review {

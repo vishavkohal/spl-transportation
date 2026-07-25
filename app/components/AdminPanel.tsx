@@ -9,6 +9,9 @@ import LeadsManager from './admin/LeadsManager';
 import UpcomingTrips from './admin/UpcomingTrips';
 import QuotesManager from './admin/QuotesManager';
 import CustomCheckoutManager from './admin/CustomCheckoutManager';
+import PromosManager from './admin/PromosManager';
+
+type AdminTab = 'overview' | 'custom-checkout' | 'promos' | 'routes' | 'bookings' | 'quotes' | 'leads' | 'upcoming';
 import type { Route } from '../types';
 import { Menu } from 'lucide-react';
 
@@ -59,7 +62,7 @@ export default function AdminPanel() {
   const [authLoading, setAuthLoading] = useState(false);
 
   // Navigation State
-  const [activeTab, setActiveTab] = useState<'overview' | 'custom-checkout' | 'routes' | 'bookings' | 'quotes' | 'leads' | 'upcoming'>('overview');
+  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Dashboard Data State
@@ -75,7 +78,7 @@ export default function AdminPanel() {
     if (typeof window !== 'undefined') {
       const searchParams = new URLSearchParams(window.location.search);
       const tabParam = searchParams.get('tab');
-      const validTabs = ['overview', 'custom-checkout', 'routes', 'bookings', 'quotes', 'leads', 'upcoming'];
+      const validTabs = ['overview', 'custom-checkout', 'promos', 'routes', 'bookings', 'quotes', 'leads', 'upcoming'];
       if (tabParam && validTabs.includes(tabParam)) {
         setActiveTab(tabParam as any);
       }
@@ -283,6 +286,7 @@ export default function AdminPanel() {
               )
             )}
             {activeTab === 'custom-checkout' && <CustomCheckoutManager />}
+            {activeTab === 'promos' && <PromosManager />}
             {activeTab === 'upcoming' && <UpcomingTrips bookings={data.bookings} />}
             {activeTab === 'routes' && <RoutesManager />}
             {activeTab === 'bookings' && <BookingsManager />}

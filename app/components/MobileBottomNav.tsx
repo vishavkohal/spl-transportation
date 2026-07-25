@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Phone, MessageSquare, MapPin, CalendarCheck } from 'lucide-react';
+import { FileText, MessageSquare, MapPin, CalendarCheck, Search } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 
 const COMPANY_PHONE = '+61470032460';
@@ -69,6 +69,19 @@ export default function MobileBottomNav() {
             <span className="text-[11px] font-bold tracking-tight">Routes</span>
           </button>
 
+          {/* Manage Booking */}
+          <button
+            type="button"
+            onClick={() => router.push('/manage-booking')}
+            className={`
+              flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-200
+              ${pathname === '/manage-booking' ? 'bg-[#102A43] text-white shadow-md' : 'text-slate-600 hover:text-slate-900'}
+            `}
+          >
+            <Search className={`w-5 h-5 mb-0.5 ${pathname === '/manage-booking' ? 'text-[#2DD4BF]' : ''}`} />
+            <span className="text-[11px] font-bold tracking-tight">Manage</span>
+          </button>
+
           {/* WhatsApp Chat */}
           <a
             href={WHATSAPP_URL}
@@ -80,14 +93,18 @@ export default function MobileBottomNav() {
             <span className="text-[11px] font-bold tracking-tight">WhatsApp</span>
           </a>
 
-          {/* Call Direct */}
-          <a
-            href={`tel:${COMPANY_PHONE}`}
-            className="flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl text-slate-600 hover:text-[#0F766E] transition-all duration-200 active:scale-95"
+          {/* Request Custom Quote */}
+          <button
+            type="button"
+            onClick={() => router.push('/contact')}
+            className={`
+              flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-200
+              ${pathname === '/contact' ? 'bg-[#102A43] text-white shadow-md' : 'text-slate-600 hover:text-slate-900'}
+            `}
           >
-            <Phone className="w-5 h-5 mb-0.5 text-[#0F766E]" />
-            <span className="text-[11px] font-bold tracking-tight">Call</span>
-          </a>
+            <FileText className={`w-5 h-5 mb-0.5 ${pathname === '/contact' ? 'text-[#2DD4BF]' : 'text-[#0F766E]'}`} />
+            <span className="text-[11px] font-bold tracking-tight">Quote</span>
+          </button>
         </div>
       </div>
     </div>

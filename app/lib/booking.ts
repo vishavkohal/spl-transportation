@@ -38,6 +38,16 @@ export type BookingPayload = {
   dayTripDestination?: string | null;
   dayTripVehicleType?: string | null;
 
+  // Round Trip fields
+  transferType?: 'one-way' | 'round-trip';
+  returnDate?: string | null;
+  returnTime?: string | null;
+  returnFlightNumber?: string | null;
+
+  // Promo Code fields
+  promoCode?: string | null;
+  discountCents?: number | null;
+
   // Status
   status?: 'PENDING' | 'PAID' | 'CANCELLED';
 };
@@ -104,6 +114,16 @@ export async function createPendingBooking(
       dayTripPickup: booking.dayTripPickup ?? null,
       dayTripDestination: booking.dayTripDestination ?? null,
       dayTripVehicleType: booking.dayTripVehicleType ?? null,
+
+      // Round Trip fields
+      transferType: booking.transferType ?? 'one-way',
+      returnDate: booking.returnDate ?? null,
+      returnTime: booking.returnTime ?? null,
+      returnFlightNumber: booking.returnFlightNumber ?? null,
+
+      // Promo fields
+      promoCode: booking.promoCode ?? null,
+      discountCents: booking.discountCents ?? 0,
     },
   });
 }

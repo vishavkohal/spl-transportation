@@ -1433,6 +1433,32 @@ function Step1StandardContent(props: {
         </div>
       )}
 
+      {/* ── Transfer Type Toggle (One Way vs Round Trip) ── */}
+      <div className="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold mb-2">
+        <button
+          type="button"
+          onClick={() => handleInputChange('transferType', 'one-way')}
+          className={`px-4 py-1.5 rounded-lg transition-all ${
+            (formData.transferType || 'one-way') === 'one-way'
+              ? 'bg-[#102A43] text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          One Way
+        </button>
+        <button
+          type="button"
+          onClick={() => handleInputChange('transferType', 'round-trip')}
+          className={`px-4 py-1.5 rounded-lg transition-all ${
+            formData.transferType === 'round-trip'
+              ? 'bg-[#102A43] text-white shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          Round Trip
+        </button>
+      </div>
+
       {/* Grid Layout */}
       <div className="space-y-6">
         {/* Row 1: Pickup, Dropoff, Date, Time (single row on desktop) */}
@@ -1595,6 +1621,45 @@ function Step1StandardContent(props: {
             )}
           </div>
         </div>
+
+        {formData.transferType === 'round-trip' && (
+          <div className="p-4 rounded-2xl bg-teal-50/70 border border-teal-200/80 space-y-3">
+            <div className="text-xs font-bold uppercase tracking-wider text-[#0F766E] flex items-center gap-1.5">
+              <Calendar className="w-4 h-4" /> Return Transfer Details
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Return Date</label>
+                <input
+                  type="date"
+                  min={formData.pickupDate || minDateForInput}
+                  value={formData.returnDate || ''}
+                  onChange={e => handleInputChange('returnDate', e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Return Time</label>
+                <input
+                  type="time"
+                  value={formData.returnTime || ''}
+                  onChange={e => handleInputChange('returnTime', e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Return Flight # (Optional)</label>
+                <input
+                  type="text"
+                  value={formData.returnFlightNumber || ''}
+                  onChange={e => handleInputChange('returnFlightNumber', e.target.value)}
+                  placeholder="e.g. QF802"
+                  className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-900 bg-white"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Row 2: Pax (Dropdown), Bags (Dropdown), Flight #, Child Seat (single row on desktop) */}
         <div className="grid grid-cols-2 md:grid-cols-[0.4fr_0.4fr_0.65fr_auto] gap-4 items-end">
@@ -2393,6 +2458,50 @@ function Step2StandardContent(props: {
               markTouched={markTouched}
               handleInputChange={handleInputChange}
             />
+
+            {/* Promo Code Input */}
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 mt-2">
+              <label className="block text-xs font-bold text-slate-700">Have a promo code?</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={formData.promoCode || ''}
+                  onChange={e => handleInputChange('promoCode', e.target.value.toUpperCase())}
+                  placeholder="e.g. SUMMER10"
+                  className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold tracking-wider text-slate-900 bg-white"
+                />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!formData.promoCode) return;
+                    try {
+                      const res = await fetch('/api/promos/validate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          code: formData.promoCode,
+                          amount: calculatedPrice,
+                          transferType: formData.transferType || 'one-way',
+                        }),
+                      });
+                      const data = await res.json();
+                      if (!res.ok) throw new Error(data.error || 'Invalid promo code');
+                      handleInputChange('appliedDiscount', data.promo);
+                    } catch (err: any) {
+                      alert(err.message || 'Invalid promo code');
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[#102A43] text-white hover:bg-[#0F766E] transition"
+                >
+                  Apply
+                </button>
+              </div>
+              {formData.appliedDiscount && (
+                <div className="text-[11px] font-bold text-emerald-700">
+                  ✓ Code {formData.appliedDiscount.code} applied (-${formData.appliedDiscount.discountAmount} AUD)
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
