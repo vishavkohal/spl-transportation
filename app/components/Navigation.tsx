@@ -267,6 +267,19 @@ export default function Navigation() {
                 )}
               </div>
 
+              {/* SERVICES & RATES */}
+              <Link
+                href="/services"
+                className={`relative pb-1 text-sm font-semibold transition-colors duration-200 ${
+                  isActive('/services') ? 'text-[#0F766E]' : 'text-slate-800 hover:text-[#0F766E]'
+                }`}
+              >
+                Services &amp; Rates
+                {isActive('/services') && (
+                  <span className="absolute left-1/2 -translate-x-1/2 bottom-0 w-7 h-[2.5px] rounded-full bg-[#0F766E]" />
+                )}
+              </Link>
+
               {/* CONTACT */}
               <Link
                 href="/contact"
@@ -450,6 +463,16 @@ export default function Navigation() {
               </div>
             )}
           </div>
+
+          <Link
+            href="/services"
+            onClick={() => setMenuOpen(false)}
+            className={`block rounded-xl px-4 py-3 text-base font-medium transition ${
+              isActive('/services') ? 'bg-[#0F766E]/10 text-[#0F766E]' : 'text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            Services &amp; Rates
+          </Link>
 
           <Link
             href="/about"

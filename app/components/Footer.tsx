@@ -75,6 +75,7 @@ export default function Footer() {
               {[
                 { label: 'Home', href: '/' },
                 { label: 'All Transfers', href: '/transfers' },
+                { label: 'Services & Rates', href: '/services' },
                 { label: 'Manage Booking', href: '/manage-booking' },
                 { label: 'Travel Guides', href: '/blog' },
                 { label: 'About Us', href: '/about' },
