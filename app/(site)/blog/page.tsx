@@ -13,15 +13,51 @@ import {
   FileText,
 } from "lucide-react";
 
-import { COLORS } from "@/app/lib/colors";
-
-const PRIMARY_COLOR = COLORS.heroOverlay; // #19324D / #102A43
-const ACCENT_COLOR = COLORS.primary; // #0F766E
+import { BASE_URL } from "@/app/lib/constants";
 
 export const metadata: Metadata = {
   title: "Cairns & Tropical North Queensland Travel Blog | SPL Transportation",
   description:
     "Discover the best places to visit in Cairns, Port Douglas, Palm Cove, Kuranda, Mission Beach and more. Travel tips, guides and private transfer advice for Tropical North Queensland.",
+  keywords: [
+    "Cairns travel blog",
+    "Port Douglas travel guides",
+    "Tropical North Queensland transfer tips",
+    "Cairns airport transfer advice",
+    "Palm Cove travel guide",
+    "SPL Transportation blog",
+  ],
+  alternates: {
+    canonical: `${BASE_URL}/blog`,
+    languages: {
+      "en-AU": `${BASE_URL}/blog`,
+      "x-default": `${BASE_URL}/blog`,
+    },
+  },
+  openGraph: {
+    type: "website",
+    url: `${BASE_URL}/blog`,
+    title: "Cairns & Tropical Queensland Travel Blog | SPL Transportation",
+    description:
+      "Local guides to attractions, hidden gems, and airport transfer tips across Cairns, Port Douglas, Palm Cove & Kuranda.",
+    siteName: "SPL Transportation",
+    locale: "en_AU",
+    images: [
+      {
+        url: `${BASE_URL}/hero-mercedes.webp`,
+        width: 1200,
+        height: 630,
+        alt: "Cairns & Tropical Queensland Travel Blog — SPL Transportation",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cairns & Tropical Queensland Travel Blog | SPL Transportation",
+    description:
+      "Travel guides and airport transfer tips across Cairns, Port Douglas & Palm Cove.",
+    images: [`${BASE_URL}/hero-mercedes.webp`],
+  },
 };
 
 // Revalidate every hour
@@ -40,8 +76,48 @@ export default async function BlogIndexPage() {
     },
   });
 
+  const schemaGraph = [
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "@id": `${BASE_URL}/blog#webpage`,
+      url: `${BASE_URL}/blog`,
+      name: "Cairns & Tropical North Queensland Travel Blog",
+      description:
+        "Local travel guides, attraction overviews, and private transfer advice across Cairns and Tropical North Queensland.",
+      isPartOf: {
+        "@type": "WebSite",
+        name: "SPL Transportation",
+        url: BASE_URL,
+      },
+      breadcrumb: {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+          { "@type": "ListItem", position: 2, name: "Blog", item: `${BASE_URL}/blog` },
+        ],
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: "Travel Guides & Articles",
+      itemListElement: posts.map((post, idx) => ({
+        "@type": "ListItem",
+        position: idx + 1,
+        url: `${BASE_URL}/blog/${post.slug}`,
+        name: post.title,
+      })),
+    },
+  ];
+
   return (
     <main className="min-h-screen bg-[#F8FAFC]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaGraph) }}
+      />
+
       {/* ================= HERO HEADER (HOMEPAGE STYLED) ================= */}
       <section className="relative bg-[#102A43] text-white pt-16 pb-20 md:pt-20 md:pb-24 overflow-hidden">
         {/* Background Image with Gradient Overlay */}

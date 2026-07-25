@@ -668,14 +668,15 @@ export default function HomePage(props: {
 
             {/* Main Headline */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white drop-shadow-md tracking-tight leading-tight mb-4">
-              Premium Transfers.<br />
-              <span className="text-[#2DD4BF]">Every Journey.</span>
+              Private Airport Transfers<br />
+              <span className="text-[#2DD4BF]">Cairns &amp; Port Douglas</span>
             </h1>
 
             {/* Subheading */}
             <p className="text-base sm:text-lg text-gray-200 font-light mb-6 max-w-2xl leading-relaxed drop-shadow">
-              Fixed prices, professional drivers and premium vehicles for your comfort across Cairns & Tropical North Queensland.
+              Fixed prices, professional local drivers and luxury vehicles for your comfort across Cairns, Port Douglas, Palm Cove, Kuranda &amp; Tropical North Queensland.
             </p>
+
 
             {/* Feature Bullets */}
             <div className="flex flex-wrap items-center gap-6 text-xs sm:text-sm font-semibold text-white">

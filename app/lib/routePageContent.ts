@@ -568,13 +568,84 @@ const fetchRouteContent = unstable_cache(
     } catch (e) {
       console.error("Failed to fetch route page content from DB:", e);
     }
-    return ROUTE_PAGE_CONTENT[key(from, to)] ?? null;
+  return ROUTE_PAGE_CONTENT[key(from, to)] ?? generateFallbackRouteContent(from, to);
   },
   ['route-content'],
   { tags: ['route-content'], revalidate: 3600 }
 );
 
+export function generateFallbackRouteContent(from: string, to: string): RoutePageContent {
+  const routeTitle = `${from} to ${to}`;
+  return {
+    intro: {
+      h2: `${routeTitle} Private Transfers: Safe, Reliable & Fixed-Price Travel`,
+      paragraphs: [
+        `Looking for a seamless, comfortable private transfer from ${from} to ${to}? SPL Transportation provides premium, direct door-to-door transfer services across Tropical North Queensland.`,
+        `Avoid the hassle of waiting for shared shuttles or fluctuating taxi meters. Our professional local drivers meet you on schedule with a clean, modern, air-conditioned vehicle for a stress-free journey.`
+      ],
+      bullets: [
+        `Direct door-to-door pickup & drop-off between ${from} and ${to}`,
+        `Fixed transparent pricing with zero surge fees or hidden costs`,
+        `Professional, licensed, and experienced local drivers`,
+        `Flight monitoring & complimentary meet & greet service`
+      ],
+      cta: `Book your private ${routeTitle} transfer with SPL Transportation today!`
+    },
+    destination: {
+      h3: `Travel Guide & Route Information: ${routeTitle}`,
+      paragraphs: [
+        `Traveling between ${from} and ${to} offers scenic views of Far North Queensland's famous tropical landscapes and coastline.`,
+        `Whether you are traveling for holiday, business, or connecting to local resorts and tours, SPL Transportation ensures your transfer is comfortable, punctual, and safe.`
+      ]
+    },
+    travelOptions: {
+      h4: `Best Transport Options for ${routeTitle}`,
+      paragraphs: [
+        `While shared buses, taxis, or car rentals exist, a pre-booked private transfer is the fastest and most convenient choice.`,
+        `With SPL Transportation, you enjoy private vehicle exclusivity, flexible scheduling, and direct non-stop transport catered specifically to your itinerary.`
+      ]
+    },
+    whyUs: {
+      h2: `Why Choose SPL Transportation for ${routeTitle} Transfers?`,
+      paragraphs: [
+        `We are dedicated to providing five-star private transport across Cairns, Port Douglas, Palm Cove, and surrounding regions.`,
+        `From individuals and couples to family groups up to 7 passengers, our modern fleet of Sedans, SUVs, and Minivans accommodates all travel requirements.`
+      ],
+      bullets: [
+        `24/7 transfer availability with advance online booking`,
+        `Modern, sanitized, air-conditioned vehicles`,
+        `Child seats & booster seats available upon request`,
+        `256-bit SSL encrypted checkout with instant confirmation`
+      ],
+      cta: `Reserve your ${routeTitle} transfer now for a guaranteed fixed price!`
+    },
+    faqs: [
+      {
+        question: `How do I book a private transfer from ${from} to ${to}?`,
+        answer: `You can book instantly online through SPL Transportation. Simply select your pickup date, time, passengers, and vehicle type for guaranteed fixed pricing and instant confirmation.`
+      },
+      {
+        question: `How long does the journey take from ${from} to ${to}?`,
+        answer: `Travel time between ${from} and ${to} depends on traffic and specific drop-off locations. SPL Transportation drivers choose the most efficient coastal and highway routes.`
+      },
+      {
+        question: `Are transfers available for early morning or late night flights?`,
+        answer: `Yes, SPL Transportation operates 24/7 for pre-booked transfers. Provide your flight details at checkout and our driver will track your arrival.`
+      },
+      {
+        question: `Can I request child safety seats for this transfer?`,
+        answer: `Yes! Infant caps, child safety seats, and booster seats can be requested during the online booking process.`
+      },
+      {
+        question: `What is the cancellation policy for SPL Transportation transfers?`,
+        answer: `SPL Transportation offers flexible cancellation and amendment terms for pre-booked transfers. Please refer to our Terms & Conditions for full details.`
+      }
+    ]
+  };
+}
+
 export async function getRoutePageContent(route: Route): Promise<RoutePageContent | null> {
   return fetchRouteContent(route.from, route.to);
 }
+
 

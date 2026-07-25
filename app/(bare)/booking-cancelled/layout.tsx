@@ -1,3 +1,13 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Booking Cancelled | SPL Transportation',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function BookingCancelledLayout({
   children
 }: {
@@ -11,3 +21,4 @@ export default function BookingCancelledLayout({
     </html>
   );
 }
+

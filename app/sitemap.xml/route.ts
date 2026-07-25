@@ -16,8 +16,10 @@ export async function GET() {
     { loc: `${BASE_URL}/about`, priority: "0.80", freq: "monthly" },
     { loc: `${BASE_URL}/contact`, priority: "0.80", freq: "monthly" },
     { loc: `${BASE_URL}/terms`, priority: "0.70", freq: "yearly" },
+    { loc: `${BASE_URL}/privacy-policy`, priority: "0.70", freq: "yearly" },
     { loc: `${BASE_URL}/blog`, priority: "0.85", freq: "weekly" }
   ];
+
 
   const staticUrls = staticPages.map(p => `
   <url>
@@ -32,16 +34,26 @@ export async function GET() {
     const slug = routeToSlug(route);
     const loc = `${BASE_URL}/transfers/${slug}`;
     const routeTitle = `${route.from} to ${route.to} Private Transfer`;
+    
+    // High-value routes receive elevated priority
+    const isTopCorridor = 
+      slug.includes("cairns-airport-to-port-douglas") ||
+      slug.includes("cairns-airport-to-palm-cove") ||
+      slug.includes("cairns-airport-to-cairns-city") ||
+      slug.includes("cairns-city-to-kuranda");
+
+    const priority = isTopCorridor ? "0.90" : "0.85";
 
     return `
   <url>
     <loc>${loc}</loc>
     <lastmod>${NOW}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
+    <changefreq>daily</changefreq>
+    <priority>${priority}</priority>
     <image:image>
       <image:loc>${BASE_URL}/routes/${slug}.jpg</image:loc>
       <image:title>${routeTitle}</image:title>
+      <image:caption>Door-to-door private transfers from ${route.from} to ${route.to}</image:caption>
     </image:image>
   </url>`;
   }).join("");
@@ -56,8 +68,13 @@ export async function GET() {
     <lastmod>${lastMod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
+    <image:image>
+      <image:loc>${BASE_URL}/hero-mercedes.webp</image:loc>
+      <image:title>${post.title}</image:title>
+    </image:image>
   </url>`;
   }).join("");
+
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">

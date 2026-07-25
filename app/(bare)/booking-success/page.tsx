@@ -1,5 +1,15 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import BookingSuccessClient from './BookingSuccessClient';
+
+export const metadata: Metadata = {
+  title: 'Booking Confirmed | SPL Transportation',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 
 export default function BookingSuccessPage() {
   return (

@@ -71,21 +71,69 @@ export async function generateMetadata({
     };
   }
 
+  const pageContent = await getRoutePageContent(route);
   const minPrice = route.pricing?.length
     ? Math.min(...route.pricing.map((p) => p.price))
     : null;
 
+  const routeName = `${route.from} to ${route.to}`;
+  const title = `${routeName} Private Transfers | ${
+    minPrice ? `From $${minPrice}` : "Fixed Fare"
+  } | SPL Transportation`;
+
+  const description =
+    route.description ||
+    pageContent?.intro?.paragraphs?.[0] ||
+    `Book private, fixed-price transfers from ${route.from} to ${route.to}. Professional drivers, modern vehicles, flight tracking, and no surge pricing across Queensland.`;
+
+  const ogImageUrl = pageContent?.imageId
+    ? `${BASE_URL}/api/images/${pageContent.imageId}`
+    : `${BASE_URL}/routes/${route.slug}.jpg`;
+
   return {
-    title: `${route.from} to ${route.to} Transfers | ${minPrice ? `From $${minPrice}` : "Private Transfer"
-      } | SPL Transportation`,
-    description:
-      route.description ??
-      `Book a private, fixed-price transfer from ${route.from} to ${route.to}. Professional drivers, modern vehicles, no hidden fees.`,
+    title,
+    description,
+    keywords: [
+      `${route.from} to ${route.to} transfer`,
+      `private transfer ${route.to}`,
+      `airport transfer ${route.from}`,
+      `private driver ${route.to}`,
+      `SPL Transportation`,
+      `Tropical North Queensland transfer`,
+      `fixed price transfer ${route.to}`,
+    ],
     alternates: {
       canonical: `${BASE_URL}/transfers/${route.slug}`,
+      languages: {
+        "en-AU": `${BASE_URL}/transfers/${route.slug}`,
+        "x-default": `${BASE_URL}/transfers/${route.slug}`,
+      },
+    },
+    openGraph: {
+      type: "website",
+      url: `${BASE_URL}/transfers/${route.slug}`,
+      title,
+      description,
+      siteName: "SPL Transportation",
+      locale: "en_AU",
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `SPL Transportation Private Transfer: ${routeName}`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImageUrl],
     },
   };
 }
+
 
 /* ----------------------------------------
    Page Component
@@ -109,6 +157,9 @@ export default async function RoutePage({
   const minPrice = route.pricing?.length
     ? Math.min(...route.pricing.map((p) => p.price))
     : null;
+
+  const otherRoutes = routes.filter((r) => r.slug !== slug).slice(0, 6);
+
 
   return (
     <main className="bg-[#F8FAFC]">
@@ -408,8 +459,64 @@ export default async function RoutePage({
         </section>
       )}
 
+      {/* ================= RELATED ROUTES INTERLINKING ================= */}
+      {otherRoutes.length > 0 && (
+
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#0F766E] mb-1">
+                Explore More Transfers
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                Popular &amp; Nearby Transfer Routes
+              </h2>
+            </div>
+            <a
+              href="/transfers"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F766E] hover:underline"
+            >
+              View All Transfer Routes <ArrowRight className="w-3.5 h-3.5" />
+            </a>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {otherRoutes.map((r) => {
+              const rMinPrice = r.pricing?.length
+                ? Math.min(...r.pricing.map((p) => p.price))
+                : null;
+              return (
+                <a
+                  key={r.slug}
+                  href={`/transfers/${r.slug}`}
+                  className="group bg-white p-5 rounded-2xl border border-slate-200/80 hover:border-[#0F766E]/50 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 text-xs font-bold text-slate-400 mb-2">
+                      <span className="truncate">{r.from}</span>
+                      <span>→</span>
+                      <span className="truncate">{r.to}</span>
+                    </div>
+                    <h3 className="text-base font-bold text-slate-900 group-hover:text-[#0F766E] transition-colors">
+                      {r.from} to {r.to} Private Transfer
+                    </h3>
+                  </div>
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100 text-xs">
+                    <span className="text-slate-500 font-medium">{r.duration ? `${r.duration} Mins` : "Direct Transfer"}</span>
+                    <span className="font-bold text-[#0F766E]">
+                      {rMinPrice ? `From $${rMinPrice} AUD` : "View Fare"}
+                    </span>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* ================= BOTTOM CTA BANNER ================= */}
       <section className="py-16 bg-[#102A43] text-white">
+
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl sm:text-4xl font-extrabold mb-4">
             Ready to Book Your {routeName} Transfer?
