@@ -108,8 +108,8 @@ export default function RouteBookingForm({ route }: { route: Route }) {
 
   const handlePassengerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = parseInt(e.target.value, 10);
-    if (isNaN(val)) val = 1;
-    if (val < 1) val = 1;
+    if (isNaN(val)) val = 0;
+    if (val < 0) val = 0;
     if (val > MAX_PASSENGERS) val = MAX_PASSENGERS;
 
     const newMaxLuggage = getMaxBagsForCurrentPax(val);
