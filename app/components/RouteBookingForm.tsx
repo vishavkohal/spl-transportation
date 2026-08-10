@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, AlertCircle, AlertTriangle, Repeat, Calendar, Clock, Users, Briefcase, Plane, CheckCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, AlertTriangle, Repeat, Calendar, Clock, Users, Briefcase, Plane, CheckCircle, ChevronDown } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
 import {
   AFTER_HOURS_SURCHARGE,
@@ -106,7 +106,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
   const update = (k: string, v: any) =>
     setForm(p => ({ ...p, [k]: v }));
 
-  const handlePassengerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePassengerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     let val = parseInt(e.target.value, 10);
     if (isNaN(val)) val = 0;
     if (val < 0) val = 0;
@@ -120,7 +120,7 @@ export default function RouteBookingForm({ route }: { route: Route }) {
     }));
   };
 
-  const handleLuggageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLuggageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     let val = parseInt(e.target.value, 10);
     if (isNaN(val)) val = 0;
 
@@ -390,15 +390,18 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 <Users className="w-3 h-3 text-[#102A43]" />
                 Passengers
               </label>
-              <input
-                type="number"
-                min={1}
-                max={MAX_PASSENGERS}
-                value={form.passengers === 0 ? '' : form.passengers}
-                onChange={handlePassengerChange}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] text-gray-900 bg-white"
-                placeholder="1"
-              />
+              <div className="relative">
+                <select
+                  value={form.passengers}
+                  onChange={handlePassengerChange}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] text-gray-900 bg-white appearance-none"
+                >
+                  {Array.from({ length: MAX_PASSENGERS }, (_, i) => i + 1).map(num => (
+                    <option key={num} value={num}>{num}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
             </div>
 
             <div className="col-span-1 md:col-span-2 space-y-1">
@@ -407,16 +410,18 @@ export default function RouteBookingForm({ route }: { route: Route }) {
                 Luggage
                 <span className="text-gray-400 text-[10px] ml-auto font-normal">(Max {getMaxBagsForCurrentPax(form.passengers)})</span>
               </label>
-              <input
-                type="number"
-                min={0}
-                max={getMaxBagsForCurrentPax(form.passengers)}
-                // Use '' if 0 so user sees empty field instead of '0'
-                value={form.luggage === 0 ? '' : form.luggage}
-                onChange={handleLuggageChange}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] text-gray-900 bg-white"
-                placeholder="0"
-              />
+              <div className="relative">
+                <select
+                  value={form.luggage}
+                  onChange={handleLuggageChange}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#0F766E]/10 focus:border-[#0F766E] text-gray-900 bg-white appearance-none"
+                >
+                  {Array.from({ length: getMaxBagsForCurrentPax(form.passengers) + 1 }, (_, i) => i).map(num => (
+                    <option key={num} value={num}>{num}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
             </div>
 
             <div className="col-span-2 md:col-span-4 space-y-1">
