@@ -57,7 +57,7 @@ export default async function ServicesPage() {
           'Professional private transfers and chauffeur services across Tropical North Queensland.',
         url: BASE_URL,
         telephone: '+61470032460',
-        email: 'spltransportation.australia@gmail.com',
+        email: 'info@spltransportation.com.au',
         logo: `${BASE_URL}/logo.png`,
         image: `${BASE_URL}/hero-mercedes.webp`,
         priceRange: '$$',

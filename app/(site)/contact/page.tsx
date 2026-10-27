@@ -70,7 +70,7 @@ const contactSchema = [
       name: 'SPL Transportation',
       url: BASE_URL,
       telephone: '+61470032460',
-      email: 'spltransportation.australia@gmail.com',
+      email: 'info@spltransportation.com.au',
       contactPoint: {
         '@type': 'ContactPoint',
         telephone: '+61470032460',

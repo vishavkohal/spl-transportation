@@ -9,7 +9,7 @@ export default function JsonLd() {
     '@id': 'https://spltransportation.com.au/#organization',
     url: 'https://spltransportation.com.au',
     telephone: '+61470032460',
-    email: 'spltransportation.australia@gmail.com',
+    email: 'info@spltransportation.com.au',
     priceRange: '$$',
     address: {
       '@type': 'PostalAddress',

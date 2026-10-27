@@ -80,7 +80,7 @@ const homepageJsonLd = [
       url: BASE_URL,
       logo: `${BASE_URL}/logo.png`,
       telephone: '+61470032460',
-      email: 'spltransportation.australia@gmail.com',
+      email: 'info@spltransportation.com.au',
       address: {
         '@type': 'PostalAddress',
         addressLocality: 'Cairns',

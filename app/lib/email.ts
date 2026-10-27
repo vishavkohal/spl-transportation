@@ -48,10 +48,10 @@ const RETRY_BASE_DELAY_MS = Number(process.env.RESEND_RETRY_BASE_DELAY_MS ?? 500
 
 // company & email config (fallbacks)
 const FROM_EMAIL = process.env.BOOKING_FROM_EMAIL || 'no-reply@spltransportation.com';
-const ADMIN_EMAIL = process.env.BOOKING_ADMIN_EMAIL || 'spltransportation.australia@gmail.com';
+const ADMIN_EMAIL = process.env.BOOKING_ADMIN_EMAIL || 'info@spltransportation.com.au';
 const COMPANY_NAME = process.env.COMPANY_NAME || 'SPL Transportation';
 const COMPANY_ABN = process.env.COMPANY_ABN || '64 957 177 372';
-const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'spltransportation.australia@gmail.com';
+const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'info@spltransportation.com.au';
 const COMPANY_PHONE = process.env.COMPANY_PHONE || '+61470032460';
 const COMPANY_ADDRESS = process.env.COMPANY_ADDRESS || 'Cairns, QLD, Australia';
 

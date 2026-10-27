@@ -5,7 +5,7 @@ export const GA_ID = 'G-0F1THLNR5M';
 export const SITE_NAME = 'SPL Transportation';
 export const BUSINESS_PHONE = '+61 470 032 460';
 export const BUSINESS_PHONE_RAW = '+61470032460';
-export const BUSINESS_EMAIL = 'spltransportation.australia@gmail.com';
+export const BUSINESS_EMAIL = 'info@spltransportation.com.au';
 export const WHATSAPP_NUMBER = '61470032460';
 
 export const BUSINESS_ADDRESS = {

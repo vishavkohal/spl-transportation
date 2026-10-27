@@ -197,7 +197,7 @@ export const InvoicePDF = ({ booking }: InvoicePDFProps) => {
                         <Text style={styles.companyDetails}>ABN: 64 957 177 372</Text>
                         <Text style={styles.companyDetails}>Cairns, QLD, Australia</Text>
                         <Text style={styles.companyDetails}>+61 470 032 460</Text>
-                        <Text style={styles.companyDetails}>spltransportation.australia@gmail.com</Text>
+                        <Text style={styles.companyDetails}>info@spltransportation.com.au</Text>
                     </View>
                     <View style={styles.headerRight}>
                         <Text style={styles.invoiceTitle}>INVOICE / RECEIPT</Text>
@@ -308,7 +308,7 @@ export const InvoicePDF = ({ booking }: InvoicePDFProps) => {
                 <Text style={styles.footer}>
                     Thank you for choosing SPL Transportation. Please retain this invoice for your records.
                     {"\n"}
-                    For any enquiries, please email spltransportation.australia@gmail.com
+                    For any enquiries, please email info@spltransportation.com.au
                 </Text>
             </Page>
         </Document>

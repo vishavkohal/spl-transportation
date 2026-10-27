@@ -639,7 +639,7 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
         "Professional private transfers across Queensland. Elevating your journey with safety, punctuality, and premium comfort.",
       url: BASE_URL,
       telephone: "+61470032460",
-      email: "spltransportation.australia@gmail.com",
+      email: "info@spltransportation.com.au",
       logo: `${BASE_URL}/logo.png`,
       image: `${BASE_URL}/logo.png`,
       priceRange: "$$",

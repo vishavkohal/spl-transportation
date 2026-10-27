@@ -64,8 +64,8 @@ export default function Footer() {
               </li>
               <li className="flex items-center space-x-3 group">
                 <Mail className="w-5 h-5 shrink-0" style={{ color: ACCENT_COLOR }} />
-                <a href="mailto:spltransportation.australia@gmail.com" className="group-hover:text-white transition-colors break-all">
-                  spltransportation.australia@gmail.com
+                <a href="mailto:info@spltransportation.com.au" className="group-hover:text-white transition-colors break-all">
+                  info@spltransportation.com.au
                 </a>
               </li>
               <li className="flex items-center space-x-3">

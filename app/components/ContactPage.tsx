@@ -164,10 +164,10 @@ export default function ContactPage() {
               <ContactCardDark
                 icon={Mail}
                 title="Email Support"
-                content="spltransportation.australia@gmail.com"
+                content="info@spltransportation.com.au"
                 subtext="Email us your travel itinerary anytime"
                 action="Email Us"
-                href="mailto:spltransportation.australia@gmail.com"
+                href="mailto:info@spltransportation.com.au"
               />
             </div>
 

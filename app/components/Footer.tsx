@@ -144,11 +144,11 @@ export default function Footer() {
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 shrink-0" style={{ color: ACCENT_COLOR }} strokeWidth={1.5} />
                 <a
-                  href="mailto:spltransportation.australia@gmail.com"
+                  href="mailto:info@spltransportation.com.au"
                   className="hover:text-white transition-colors break-all"
                   style={{ color: TEXT_MUTED }}
                 >
-                  spltransportation.australia@gmail.com
+                  info@spltransportation.com.au
                 </a>
               </li>
             </ul>
