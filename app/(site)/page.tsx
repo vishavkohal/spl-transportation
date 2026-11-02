@@ -1,11 +1,9 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import HomePageClient from './HomePageClient';
-import JsonLd from '@/app/components/JsonLd';
-import { BASE_URL, BUSINESS_PHONE_RAW } from '@/app/lib/constants';
+import { BASE_URL } from '@/app/lib/constants';
 
 export const metadata: Metadata = {
-  title: 'Private Airport Transfers Cairns | From $55 | SPL Transportation',
+  title: 'Private Airport Transfers Cairns | From $55',
   description:
     'Book private airport transfers in Cairns from $55. Professional drivers, fixed pricing, meet & greet at Cairns Airport. Transfers to Port Douglas, Palm Cove, Kuranda & Tropical North Queensland.',
   keywords: [
@@ -50,115 +48,80 @@ export const metadata: Metadata = {
 };
 
 // Structured data for the homepage
-const homepageJsonLd = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'SPL Transportation',
-    url: BASE_URL,
-    description:
-      'Professional private airport and regional transfers in Cairns and Tropical North Queensland.',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: `${BASE_URL}/transfers/{search_term_string}`,
-      },
-      'query-input': 'required name=search_term_string',
-    },
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'TransportService',
-    name: 'SPL Transportation - Cairns Airport Transfers',
-    url: BASE_URL,
-    description:
-      'Private airport transfer service from Cairns Airport to Port Douglas, Palm Cove, Kuranda, Cairns City and all Tropical North Queensland destinations.',
-    provider: {
-      '@type': 'Organization',
-      name: 'SPL Transportation',
+const homepageJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'TransportService',
+      '@id': `${BASE_URL}/#service`,
+      name: 'SPL Transportation - Cairns Airport Transfers',
       url: BASE_URL,
-      logo: `${BASE_URL}/logo.png`,
-      telephone: '+61470032460',
-      email: 'info@spltransportation.com.au',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Cairns',
-        addressRegion: 'QLD',
-        addressCountry: 'AU',
+      description:
+        'Private airport transfer service from Cairns Airport to Port Douglas, Palm Cove, Kuranda, Cairns City and all Tropical North Queensland destinations.',
+      provider: { '@id': `${BASE_URL}/#organization` },
+      areaServed: [
+        { '@type': 'City', name: 'Cairns' },
+        { '@type': 'City', name: 'Port Douglas' },
+        { '@type': 'City', name: 'Palm Cove' },
+        { '@type': 'City', name: 'Kuranda' },
+        { '@type': 'Place', name: 'Atherton Tablelands' },
+        { '@type': 'Place', name: 'Cairns Airport' },
+        { '@type': 'Place', name: 'Northern Beaches' },
+      ],
+      serviceType: 'Private Airport Transfer',
+      offers: {
+        '@type': 'AggregateOffer',
+        priceCurrency: 'AUD',
+        lowPrice: '55',
+        offerCount: '15',
+        availability: 'https://schema.org/InStock',
       },
     },
-    areaServed: [
-      { '@type': 'City', name: 'Cairns' },
-      { '@type': 'City', name: 'Port Douglas' },
-      { '@type': 'City', name: 'Palm Cove' },
-      { '@type': 'City', name: 'Kuranda' },
-      { '@type': 'Place', name: 'Atherton Tablelands' },
-      { '@type': 'Place', name: 'Cairns Airport' },
-      { '@type': 'Place', name: 'Northern Beaches' },
-    ],
-    serviceType: 'Private Airport Transfer',
-    offers: {
-      '@type': 'AggregateOffer',
-      priceCurrency: 'AUD',
-      lowPrice: '55',
-      offerCount: '15',
-      availability: 'https://schema.org/InStock',
+    {
+      '@type': 'FAQPage',
+      '@id': `${BASE_URL}/#faq`,
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'How much does a private transfer from Cairns Airport cost?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Private transfers from Cairns Airport start from $55 AUD for a sedan to Cairns City. Prices vary by destination and vehicle type, with fixed pricing and no surge charges.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'How do I get from Cairns Airport to Port Douglas?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'SPL Transportation offers private door-to-door transfers from Cairns Airport to Port Douglas. The journey takes approximately 1 hour in a comfortable, air-conditioned vehicle with a professional driver.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Do you offer meet and greet at Cairns Airport?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Yes, all airport transfers include a complimentary meet and greet service. Your driver will be waiting for you at arrivals with a name sign, and will assist with your luggage.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What areas do you service from Cairns Airport?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'We service all major destinations in Tropical North Queensland including Cairns City, Port Douglas, Palm Cove, Northern Beaches, Kuranda, Mission Beach, Atherton Tablelands, and more.',
+          },
+        },
+      ],
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.9',
-      reviewCount: '250',
-      bestRating: '5',
-      worstRating: '1',
-    },
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: 'How much does a private transfer from Cairns Airport cost?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Private transfers from Cairns Airport start from $55 AUD for a sedan to Cairns City. Prices vary by destination and vehicle type, with fixed pricing and no surge charges.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'How do I get from Cairns Airport to Port Douglas?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'SPL Transportation offers private door-to-door transfers from Cairns Airport to Port Douglas. The journey takes approximately 1 hour in a comfortable, air-conditioned vehicle with a professional driver.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'Do you offer meet and greet at Cairns Airport?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Yes, all airport transfers include a complimentary meet and greet service. Your driver will be waiting for you at arrivals with a name sign, and will assist with your luggage.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'What areas do you service from Cairns Airport?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'We service all major destinations in Tropical North Queensland including Cairns City, Port Douglas, Palm Cove, Northern Beaches, Kuranda, Mission Beach, Atherton Tablelands, and more.',
-        },
-      },
-    ],
-  },
-];
+  ],
+};
 
 export default function Home() {
   return (
     <>
-      <JsonLd />
-      <Script
-        id="homepage-structured-data"
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(homepageJsonLd),

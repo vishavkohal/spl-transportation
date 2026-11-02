@@ -16,7 +16,7 @@ import {
 import { BASE_URL } from "@/app/lib/constants";
 
 export const metadata: Metadata = {
-  title: "Cairns & Tropical North Queensland Travel Blog | SPL Transportation",
+  title: "Cairns & Tropical North Queensland Travel Blog",
   description:
     "Discover the best places to visit in Cairns, Port Douglas, Palm Cove, Kuranda, Mission Beach and more. Travel tips, guides and private transfer advice for Tropical North Queensland.",
   keywords: [
@@ -76,40 +76,37 @@ export default async function BlogIndexPage() {
     },
   });
 
-  const schemaGraph = [
-    {
-      "@context": "https://schema.org",
-      "@type": "CollectionPage",
-      "@id": `${BASE_URL}/blog#webpage`,
-      url: `${BASE_URL}/blog`,
-      name: "Cairns & Tropical North Queensland Travel Blog",
-      description:
-        "Local travel guides, attraction overviews, and private transfer advice across Cairns and Tropical North Queensland.",
-      isPartOf: {
-        "@type": "WebSite",
-        name: "SPL Transportation",
-        url: BASE_URL,
+  const schemaGraph = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${BASE_URL}/blog#webpage`,
+        url: `${BASE_URL}/blog`,
+        name: "Cairns & Tropical North Queensland Travel Blog",
+        description:
+          "Local travel guides, attraction overviews, and private transfer advice across Cairns and Tropical North Queensland.",
+        isPartOf: { "@id": `${BASE_URL}/#website` },
+        breadcrumb: {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+            { "@type": "ListItem", position: 2, name: "Blog", item: `${BASE_URL}/blog` },
+          ],
+        },
       },
-      breadcrumb: {
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
-          { "@type": "ListItem", position: 2, name: "Blog", item: `${BASE_URL}/blog` },
-        ],
+      {
+        "@type": "ItemList",
+        name: "Travel Guides & Articles",
+        itemListElement: posts.map((post, idx) => ({
+          "@type": "ListItem",
+          position: idx + 1,
+          item: `${BASE_URL}/blog/${post.slug}`,
+          name: post.title,
+        })),
       },
-    },
-    {
-      "@context": "https://schema.org",
-      "@type": "ItemList",
-      name: "Travel Guides & Articles",
-      itemListElement: posts.map((post, idx) => ({
-        "@type": "ListItem",
-        position: idx + 1,
-        url: `${BASE_URL}/blog/${post.slug}`,
-        name: post.title,
-      })),
-    },
-  ];
+    ],
+  };
 
   return (
     <main className="min-h-screen bg-[#F8FAFC]">

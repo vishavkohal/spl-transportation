@@ -3,7 +3,7 @@ import ContactPage from '../../components/ContactPage';
 import { BASE_URL } from '@/app/lib/constants';
 
 export const metadata: Metadata = {
-  title: 'Contact SPL Transportation | Cairns Airport Transfer Enquiries',
+  title: 'Contact Us | 24/7 Airport Transfer Enquiries & Support',
   description:
     'Get in touch with SPL Transportation for private airport transfer enquiries, bookings, and quotes. Available 24/7 for Cairns, Port Douglas, Palm Cove and Tropical North Queensland transfers.',
   keywords: [
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
         url: `${BASE_URL}/hero-mercedes.webp`,
         width: 1200,
         height: 630,
-        alt: 'Contact SPL Transportation — 24/7 Transfer Support',
+        alt: 'Contact SPL Transportation - 24/7 Transfer Support',
       },
     ],
   },
@@ -44,43 +44,28 @@ export const metadata: Metadata = {
   },
 };
 
-const contactSchema = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'ContactPage',
-    '@id': `${BASE_URL}/contact#webpage`,
-    url: `${BASE_URL}/contact`,
-    name: 'Contact SPL Transportation',
-    description:
-      'Contact SPL Transportation 24/7 for private airport transfer quotes and customer support.',
-    isPartOf: {
-      '@type': 'WebSite',
-      name: 'SPL Transportation',
-      url: BASE_URL,
-    },
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
-        { '@type': 'ListItem', position: 2, name: 'Contact', item: `${BASE_URL}/contact` },
-      ],
-    },
-    mainEntity: {
-      '@type': 'Organization',
-      name: 'SPL Transportation',
-      url: BASE_URL,
-      telephone: '+61470032460',
-      email: 'info@spltransportation.com.au',
-      contactPoint: {
-        '@type': 'ContactPoint',
-        telephone: '+61470032460',
-        contactType: 'customer support',
-        availableLanguage: 'English',
-        areaServed: 'AU',
+const contactSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'ContactPage',
+      '@id': `${BASE_URL}/contact#webpage`,
+      url: `${BASE_URL}/contact`,
+      name: 'Contact SPL Transportation',
+      description:
+        'Contact SPL Transportation 24/7 for private airport transfer quotes and customer support.',
+      isPartOf: { '@id': `${BASE_URL}/#website` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Contact', item: `${BASE_URL}/contact` },
+        ],
       },
+      mainEntity: { '@id': `${BASE_URL}/#organization` },
     },
-  },
-];
+  ],
+};
 
 export default function ContactIndexPage() {
   return (

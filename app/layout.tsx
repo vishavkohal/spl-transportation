@@ -15,12 +15,20 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 import { BookingProvider } from "./providers/BookingProvider";
-import Navigation from "../app/components/Navigation";
 import UtmTracker from "@/app/components/UtmTracker";
 import CookieConsent from "@/app/components/CookieConsent";
 import WhatsAppButton from "@/app/components/WhatsAppButton";
 import { Toaster } from 'sonner';
-import { BASE_URL, GA_ID, BUSINESS_PHONE } from "@/app/lib/constants";
+import {
+  BASE_URL,
+  GA_ID,
+  SITE_NAME,
+  BUSINESS_PHONE_RAW,
+  BUSINESS_EMAIL,
+  BUSINESS_ADDRESS,
+  SERVICED_AREAS,
+  SOCIAL_LINKS,
+} from "@/app/lib/constants";
 
 
 export const metadata: Metadata = {
@@ -45,7 +53,13 @@ export const metadata: Metadata = {
       "Private, professional transport services across Cairns, Port Douglas, Palm Cove & Far North Queensland.",
     images: [
       {
-        url: "/logo.png",
+        url: `${BASE_URL}/hero-mercedes.webp`,
+        width: 1200,
+        height: 630,
+        alt: "SPL Transportation - Premium Fleet & Private Transfers",
+      },
+      {
+        url: `${BASE_URL}/logo.png`,
         width: 600,
         height: 600,
         alt: "SPL Transportation Logo",
@@ -58,7 +72,7 @@ export const metadata: Metadata = {
     title: "SPL Transportation",
     description:
       "Private airport & regional transfers across Cairns and Port Douglas.",
-    images: ["/logo.png"],
+    images: [`${BASE_URL}/hero-mercedes.webp`],
   },
 
   alternates: {
@@ -94,6 +108,67 @@ export const viewport = {
   themeColor: "#102A43",
 };
 
+const rootSchema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": `${BASE_URL}/#website`,
+      url: BASE_URL,
+      name: SITE_NAME,
+      description:
+        "Professional private airport and regional transfers across Cairns, Port Douglas, Palm Cove and Tropical North Queensland.",
+      publisher: { "@id": `${BASE_URL}/#organization` },
+      inLanguage: "en-AU",
+    },
+    {
+      "@type": ["LocalBusiness", "TaxiService"],
+      "@id": `${BASE_URL}/#organization`,
+      name: SITE_NAME,
+      url: BASE_URL,
+      logo: `${BASE_URL}/logo.png`,
+      image: `${BASE_URL}/hero-mercedes.webp`,
+      telephone: BUSINESS_PHONE_RAW,
+      email: BUSINESS_EMAIL,
+      priceRange: "$$",
+      description:
+        "Private airport and regional transfers across Cairns, Port Douglas, Palm Cove and Far North Queensland.",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: BUSINESS_ADDRESS.streetAddress,
+        addressLocality: BUSINESS_ADDRESS.addressLocality,
+        addressRegion: BUSINESS_ADDRESS.addressRegion,
+        postalCode: BUSINESS_ADDRESS.postalCode,
+        addressCountry: BUSINESS_ADDRESS.addressCountry,
+      },
+      geo: {
+        "@type": "GeoCoordinates",
+        latitude: -16.9186,
+        longitude: 145.7781,
+      },
+      openingHoursSpecification: {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ],
+        opens: "00:00",
+        closes: "23:59",
+      },
+      areaServed: SERVICED_AREAS.map((area) => ({
+        "@type": "City",
+        name: area,
+      })),
+      sameAs: [SOCIAL_LINKS.facebook, SOCIAL_LINKS.instagram],
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -120,15 +195,15 @@ export default function RootLayout({
             `,
           }}
         />
-        {/* ✅ Preload LCP hero image */}
+        {/* âœ… Preload LCP hero image */}
         <link rel="preload" as="image" href="/hero-mercedes.webp" type="image/webp" fetchPriority="high" />
-        {/* ✅ Preload brand logo */}
+        {/* âœ… Preload brand logo */}
         <link rel="preload" as="image" href="/logo.png" />
-        {/* ✅ Preconnect to external origins */}
+        {/* âœ… Preconnect to external origins */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
 
-        {/* ✅ Google Analytics */}
+        {/* âœ… Google Analytics */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
           strategy="lazyOnload"
@@ -144,56 +219,18 @@ export default function RootLayout({
           `}
         </Script>
 
-        {/* ✅ LocalBusiness JSON-LD */}
-        <Script
-          id="local-business-schema"
+        {/* âœ… LocalBusiness JSON-LD */}
+        {/* Global Canonical Structured Data (WebSite + LocalBusiness) */}
+        <script
           type="application/ld+json"
-          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify([
-              {
-                "@context": "https://schema.org",
-                "@type": "Organization",
-                "name": "SPL Transportation",
-                "url": BASE_URL,
-                "logo": `${BASE_URL}/logo.png`,
-                "sameAs": [
-                  "https://www.facebook.com/spltransportation",
-                  "https://www.instagram.com/spltransportation"
-                ]
-              },
-              {
-                "@context": "https://schema.org",
-                "@type": "LocalBusiness",
-                "name": "SPL Transportation",
-                "url": BASE_URL,
-                "image": `${BASE_URL}/logo.png`,
-                "logo": `${BASE_URL}/logo.png`,
-                "description":
-                  "Private airport and regional transfers across Cairns, Port Douglas and Far North Queensland.",
-                "telephone": BUSINESS_PHONE,
-                "address": {
-                  "@type": "PostalAddress",
-                  "addressCountry": "AU",
-                  "addressRegion": "QLD",
-                },
-                "areaServed": [
-                  "Cairns",
-                  "Port Douglas",
-                  "Palm Cove",
-                  "Kuranda",
-                  "Northern Beaches",
-                  "Atherton Tablelands",
-                ],
-                "priceRange": "$$",
-              }
-            ]),
+            __html: JSON.stringify(rootSchema),
           }}
         />
       </head>
 
       <body className={`${inter.variable} ${playfair.variable} bg-[#F8FAFC] text-[#475569] antialiased`}>
-        {/* ✅ Global App State */}
+        {/* âœ… Global App State */}
         <BookingProvider>
           <UtmTracker />
           <CookieConsent />

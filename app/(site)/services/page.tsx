@@ -4,12 +4,12 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { getRoutes } from '@/app/lib/routesStore';
 import ServicesPageClient from './ServicesPageClient';
+import { BASE_URL } from '@/app/lib/constants';
 
-const BASE_URL = 'https://www.spltransportation.com.au';
 export const revalidate = 3600; // Revalidate ISR cache hourly or on tag revalidation
 
 export const metadata: Metadata = {
-  title: 'Services & Rates | Private Airport Transfers & Chauffeur Hire | SPL Transportation',
+  title: 'Services & Rates | Private Airport Transfers & Chauffeur Hire',
   description:
     'Complete rate list and service guide for private airport transfers, hourly chauffeur hire, and 8-hour day trip charters across Cairns, Port Douglas & Palm Cove. Transparent fixed pricing, no hidden fees.',
   keywords: [
@@ -23,6 +23,10 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: `${BASE_URL}/services`,
+    languages: {
+      'en-AU': `${BASE_URL}/services`,
+      'x-default': `${BASE_URL}/services`,
+    },
   },
   openGraph: {
     type: 'website',
@@ -31,14 +35,15 @@ export const metadata: Metadata = {
     description:
       'Transparent rate list for private transfers, hourly hire, and day trip charters across Tropical North Queensland.',
     siteName: 'SPL Transportation',
-    images: [{ url: '/hero-mercedes.webp', width: 1200, height: 630, alt: 'SPL Transportation Rates & Services' }],
+    locale: 'en_AU',
+    images: [{ url: `${BASE_URL}/hero-mercedes.webp`, width: 1200, height: 630, alt: 'SPL Transportation Rates & Services' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Services & Rates — SPL Transportation',
     description:
       'Fixed pricing and complete rate breakdown for airport transfers, hourly hire, and day tours in Cairns & Port Douglas.',
-    images: ['/hero-mercedes.webp'],
+    images: [`${BASE_URL}/hero-mercedes.webp`],
   },
 };
 
@@ -49,25 +54,6 @@ export default async function ServicesPage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
-      {
-        '@type': 'LocalBusiness',
-        '@id': `${BASE_URL}/#organization`,
-        name: 'SPL Transportation',
-        description:
-          'Professional private transfers and chauffeur services across Tropical North Queensland.',
-        url: BASE_URL,
-        telephone: '+61470032460',
-        email: 'info@spltransportation.com.au',
-        logo: `${BASE_URL}/logo.png`,
-        image: `${BASE_URL}/hero-mercedes.webp`,
-        priceRange: '$$',
-        address: {
-          '@type': 'PostalAddress',
-          addressLocality: 'Cairns',
-          addressRegion: 'Queensland',
-          addressCountry: 'AU',
-        },
-      },
       {
         '@type': 'Service',
         '@id': `${BASE_URL}/services#service`,

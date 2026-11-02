@@ -3,9 +3,9 @@ import AboutPage from '../../components/AboutPage';
 import { BASE_URL } from '@/app/lib/constants';
 
 export const metadata: Metadata = {
-  title: 'About SPL Transportation | Trusted Cairns Airport Transfers Since 2004',
+  title: 'About Us | Trusted Cairns Airport Transfers Since 2004',
   description:
-    'Learn about SPL Transportation — 20+ years of professional private airport transfers in Cairns, Port Douglas, Palm Cove and Tropical North Queensland. Licensed drivers, modern fleet, fixed pricing.',
+    'Learn about SPL Transportation - 20+ years of professional private airport transfers in Cairns, Port Douglas, Palm Cove and Tropical North Queensland. Licensed drivers, modern fleet, fixed pricing.',
   keywords: [
     'About SPL Transportation',
     'Cairns private transport company',
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
         url: `${BASE_URL}/hero-mercedes.webp`,
         width: 1200,
         height: 630,
-        alt: 'About SPL Transportation — Professional Airport Transfers',
+        alt: 'About SPL Transportation - Professional Airport Transfers',
       },
     ],
   },
@@ -44,35 +44,28 @@ export const metadata: Metadata = {
   },
 };
 
-const aboutSchema = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'AboutPage',
-    '@id': `${BASE_URL}/about#webpage`,
-    url: `${BASE_URL}/about`,
-    name: 'About SPL Transportation',
-    description:
-      '20+ years of professional private airport transfers in Cairns, Port Douglas, Palm Cove and Tropical North Queensland.',
-    isPartOf: {
-      '@type': 'WebSite',
-      name: 'SPL Transportation',
-      url: BASE_URL,
+const aboutSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'AboutPage',
+      '@id': `${BASE_URL}/about#webpage`,
+      url: `${BASE_URL}/about`,
+      name: 'About SPL Transportation',
+      description:
+        '20+ years of professional private airport transfers in Cairns, Port Douglas, Palm Cove and Tropical North Queensland.',
+      isPartOf: { '@id': `${BASE_URL}/#website` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'About Us', item: `${BASE_URL}/about` },
+        ],
+      },
+      about: { '@id': `${BASE_URL}/#organization` },
     },
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
-        { '@type': 'ListItem', position: 2, name: 'About Us', item: `${BASE_URL}/about` },
-      ],
-    },
-    about: {
-      '@type': 'Organization',
-      name: 'SPL Transportation',
-      url: BASE_URL,
-      logo: `${BASE_URL}/logo.png`,
-    },
-  },
-];
+  ],
+};
 
 export default function About() {
   return (
@@ -85,4 +78,3 @@ export default function About() {
     </>
   );
 }
-

@@ -7,6 +7,9 @@ export async function GET() {
 User-agent: *
 Disallow: /admin
 Disallow: /cms
+Disallow: /booking-success
+Disallow: /booking-cancelled
+Disallow: /manage-booking
 Allow: /
 Sitemap: ${BASE_URL}/sitemap.xml
 `.trim();

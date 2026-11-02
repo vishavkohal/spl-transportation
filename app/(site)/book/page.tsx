@@ -17,7 +17,7 @@ const ACCENT_COLOR = COLORS.primary;
 /* ─── Metadata (server-rendered for SEO) ─── */
 
 export const metadata: Metadata = {
-  title: 'Book Private Airport Transfers in Cairns | From $55 | SPL Transportation',
+  title: 'Book Private Airport Transfers in Cairns | From $55',
   description:
     'Book a private airport transfer in Cairns, Port Douglas, Palm Cove & Far North Queensland. Fixed pricing, no hidden fees, professional drivers. Instant confirmation.',
   keywords: [
@@ -39,14 +39,14 @@ export const metadata: Metadata = {
     description:
       'Fixed-price private airport transfers across Cairns, Port Douglas & Palm Cove. Book online in under 60 seconds.',
     siteName: 'SPL Transportation',
-    images: [{ url: '/logo.png', width: 600, height: 600, alt: 'SPL Transportation' }],
+    images: [{ url: `${BASE_URL}/hero-mercedes.webp`, width: 1200, height: 630, alt: 'Book Private Transfers - SPL Transportation' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Book Private Airport Transfers — SPL Transportation',
     description:
       'Fixed-price transfers across Cairns & Port Douglas. Professional drivers, modern vehicles.',
-    images: ['/logo.png'],
+    images: [`${BASE_URL}/hero-mercedes.webp`],
   },
   robots: {
     index: true,
@@ -322,43 +322,6 @@ export default function BookLandingPage() {
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@graph': [
-              {
-                '@type': 'LocalBusiness',
-                '@id': `${BASE_URL}/#organization`,
-                name: 'SPL Transportation',
-                description:
-                  'Professional private transfers across Queensland. Elevating your journey with safety, punctuality, and premium comfort.',
-                url: BASE_URL,
-                telephone: '+61470032460',
-                email: 'info@spltransportation.com.au',
-                logo: `${BASE_URL}/logo.png`,
-                image: `${BASE_URL}/logo.png`,
-                priceRange: '$$',
-                address: {
-                  '@type': 'PostalAddress',
-                  addressLocality: 'Cairns',
-                  addressRegion: 'Queensland',
-                  addressCountry: 'AU',
-                },
-                geo: {
-                  '@type': 'GeoCoordinates',
-                  latitude: '-16.9186',
-                  longitude: '145.7781',
-                },
-                areaServed: [
-                  { '@type': 'City', name: 'Cairns' },
-                  { '@type': 'City', name: 'Port Douglas' },
-                  { '@type': 'City', name: 'Palm Cove' },
-                  { '@type': 'State', name: 'Queensland' },
-                ],
-                aggregateRating: {
-                  '@type': 'AggregateRating',
-                  ratingValue: '4.9',
-                  reviewCount: '324',
-                  bestRating: '5',
-                  worstRating: '1',
-                },
-              },
               {
                 '@type': 'Service',
                 '@id': `${BASE_URL}/book#service`,

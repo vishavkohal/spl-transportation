@@ -4,7 +4,7 @@ import { ShieldCheck, ArrowLeft, Mail, Phone, Lock } from 'lucide-react';
 import { BASE_URL, BUSINESS_EMAIL, BUSINESS_PHONE } from '@/app/lib/constants';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | SPL Transportation',
+  title: 'Privacy Policy',
   description:
     'Read the Privacy Policy for SPL Transportation. Learn how we collect, protect, and handle your personal booking and payment information across Cairns and Queensland transfers.',
   alternates: {
@@ -38,28 +38,26 @@ export const metadata: Metadata = {
   },
 };
 
-const privacySchema = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    '@id': `${BASE_URL}/privacy-policy#webpage`,
-    url: `${BASE_URL}/privacy-policy`,
-    name: 'Privacy Policy | SPL Transportation',
-    description: 'Read how SPL Transportation handles customer data, booking information, and payment security.',
-    isPartOf: {
-      '@type': 'WebSite',
-      name: 'SPL Transportation',
-      url: BASE_URL,
+const privacySchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${BASE_URL}/privacy-policy#webpage`,
+      url: `${BASE_URL}/privacy-policy`,
+      name: 'Privacy Policy | SPL Transportation',
+      description: 'Read how SPL Transportation handles customer data, booking information, and payment security.',
+      isPartOf: { '@id': `${BASE_URL}/#website` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Privacy Policy', item: `${BASE_URL}/privacy-policy` },
+        ],
+      },
     },
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
-        { '@type': 'ListItem', position: 2, name: 'Privacy Policy', item: `${BASE_URL}/privacy-policy` },
-      ],
-    },
-  },
-];
+  ],
+};
 
 export default function PrivacyPolicyPage() {
   return (

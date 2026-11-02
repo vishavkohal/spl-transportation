@@ -3,7 +3,7 @@ import Terms from '../../components/TermsPage';
 import { BASE_URL } from '@/app/lib/constants';
 
 export const metadata: Metadata = {
-  title: 'Terms & Conditions | SPL Transportation',
+  title: 'Terms & Conditions',
   description:
     'Read the terms and conditions for SPL Transportation private transfer services. Covers rates, payment, cancellation policy, luggage allowance, and conduct guidelines.',
   alternates: {
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     description: 'Service agreement, rates, payment, cancellation policy, and luggage guidelines.',
     siteName: 'SPL Transportation',
     locale: 'en_AU',
-    images: [{ url: `${BASE_URL}/hero-mercedes.webp`, width: 1200, height: 630, alt: 'Terms & Conditions — SPL Transportation' }],
+    images: [{ url: `${BASE_URL}/hero-mercedes.webp`, width: 1200, height: 630, alt: 'Terms & Conditions - SPL Transportation' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -30,28 +30,26 @@ export const metadata: Metadata = {
   },
 };
 
-const termsSchema = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    '@id': `${BASE_URL}/terms#webpage`,
-    url: `${BASE_URL}/terms`,
-    name: 'Terms & Conditions | SPL Transportation',
-    description: 'Read the terms and conditions for SPL Transportation private transfer services.',
-    isPartOf: {
-      '@type': 'WebSite',
-      name: 'SPL Transportation',
-      url: BASE_URL,
+const termsSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${BASE_URL}/terms#webpage`,
+      url: `${BASE_URL}/terms`,
+      name: 'Terms & Conditions | SPL Transportation',
+      description: 'Read the terms and conditions for SPL Transportation private transfer services.',
+      isPartOf: { '@id': `${BASE_URL}/#website` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Terms & Conditions', item: `${BASE_URL}/terms` },
+        ],
+      },
     },
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
-        { '@type': 'ListItem', position: 2, name: 'Terms & Conditions', item: `${BASE_URL}/terms` },
-      ],
-    },
-  },
-];
+  ],
+};
 
 export default function TermsPage() {
   return (
@@ -64,4 +62,3 @@ export default function TermsPage() {
     </>
   );
 }
-

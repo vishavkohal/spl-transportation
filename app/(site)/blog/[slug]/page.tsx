@@ -34,7 +34,7 @@ export async function generateMetadata({
   }
 
   const url = `${BASE_URL}/blog/${post.slug}`;
-  const imageUrl = post.featuredImage ? `${BASE_URL}/api/images/${post.featuredImage.id}` : '';
+  const imageUrl = post.featuredImage ? `${BASE_URL}/api/images/${post.featuredImage.id}` : `${BASE_URL}/hero-mercedes.webp`;
 
   return {
     title: post.title,
@@ -344,57 +344,56 @@ export default async function BlogPostPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify([
-            {
-              "@context": "https://schema.org",
-              "@type": "BlogPosting",
-              "headline": post.title,
-              "description": post.excerpt,
-              "datePublished": post.publishedAt,
-              "dateModified": post.updatedAt || post.publishedAt,
-              "mainEntityOfPage": {
-                "@type": "WebPage",
-                "@id": `${BASE_URL}/blog/${post.slug}`
-              },
-              "image": post.featuredImage ? `${BASE_URL}/api/images/${post.featuredImage.id}` : `${BASE_URL}/hero-mercedes.webp`,
-              "author": {
-                "@type": "Organization",
-                "name": "SPL Transportation"
-              },
-              "publisher": {
-                "@type": "Organization",
-                "name": "SPL Transportation",
-                "logo": {
-                  "@type": "ImageObject",
-                  "url": `${BASE_URL}/logo.png`
-                }
-              }
-            },
-            {
-              "@context": "https://schema.org",
-              "@type": "BreadcrumbList",
-              "itemListElement": [
-                {
-                  "@type": "ListItem",
-                  "position": 1,
-                  "name": "Home",
-                  "item": BASE_URL
-                },
-                {
-                  "@type": "ListItem",
-                  "position": 2,
-                  "name": "Blog",
-                  "item": `${BASE_URL}/blog`
-                },
-                {
-                  "@type": "ListItem",
-                  "position": 3,
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "BlogPosting",
+                "@id": `${BASE_URL}/blog/${post.slug}#article`,
+                "headline": post.title,
+                "description": post.excerpt,
+                "datePublished": post.publishedAt,
+                "dateModified": post.updatedAt || post.publishedAt,
+                "mainEntityOfPage": {
+                  "@type": "WebPage",
+                  "@id": `${BASE_URL}/blog/${post.slug}#webpage`,
+                  "url": `${BASE_URL}/blog/${post.slug}`,
                   "name": post.title,
-                  "item": `${BASE_URL}/blog/${post.slug}`
-                }
-              ]
-            }
-          ])
+                  "isPartOf": { "@id": `${BASE_URL}/#website` }
+                },
+                "image": post.featuredImage ? `${BASE_URL}/api/images/${post.featuredImage.id}` : `${BASE_URL}/hero-mercedes.webp`,
+                "author": {
+                  "@type": "Person",
+                  "name": "SPL Editorial Team"
+                },
+                "publisher": { "@id": `${BASE_URL}/#organization` }
+              },
+              {
+                "@type": "BreadcrumbList",
+                "@id": `${BASE_URL}/blog/${post.slug}#breadcrumb`,
+                "itemListElement": [
+                  {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": BASE_URL
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Blog",
+                    "item": `${BASE_URL}/blog`
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": post.title,
+                    "item": `${BASE_URL}/blog/${post.slug}`
+                  }
+                ]
+              }
+            ]
+          })
         }}
       />
     </main>

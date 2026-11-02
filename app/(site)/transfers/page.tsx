@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
 import RoutesPage from '../../components/RoutesPage';
-import JsonLd from '@/app/components/JsonLd';
 import { BASE_URL } from '@/app/lib/constants';
 
 export const metadata: Metadata = {
-  title: 'All Transfer Routes Cairns | Private Airport Transfers | SPL Transportation',
+  title: 'All Transfer Routes Cairns | Private Airport Transfers',
   description:
     'Browse all private transfer routes from Cairns Airport to Port Douglas, Palm Cove, Kuranda, Northern Beaches, Atherton Tablelands and more. Fixed pricing, no hidden fees.',
   keywords: [
@@ -26,7 +25,7 @@ export const metadata: Metadata = {
     type: 'website',
     url: `${BASE_URL}/transfers`,
     title: 'All Private Transfer Routes | SPL Transportation',
-    description: 'Private airport and regional transfers across Tropical North Queensland — browse all routes with fixed pricing.',
+    description: 'Private airport and regional transfers across Tropical North Queensland - browse all routes with fixed pricing.',
     siteName: 'SPL Transportation',
     locale: 'en_AU',
     images: [
@@ -46,34 +45,31 @@ export const metadata: Metadata = {
   },
 };
 
-const transfersSchema = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    '@id': `${BASE_URL}/transfers#webpage`,
-    url: `${BASE_URL}/transfers`,
-    name: 'All Private Transfer Routes | SPL Transportation',
-    description:
-      'Browse all private airport & regional transfer routes across Cairns, Port Douglas, Palm Cove, Kuranda, Northern Beaches & Tablelands.',
-    isPartOf: {
-      '@type': 'WebSite',
-      name: 'SPL Transportation',
-      url: BASE_URL,
+const transfersSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      '@id': `${BASE_URL}/transfers#webpage`,
+      url: `${BASE_URL}/transfers`,
+      name: 'All Private Transfer Routes | SPL Transportation',
+      description:
+        'Browse all private airport & regional transfer routes across Cairns, Port Douglas, Palm Cove, Kuranda, Northern Beaches & Tablelands.',
+      isPartOf: { '@id': `${BASE_URL}/#website` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Transfers', item: `${BASE_URL}/transfers` },
+        ],
+      },
     },
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: BASE_URL },
-        { '@type': 'ListItem', position: 2, name: 'Transfers', item: `${BASE_URL}/transfers` },
-      ],
-    },
-  },
-];
+  ],
+};
 
 export default function TransfersPage() {
   return (
     <>
-      <JsonLd />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(transfersSchema) }}
@@ -82,4 +78,3 @@ export default function TransfersPage() {
     </>
   );
 }
-

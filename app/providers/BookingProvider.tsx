@@ -247,7 +247,7 @@ export function BookingProvider({ children }: { children: React.ReactNode }) {
         return pax >= min && pax <= max;
       }) || tiers[tiers.length - 1];
 
-    let baseOneWay = tier?.price || 0;
+    const baseOneWay = tier?.price || 0;
     let price = formData.transferType === 'round-trip' ? baseOneWay * 2 : baseOneWay;
 
     if (formData.childSeat) price += 20;

@@ -1,3 +1,4 @@
+import Link from "next/link";
 // app/transfers/[slug]/page.tsx
 
 import React from "react";
@@ -79,7 +80,7 @@ export async function generateMetadata({
   const routeName = `${route.from} to ${route.to}`;
   const title = `${routeName} Private Transfers | ${
     minPrice ? `From $${minPrice}` : "Fixed Fare"
-  } | SPL Transportation`;
+  }`;
 
   const description =
     route.description ||
@@ -472,12 +473,12 @@ export default async function RoutePage({
                 Popular &amp; Nearby Transfer Routes
               </h2>
             </div>
-            <a
+            <Link
               href="/transfers"
               className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F766E] hover:underline"
             >
               View All Transfer Routes <ArrowRight className="w-3.5 h-3.5" />
-            </a>
+            </Link>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -604,6 +605,10 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
     pageContent?.intro?.paragraphs?.[0] ||
     `Premium private transfers from ${route.from} to ${route.to} with fixed pricing.`;
 
+  const ogImageUrl = pageContent?.imageId
+    ? `${BASE_URL}/api/images/${pageContent.imageId}`
+    : `${BASE_URL}/routes/${route.slug}.jpg`;
+
   const isCairnsCity = route.slug === "cairns-airport-to-cairns-city";
   const reviewsData = isCairnsCity ? CAIRNS_CITY_REVIEWS : [];
 
@@ -618,7 +623,7 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
   const reviewsSchema = reviewsData.map((r, i) => ({
     "@type": "Review",
     "@id": `${url}#review${i + 1}`,
-    itemReviewed: { "@id": `${url}#service` },
+    itemReviewed: { "@id": `${url}#product` },
     author: { "@type": "Person", name: r.author },
     reviewRating: {
       "@type": "Rating",
@@ -631,37 +636,6 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
   }));
 
   const graph = [
-    {
-      "@type": "LocalBusiness",
-      "@id": `${BASE_URL}/#organization`,
-      name: "SPL Transportation",
-      description:
-        "Professional private transfers across Queensland. Elevating your journey with safety, punctuality, and premium comfort.",
-      url: BASE_URL,
-      telephone: "+61470032460",
-      email: "info@spltransportation.com.au",
-      logo: `${BASE_URL}/logo.png`,
-      image: `${BASE_URL}/logo.png`,
-      priceRange: "$$",
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: "Cairns",
-        addressRegion: "Queensland",
-        addressCountry: "AU",
-      },
-      geo: {
-        "@type": "GeoCoordinates",
-        latitude: "-16.9186",
-        longitude: "145.7781",
-      },
-      areaServed: [
-        { "@type": "City", name: "Cairns" },
-        { "@type": "City", name: "Port Douglas" },
-        { "@type": "City", name: "Palm Cove" },
-        { "@type": "State", name: "Queensland" },
-      ],
-      aggregateRating: aggregateRating,
-    },
     {
       "@type": "Service",
       "@id": `${url}#service`,
@@ -678,10 +652,28 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
         availability: "https://schema.org/InStock",
         url: url,
         validFrom: "2025-01-01",
-        itemOffered: {
-          "@type": "Service",
-          name: `Private Transfer - ${routeName}`,
-        },
+        seller: { "@id": `${BASE_URL}/#organization` },
+      },
+    },
+    {
+      "@type": "Product",
+      "@id": `${url}#product`,
+      name: `${routeName} Private Transfer`,
+      description: `Premium private transfer service from ${route.from} to ${route.to}.`,
+      image: [ogImageUrl],
+      brand: {
+        "@type": "Brand",
+        name: "SPL Transportation",
+      },
+      sku: `SPL-TRANSFER-${route.slug.toUpperCase()}`,
+      offers: {
+        "@type": "Offer",
+        price: minPrice.toString(),
+        priceCurrency: "AUD",
+        availability: "https://schema.org/InStock",
+        url: url,
+        priceValidUntil: validUntil,
+        seller: { "@id": `${BASE_URL}/#organization` },
       },
       aggregateRating: aggregateRating,
     },
@@ -693,30 +685,14 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
       fromLocation: {
         "@type": "Place",
         name: route.from,
-        address: { "@type": "PostalAddress", addressLocality: "Cairns", addressCountry: "AU" }
+        address: { "@type": "PostalAddress", addressLocality: "Cairns", addressCountry: "AU" },
       },
       toLocation: {
         "@type": "Place",
         name: route.to,
-        address: { "@type": "PostalAddress", addressLocality: route.to, addressCountry: "AU" }
+        address: { "@type": "PostalAddress", addressLocality: route.to, addressCountry: "AU" },
       },
       distance: route.distance || undefined,
-    },
-    {
-      "@type": "Product",
-      "@id": `${url}#product`,
-      name: `${routeName} Private Transfer`,
-      description: `Premium private transfer service from ${route.from} to ${route.to}.`,
-      brand: { "@id": `${BASE_URL}/#organization` },
-      offers: {
-        "@type": "Offer",
-        price: minPrice.toString(),
-        priceCurrency: "AUD",
-        availability: "https://schema.org/InStock",
-        url: url,
-        priceValidUntil: validUntil,
-      },
-      aggregateRating: aggregateRating,
     },
     {
       "@type": "BreadcrumbList",
@@ -752,9 +728,10 @@ function generateSchema(route: RouteWithSlug, pageContent: RoutePageContent | nu
       isPartOf: { "@id": `${BASE_URL}/#website` },
       breadcrumb: { "@id": `${url}#breadcrumb` },
       about: { "@id": `${url}#service` },
+      mainEntity: { "@id": `${url}#product` },
       primaryImageOfPage: {
         "@type": "ImageObject",
-        url: `${BASE_URL}/routes/${route.slug}.jpg`,
+        url: ogImageUrl,
       },
     },
     {
